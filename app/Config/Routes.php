@@ -6,5 +6,5 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', fn() => redirect()->to('/login'));
 $routes->get('login', 'Auth::login');
 $routes->post('login', 'Auth::autenticar');
-$routes->post('logout', 'Auth::logout', ['filter' => 'auth']);
+$routes->get('logout', 'Auth::logout', ['filter' => 'auth']);
 $routes->get('dashboard', 'Dashboard::index', ['filter' => 'auth']);
