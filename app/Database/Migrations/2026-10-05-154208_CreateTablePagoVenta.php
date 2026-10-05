@@ -20,7 +20,7 @@ class CreateTablePagoVenta extends Migration
         ]);
         $this->forge->addPrimaryKey('idpagoventa');
         $this->forge->addForeignKey('idventa', 'ventas', 'idventa', 'CASCADE', 'RESTRICT');
-        $this->forge->addForeignKey('idtipopago', 'tipopago', 'idtipopago', 'CASCADE', 'RESTRICT');
+        $this->forge->addForeignKey('idtipopago', 'tipospago', 'idtipopago', 'CASCADE', 'RESTRICT');
         $this->forge->createTable('pagoventa', true);
     }
 
