@@ -39,9 +39,14 @@ class Auth extends BaseController
 
         session()->regenerate(true);
         session()->set([
-            'idusuario' => $usuario['idusuario'],
-            'nombre'    => $usuario['nombres'] . ' ' . $usuario['apellidos'],
-            'rol'       => $usuario['rol'],
+            'idusuario'     => $usuario['idusuario'],
+            'nombreusuario' => $usuario['nombreusuario'],
+            'nombres'       => $usuario['nombres'],
+            'apellidos'     => $usuario['apellidos'],
+            'nombre'        => $usuario['nombres'] . ' ' . $usuario['apellidos'],
+            'email'         => $usuario['email'] ?? '',
+            'rol'           => $usuario['rol'],
+            'isLoggedIn'    => true,
         ]);
 
         return redirect()->to('/dashboard');
