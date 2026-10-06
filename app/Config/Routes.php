@@ -14,3 +14,9 @@ $routes->group('categorias', ['filter' => 'auth'], static function ($routes) {
     $routes->post('guardar', 'CategoriaController::guardar');
     $routes->get('eliminar/(:num)', 'CategoriaController::eliminar/$1');
 });
+
+$routes->group('marcas', [' filter' => 'auth'], static function ($routes) {
+    $routes->get('/', 'MarcaController::index');
+    $routes->post('guardar', 'MarcaController::guardar');
+    $routes->get('eliminar/(:num)', 'MarcaController::eliminar/$1');
+});
