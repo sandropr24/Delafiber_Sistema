@@ -98,6 +98,7 @@ CREATE TABLE productos (
   modelo       VARCHAR(80) NULL,
   codigobarras VARCHAR(50) NULL UNIQUE,
   estado       TINYINT(1) NOT NULL DEFAULT 1,
+  imagen       VARCHAR(255)
   precioventa  DECIMAL(10,2) NOT NULL CHECK (precioventa >= 0),
   FOREIGN KEY (idcategoria) REFERENCES categorias(idcategoria),
   FOREIGN KEY (idmarca)     REFERENCES marcas(idmarca)
@@ -255,4 +256,4 @@ CREATE TABLE pagoventa (
 
 
 
-SELECT * FROM usuarios;
+SELECT * FROM productos;

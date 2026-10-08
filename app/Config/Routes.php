@@ -20,3 +20,9 @@ $routes->group('marcas', [' filter' => 'auth'], static function ($routes) {
     $routes->post('guardar', 'MarcaController::guardar');
     $routes->get('eliminar/(:num)', 'MarcaController::eliminar/$1');
 });
+
+$routes->group('productos', ['filter' => 'auth'], static function($routes) {
+    $routes->get('/', 'ProductoController::index');
+    $routes->post('guardar', 'ProductoController::guardar');
+    $routes->get('cambiarestado/(:num)', 'ProductoController::cambiarEstado/$1');
+});
