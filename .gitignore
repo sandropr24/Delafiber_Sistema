@@ -124,3 +124,6 @@ _modules/*
 
 /results/
 /phpunit.xml
+
+public/uploads/*
+!public/uploads/.gitkeep
