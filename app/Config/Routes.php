@@ -26,3 +26,9 @@ $routes->group('productos', ['filter' => 'auth'], static function($routes) {
     $routes->post('guardar', 'ProductoController::guardar');
     $routes->get('cambiarestado/(:num)', 'ProductoController::cambiarEstado/$1');
 });
+
+$routes->group('locales', ['filter' => 'auth'], static function($routes) {
+    $routes->get('/', 'LocalController::index');
+    $routes->post('guardar', 'LocalController::guardar');
+    $routes->get('eliminar/(:num)', 'LocalController::eliminar/$1');
+});
