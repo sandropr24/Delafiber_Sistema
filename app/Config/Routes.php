@@ -32,3 +32,11 @@ $routes->group('locales', ['filter' => 'auth'], static function($routes) {
     $routes->post('guardar', 'LocalController::guardar');
     $routes->get('eliminar/(:num)', 'LocalController::eliminar/$1');
 });
+
+$routes->group('usuarios', ['filter' => 'auth'], static function($routes) {
+    $routes->get('/', 'UsuarioController::index');
+    $routes->post('guardar', 'UsuarioController::guardar');
+    $routes->get('cambiarestado/(:num)', 'UsuarioController::cambiarEstado/$1');
+    $routes->get('eliminar/(:num)', 'UsuarioController::eliminar/$1');
+});
+

@@ -41,6 +41,14 @@ class UsuarioModel extends Model
       return $builder->first();
    }
 
+   public function obtenerUsuariosConPersona() : array 
+   {
+         return $this->select('usuarios.*, personas.nombres, personas.apellidos, personas.numerodoc, personas.telefono, personas.email, personas.direccion')
+               ->join('personas', 'personas.idpersona = usuarios.idpersona')
+               ->orderBy('usuarios.idusuario', 'DESC')
+               ->findAll();
+   }
+
    protected function hashearClave(array $data)
    {
       if (isset($data['data']['claveacceso']) && !empty($data['data']['claveacceso'])) {
