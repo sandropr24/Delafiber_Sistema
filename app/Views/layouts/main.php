@@ -61,7 +61,7 @@
 
                 <?php if (in_array($userRol, ['Administrador', 'Cajero'], true)): ?>
                     <div class="nav-section-title">Comercial</div>
-                    <a href="<?= base_url('personas') ?>" class="sidebar-link <?= url_is('personas*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('clientes') ?>" class="sidebar-link <?= url_is('personas*') ? 'active' : '' ?>">
                         <i class="bi bi-people"></i>
                         <span>Clientes</span>
                     </a>
