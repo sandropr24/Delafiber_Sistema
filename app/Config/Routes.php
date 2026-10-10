@@ -52,3 +52,7 @@ $routes->group('proveedores',['filter' => 'auth'],function($routes){
     $routes->get('eliminar/(:num)', 'ProveedorController::eliminar/$1');
 });
 
+$routes->group('kardex',['filter' => 'auth'],function($routes){
+    $routes->get('', 'KardexController::index');
+});
+
