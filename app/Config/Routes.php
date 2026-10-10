@@ -46,3 +46,9 @@ $routes->group('clientes', ['filter' => 'auth'], static function ($routes) {
     $routes->get('eliminar/(:num)', 'ClienteController::eliminar/$1');
 });
 
+$routes->group('proveedores',['filter' => 'auth'],function($routes){
+    $routes->get('/','ProveedorController::index');
+    $routes->post('guardar', 'ProveedorController::guardar');
+    $routes->get('eliminar/(:num)', 'ProveedorController::eliminar/$1');
+});
+
