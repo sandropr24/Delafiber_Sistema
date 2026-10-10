@@ -96,7 +96,7 @@
                         </div>
                         <div class="col-12 col-md-8">
                             <label for="numerodoc" class="form-label small fw-semibold">N° Documento <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" required placeholder="8 dígitos (DNI) o 11 dígitos (RUC)">
+                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" required  maxlength="8">
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="nombres" class="form-label small fw-semibold" id="labelNombres">Nombres <span class="text-danger">*</span></label>
@@ -108,15 +108,15 @@
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="telefono" class="form-label small fw-semibold">Teléfono</label>
-                            <input type="text" class="form-control" id="telefono" name="telefono" placeholder="999888777">
+                            <input type="text" class="form-control" id="telefono" name="telefono" >
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="email" class="form-label small fw-semibold">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="cliente@correo.com">
+                            <input type="email" class="form-control" id="email" name="email" >
                         </div>
                         <div class="col-12">
                             <label for="direccion" class="form-label small fw-semibold">Dirección</label>
-                            <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Calle / Av. y número">
+                            <input type="text" class="form-control" id="direccion" name="direccion">
                         </div>
                     </div>
                 </div>
@@ -137,14 +137,27 @@
         const tipo = document.getElementById('tipodoc').value;
         const labelNombres = document.getElementById('labelNombres');
         const contenedorApellidos = document.getElementById('contenedorApellidos');
+        const inputNumDoc = document.getElementById('numerodoc');
 
         if (tipo === 'RUC') {
             labelNombres.innerHTML = 'Razón Social <span class="text-danger">*</span>';
             contenedorApellidos.style.display = 'none';
             document.getElementById('apellidos').value = '';
+            inputNumDoc.setAttribute('maxlength', '11');
+            if (inputNumDoc.value.length > 11) {
+                inputNumDoc.value = inputNumDoc.value.slice(0, 11);
+            }
+        } else if (tipo === 'DNI') {
+            labelNombres.innerHTML = 'Nombres <span class="text-danger">*</span>';
+            contenedorApellidos.style.display = 'block';
+            inputNumDoc.setAttribute('maxlength', '8');
+            if (inputNumDoc.value.length > 8) {
+                inputNumDoc.value = inputNumDoc.value.slice(0, 8);
+            }
         } else {
             labelNombres.innerHTML = 'Nombres <span class="text-danger">*</span>';
             contenedorApellidos.style.display = 'block';
+            inputNumDoc.setAttribute('maxlength', '12'); 
         }
     }
 
