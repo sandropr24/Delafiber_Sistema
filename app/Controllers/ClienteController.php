@@ -3,21 +3,20 @@
 namespace App\Controllers;
 
 use App\Models\PersonaModel;
+use CodeIgniter\HTTP\RedirectResponse;
 
 class ClienteController extends BaseController
 {
-    protected $personaModel;
+    protected PersonaModel $personaModel;
 
     public function __construct()
     {
-        $this->personaModel = new PersonaModel();
+        $this->personaModel = model(PersonaModel::class);
     }
 
-    public function index()
+    public function index(): string
     {
-        $db = \Config\Database::connect();
-
-        $clientes = $db->table('personas')
+        $clientes = $this->personaModel->builder()
             ->whereNotIn('idpersona', static function ($builder) {
                 return $builder->select('idpersona')->from('usuarios');
             })
@@ -33,75 +32,78 @@ class ClienteController extends BaseController
         return view('clientes/index', $data);
     }
 
-    public function guardar()
+    public function guardar(): RedirectResponse
     {
         $idPersona = $this->request->getPost('idpersona');
-        $numeroDoc = trim((string) $this->request->getPost('numerodoc'));
-        $tipoDoc   = $this->request->getPost('tipodoc');
 
-        $db = \Config\Database::connect();
-        $builder = $db->table('personas')->where('numerodoc', $numeroDoc);
-
-        if (!empty($idPersona)) {
-            $builder->where('idpersona !=', $idPersona);
-        }
-
-        if ($builder->countAllResults() > 0) {
-            return redirect()->to(base_url('clientes'))
-                             ->withInput()
-                             ->with('error', 'El número de documento ya se encuentra registrado.');
-        }
-
-        $datosPersona = [
-            'nombres'   => trim((string) $this->request->getPost('nombres')),
-            'apellidos' => trim((string) $this->request->getPost('apellidos')),
-            'tipodoc'   => $tipoDoc,
-            'numerodoc' => $numeroDoc,
-            'telefono'  => trim((string) $this->request->getPost('telefono')) ?: null,
-            'email'     => trim((string) $this->request->getPost('email')) ?: null,
-            'direccion' => trim((string) $this->request->getPost('direccion')) ?: null,
+        $reglas = [
+            'nombres'   => 'required|max_length[100]',
+            'apellidos' => 'required|max_length[100]',
+            'tipodoc'   => 'required',
+            'numerodoc' => 'required|max_length[20]|is_unique[personas.numerodoc,idpersona,' . ($idPersona ?: 'NULL') . ']',
+            'email'     => 'permit_empty|valid_email|max_length[150]',
         ];
+
+        $mensajes = [
+            'numerodoc' => [
+                'is_unique' => 'El número de documento ya se encuentra registrado.'
+            ]
+        ];
+
+        if (!$this->validate($reglas, $mensajes)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->validator->getErrors());
+        }
+
+        $campos = ['nombres', 'apellidos', 'tipodoc', 'numerodoc', 'telefono', 'email', 'direccion'];
+        $datosPersona = $this->request->getPost($campos);
+
+        $datosPersona = array_map(static function ($valor) {
+            $limpio = trim((string) $valor);
+            return $limpio === '' ? null : $limpio;
+        }, $datosPersona);
 
         if (!empty($idPersona)) {
             $datosPersona['idpersona'] = $idPersona;
-            $this->personaModel->save($datosPersona);
-            $mensaje = 'Cliente actualizado con éxito.';
-        } else {
-            $this->personaModel->insert($datosPersona);
-            $mensaje = 'Cliente registrado con éxito.';
         }
 
+        if (!$this->personaModel->save($datosPersona)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('errors', $this->personaModel->errors());
+        }
+
+        $mensaje = !empty($idPersona) ? 'Cliente actualizado con éxito.' : 'Cliente registrado con éxito.';
         return redirect()->to(base_url('clientes'))->with('mensaje', $mensaje);
     }
 
-    public function eliminar($id = null)
-{
-    $db = \Config\Database::connect();
+    public function eliminar($id = null): RedirectResponse
+    {
+        if (empty($id) || !$this->personaModel->find($id)) {
+            return redirect()->to(base_url('clientes'))->with('error', 'El cliente no existe.');
+        }
 
-    $persona = $db->table('personas')->where('idpersona', $id)->get()->getRowArray();
+        $db = $this->personaModel->builder()->db();
 
-    if (!$persona) {
-        return redirect()->to(base_url('clientes'))->with('error', 'El cliente no existe.');
-    }
+        $esUsuario = $db->table('usuarios')->where('idpersona', $id)->countAllResults();
+        if ($esUsuario > 0) {
+            return redirect()->to(base_url('clientes'))->with('error', 'No se puede eliminar: esta persona está asignada como usuario del sistema.');
+        }
 
-    $esUsuario = $db->table('usuarios')->where('idpersona', $id)->countAllResults();
-    if ($esUsuario > 0) {
-        return redirect()->to(base_url('clientes'))->with('error', 'No se puede eliminar: esta persona está asignada como usuario del sistema.');
-    }
+        if ($db->tableExists('ventas')) {
+            $columnaVentas = $db->fieldExists('idcliente', 'ventas') ? 'idcliente' : ($db->fieldExists('idpersona', 'ventas') ? 'idpersona' : null);
 
-    if ($db->tableExists('ventas')) {
-        $columnaVentas = $db->fieldExists('idcliente', 'ventas') ? 'idcliente' : ($db->fieldExists('idpersona', 'ventas') ? 'idpersona' : null);
-
-        if ($columnaVentas !== null) {
-            $tieneVentas = $db->table('ventas')->where($columnaVentas, $id)->countAllResults();
-            if ($tieneVentas > 0) {
-                return redirect()->to(base_url('clientes'))->with('error', 'No se puede eliminar: el cliente registra compras o comprobantes.');
+            if ($columnaVentas !== null) {
+                $tieneVentas = $db->table('ventas')->where($columnaVentas, $id)->countAllResults();
+                if ($tieneVentas > 0) {
+                    return redirect()->to(base_url('clientes'))->with('error', 'No se puede eliminar: el cliente registra compras o comprobantes.');
+                }
             }
         }
+
+        $this->personaModel->delete($id);
+
+        return redirect()->to(base_url('clientes'))->with('mensaje', 'Cliente eliminado con éxito.');
     }
-
-    $db->table('personas')->where('idpersona', $id)->delete();
-
-    return redirect()->to(base_url('clientes'))->with('mensaje', 'Cliente eliminado con éxito.');
-}
 }
