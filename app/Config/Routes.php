@@ -21,19 +21,19 @@ $routes->group('marcas', [' filter' => 'auth'], static function ($routes) {
     $routes->get('eliminar/(:num)', 'MarcaController::eliminar/$1');
 });
 
-$routes->group('productos', ['filter' => 'auth'], static function($routes) {
+$routes->group('productos', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'ProductoController::index');
     $routes->post('guardar', 'ProductoController::guardar');
     $routes->get('cambiarestado/(:num)', 'ProductoController::cambiarEstado/$1');
 });
 
-$routes->group('locales', ['filter' => 'auth'], static function($routes) {
+$routes->group('locales', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'LocalController::index');
     $routes->post('guardar', 'LocalController::guardar');
     $routes->get('eliminar/(:num)', 'LocalController::eliminar/$1');
 });
 
-$routes->group('usuarios', ['filter' => 'auth'], static function($routes) {
+$routes->group('usuarios', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'UsuarioController::index');
     $routes->post('guardar', 'UsuarioController::guardar');
     $routes->get('cambiarestado/(:num)', 'UsuarioController::cambiarEstado/$1');
@@ -46,13 +46,20 @@ $routes->group('clientes', ['filter' => 'auth'], static function ($routes) {
     $routes->get('eliminar/(:num)', 'ClienteController::eliminar/$1');
 });
 
-$routes->group('proveedores',['filter' => 'auth'],function($routes){
-    $routes->get('/','ProveedorController::index');
+$routes->group('proveedores', ['filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'ProveedorController::index');
     $routes->post('guardar', 'ProveedorController::guardar');
     $routes->get('eliminar/(:num)', 'ProveedorController::eliminar/$1');
 });
 
-$routes->group('kardex',['filter' => 'auth'],function($routes){
+$routes->group('kardex', ['filter' => 'auth'], function ($routes) {
     $routes->get('', 'KardexController::index');
+    $routes->get('historial/(:num)', 'KardexController::historial/$1');
 });
 
+$routes->group('compras', ['filter' => 'auth'], function ($routes) {
+    $routes->get('', 'CompraController::index');
+    $routes->get('nuevo', 'CompraController::nuevo');
+    $routes->post('guardar', 'CompraController::guardar');
+    $routes->get('detalles/(:num)', 'CompraController::detalles/$1');
+});
