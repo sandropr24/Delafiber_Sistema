@@ -13,8 +13,8 @@ class KardexController extends BaseController
     public function __construct()
     {
         helper(['url', 'form']);
-        $this->kardexModel     = new KardexModel();
-        $this->movimientoModel = new MovimientoModel();
+        $this->kardexModel     = model(KardexModel::class);
+        $this->movimientoModel = model(MovimientoModel::class);
     }
 
     public function index()
@@ -30,10 +30,10 @@ class KardexController extends BaseController
     public function historial($idkardex)
     {
         $kardexInfo = $this->kardexModel->select('kardex.*, productos.descripcion as producto, locales.nombrelocal as local')
-                                        ->join('productos', 'productos.idproducto = kardex.idproducto')
-                                        ->join('locales', 'locales.idlocal = kardex.idlocal')
-                                        ->where('kardex.idkardex', $idkardex)
-                                        ->first();
+            ->join('productos', 'productos.idproducto = kardex.idproducto')
+            ->join('locales', 'locales.idlocal = kardex.idlocal')
+            ->where('kardex.idkardex', $idkardex)
+            ->first();
 
         if (!$kardexInfo) {
             return redirect()->to(base_url('kardex'))->with('error', 'Registro de kardex no encontrado.');
