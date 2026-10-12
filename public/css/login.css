@@ -1,0 +1,63 @@
+body.login-body-custom {
+  background: linear-gradient(135deg, #160a2b 0%, #0b0516 100%) !important;
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Inter", sans-serif;
+}
+
+.login-wrapper-box {
+  width: 100%;
+  max-width: 400px;
+  padding: 15px;
+}
+
+.login-card-clean {
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4) !important;
+  background-color: #ffffff !important;
+}
+
+.login-logo-fixed {
+  max-height: 50px !important;
+  width: auto !important;
+  object-fit: contain;
+}
+
+.form-control {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 0.25rem rgba(255, 37, 75, 0.15);
+  border-color: #ff254b;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+  color: #6c757d;
+}
+
+.btn-login-marca {
+  background-color: #ff254b !important;
+  border-color: #ff254b !important;
+  color: #fff !important;
+  padding: 0.75rem !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(255, 37, 75, 0.25) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.btn-login-marca:hover {
+  background-color: #e01e3e !important;
+  border-color: #e01e3e !important;
+  transform: translateY(-1px);
+}

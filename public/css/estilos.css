@@ -1,18 +1,22 @@
 :root {
-  --brand-fuchsia: #ff254b;    
-  --brand-purple: #3b0066;     
+  --brand-fuchsia: #ff254b;
+  --brand-purple: #3b0066;
 
-  --sidebar-bg-start: #160a2b;  
-  --sidebar-bg-end: #0b0516;    
-  --sidebar-hover: rgba(255, 37, 75, 0.08); 
-  --sidebar-active: #ff254b;     
+  --sidebar-bg-start: #160a2b;
+  --sidebar-bg-end: #0b0516;
+  --sidebar-hover: rgba(255, 37, 75, 0.08);
+  --sidebar-active: #ff254b;
   --topbar-bg: #ffffff;
   --body-bg: #f8fafc;
 }
 
 body {
   background-color: var(--body-bg);
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: #1e293b;
   overflow-x: hidden;
 }
@@ -20,7 +24,11 @@ body {
 #sidebar {
   width: 260px;
   min-height: 100vh;
-  background: linear-gradient(180deg, var(--sidebar-bg-start) 0%, var(--sidebar-bg-end) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--sidebar-bg-start) 0%,
+    var(--sidebar-bg-end) 100%
+  );
   transition: all 0.3s;
   position: fixed;
   top: 0;
@@ -32,7 +40,7 @@ body {
 
 #sidebar .brand {
   padding: 28px 20px;
-  background-color: transparent; 
+  background-color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,7 +81,11 @@ body {
 }
 
 .sidebar-link.active {
-  background: linear-gradient(90deg, rgba(255, 37, 75, 0.15) 0%, rgba(255, 37, 75, 0.02) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 37, 75, 0.15) 0%,
+    rgba(255, 37, 75, 0.02) 100%
+  );
   color: #ffffff;
   border-left-color: var(--sidebar-active);
   font-weight: 600;
@@ -92,7 +104,7 @@ body {
 }
 
 #main-content {
-  margin-left: 260px; 
+  margin-left: 260px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -115,7 +127,7 @@ body {
 .content-area {
   padding: 24px;
   flex-grow: 1;
-  width: 100%; 
+  width: 100%;
 }
 
 .card {
@@ -125,7 +137,8 @@ body {
   background-color: #ffffff;
 }
 
-.btn-primary, #main-content .btn-primary {
+.btn-primary,
+#main-content .btn-primary {
   background-color: var(--brand-fuchsia) !important;
   border-color: var(--brand-fuchsia) !important;
   font-weight: 600 !important;
@@ -161,4 +174,3 @@ body {
     margin-left: 0;
   }
 }
-
