@@ -38,6 +38,7 @@ class ProductoController extends BaseController
         $datos = [
             'idcategoria'  => $this->request->getPost('idcategoria'),
             'idmarca'      => $this->request->getPost('idmarca'),
+            'nombre'       => trim((string) $this->request->getPost('nombre')),
             'descripcion'  => trim((string) $this->request->getPost('descripcion')),
             'modelo'       => trim((string) $this->request->getPost('modelo')) ?: null,
             'codigobarras' => trim((string) $this->request->getPost('codigobarras')) ?: null,
@@ -49,10 +50,8 @@ class ProductoController extends BaseController
             $datos['idproducto'] = $id;
         }
 
-        // Manejo de carga de imagen
         $archivoImagen = $this->request->getFile('imagen');
         if ($archivoImagen && $archivoImagen->isValid() && !$archivoImagen->hasMoved()) {
-            // Validacion de la imagen
             $validacionesFoto = [
                 'imagen' => [
                     'rules' => 'is_image[imagen]|mime_in[imagen,image/jpg,image/jpeg,image/png,image/webp]|max_size[imagen,2048]',
@@ -66,11 +65,10 @@ class ProductoController extends BaseController
 
             if (!$this->validate($validacionesFoto)) {
                 return redirect()->to(base_url('productos'))
-                                 ->withInput()
-                                 ->with('errors', $this->validator->getErrors());
+                    ->withInput()
+                    ->with('errors', $this->validator->getErrors());
             }
 
-            // Si es edición y ya tenía una imagen anterior se borra
             if (!empty($id)) {
                 $prodActual = $this->productoModel->find($id);
                 if (!empty($prodActual['imagen'])) {
@@ -88,8 +86,8 @@ class ProductoController extends BaseController
 
         if (!$this->productoModel->save($datos)) {
             return redirect()->to(base_url('productos'))
-                             ->withInput()
-                             ->with('errors', $this->productoModel->errors());
+                ->withInput()
+                ->with('errors', $this->productoModel->errors());
         }
 
         $mensaje = !empty($id) ? 'Producto actualizado correctamente.' : 'Producto registrado correctamente.';

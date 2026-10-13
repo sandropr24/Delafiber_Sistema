@@ -12,6 +12,7 @@ class ProductoModel extends Model
     protected $returnType       = 'array';
     protected $allowedFields    = [
         'idcategoria',
+        'nombre',
         'descripcion',
         'idmarca',
         'modelo',
@@ -25,7 +26,8 @@ class ProductoModel extends Model
         'idproducto'   => 'permit_empty|is_natural_no_zero',
         'idcategoria'  => 'required|is_natural_no_zero',
         'idmarca'      => 'required|is_natural_no_zero',
-        'descripcion'  => 'required|min_length[3]|max_length[150]',
+        'nombre'       => 'required|min_length[2]|max_length[150]', 
+        'descripcion'  => 'permit_empty|max_length[150]',
         'modelo'       => 'permit_empty|max_length[80]',
         'codigobarras' => 'permit_empty|max_length[50]|is_unique[productos.codigobarras,idproducto,{idproducto}]',
         'precioventa'  => 'required|decimal|greater_than_equal_to[0]',
@@ -34,16 +36,17 @@ class ProductoModel extends Model
     ];
 
     protected $validationMessages = [
-        'idcategoria'  => ['required' => 'Debe seleccionar una categoría.'],
-        'idmarca'      => ['required' => 'Debe seleccionar una marca.'],
-        'descripcion'  => [
-            'required'   => 'La descripción del producto es obligatoria.',
-            'max_length' => 'La descripción no puede superar los 150 caracteres.',
+        'idcategoria' => ['required' => 'Debe seleccionar una categoría.'],
+        'idmarca'     => ['required' => 'Debe seleccionar una marca.'],
+        'nombre'      => [
+            'required'   => 'El nombre del producto es obligatorio.',
+            'min_length' => 'El nombre debe tener al menos 2 caracteres.',
+            'max_length' => 'El nombre no puede superar los 150 caracteres.',
         ],
         'codigobarras' => [
-            'is_unique'  => 'Este código de barras ya pertenece a otro producto.',
+            'is_unique' => 'Este código de barras ya pertenece a otro producto.',
         ],
-        'precioventa'  => [
+        'precioventa' => [
             'required' => 'El precio de venta es obligatorio.',
             'decimal'  => 'Ingrese un precio válido.',
         ],
@@ -52,9 +55,9 @@ class ProductoModel extends Model
     public function obtenerConRelaciones()
     {
         return $this->select('productos.*, categorias.categoria, marcas.marca')
-                    ->join('categorias', 'categorias.idcategoria = productos.idcategoria')
-                    ->join('marcas', 'marcas.idmarca = productos.idmarca')
-                    ->orderBy('productos.idproducto', 'DESC')
-                    ->findAll();
+            ->join('categorias', 'categorias.idcategoria = productos.idcategoria')
+            ->join('marcas', 'marcas.idmarca = productos.idmarca')
+            ->orderBy('productos.idproducto', 'DESC')
+            ->findAll();
     }
 }
