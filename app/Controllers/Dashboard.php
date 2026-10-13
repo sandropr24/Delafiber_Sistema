@@ -28,9 +28,10 @@ class Dashboard extends BaseController
 
 
         $cotizacionesPendientes = $db->table('cotizacion')
-            ->join('estadocotizacion', 'estadocotizacion.idestado = cotizacion.idestado')
-            ->where('estadocotizacion.estado', 'Pendiente')
+            ->join('estadocotizacion', 'estadocotizacion.idestadocotizacion = cotizacion.idestado')
+            ->where('estadocotizacion.estadocotizacion', 'Pendiente')
             ->countAllResults();
+
 
         $ultimasVentas = $db->table('ventas')
             ->select('ventas.*, personas.nombres, personas.apellidos')
