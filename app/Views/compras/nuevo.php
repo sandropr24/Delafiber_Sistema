@@ -118,9 +118,9 @@
                                         <option value="" selected disabled>Seleccionar producto...</option>
                                         <?php foreach ($productos as $prod): ?>
                                             <option value="<?= $prod['idproducto'] ?>"
-                                                data-nombre="<?= esc($prod['descripcion'] ?? $prod['nombre']) ?>"
+                                                data-nombre="<?= esc($prod['nombre'] ?? $prod['descripcion']) ?>"
                                                 data-precio="<?= $prod['precioventa'] ?? 0 ?>">
-                                                <?= esc($prod['descripcion'] ?? $prod['nombre']) ?>
+                                                <?= esc($prod['nombre'] ?? $prod['descripcion']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -135,7 +135,7 @@
                                 </div>
                                 <div class="col-md-1">
                                     <button type="button" class="btn btn-success w-100 fw-bold shadow-sm" id="btnAgregarItem" title="Agregar producto">
-                                        <i class="fas fa-plus"></i>
+                                        <i class="fas fa-plus">+</i>
                                     </button>
                                 </div>
                             </div>

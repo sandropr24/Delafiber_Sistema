@@ -23,12 +23,20 @@
     </div>
 <?php endif; ?>
 
+<?php if (session()->getFlashdata('mensaje')): ?>
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle me-1"></i> <?= session()->getFlashdata('mensaje') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr class="small text-uppercase text-secondary">
                     <th class="ps-4" style="width: 60px;">Foto</th>
+                    <th>Nombre</th>
                     <th>Descripción</th>
                     <th>Categoría</th>
                     <th>Marca</th>
@@ -42,7 +50,7 @@
             <tbody>
                 <?php if (empty($productos)): ?>
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4">No hay productos registrados aún.</td>
+                        <td colspan="10" class="text-center text-muted py-4">No hay productos registrados aún.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($productos as $p): ?>
@@ -50,7 +58,7 @@
                             <td class="ps-4">
                                 <?php if (!empty($p['imagen']) && is_file(FCPATH . 'uploads/productos/' . $p['imagen'])): ?>
                                     <img src="<?= base_url('uploads/productos/' . esc($p['imagen'])) ?>"
-                                        alt="<?= esc($p['descripcion']) ?>"
+                                        alt="<?= esc($p['nombre']) ?>"
                                         class="rounded border object-fit-cover shadow-sm"
                                         style="width: 44px; height: 44px;">
                                 <?php else: ?>
@@ -60,7 +68,8 @@
                                     </div>
                                 <?php endif; ?>
                             </td>
-                            <td class="fw-semibold text-dark"><?= esc($p['descripcion']) ?></td>
+                            <td class="fw-semibold text-dark"><?= esc($p['nombre']) ?></td>
+                            <td class="text-muted small"><?= esc($p['descripcion'] ?: '-') ?></td>
                             <td><span class="badge bg-light text-dark border"><?= esc($p['categoria']) ?></span></td>
                             <td><?= esc($p['marca']) ?></td>
                             <td class="text-muted small"><?= esc($p['modelo'] ?: '-') ?></td>
@@ -75,7 +84,7 @@
                             </td>
                             <td class="text-end pe-4">
                                 <button type="button" class="btn btn-sm btn-outline-primary"
-                                    onclick="editarProducto(<?= esc(json_encode($p)) ?>)">
+                                    onclick="editarProducto(<?= esc(json_encode($p), 'attr') ?>)">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                             </td>
@@ -100,9 +109,14 @@
                 </div>
                 <div class="modal-body py-3">
                     <div class="row g-3">
-                        <div class="col-12">
-                            <label for="descripcion" class="form-label small fw-semibold">Descripción del Producto <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="descripcion" name="descripcion" required>
+                        <div class="col-12 col-md-6">
+                            <label for="nombre" class="form-label small fw-semibold">Nombre del Producto <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="descripcion" class="form-label small fw-semibold">Descripción</label>
+                            <input type="text" class="form-control" id="descripcion" name="descripcion">
                         </div>
 
                         <div class="col-12 col-md-6">
@@ -132,14 +146,13 @@
 
                         <div class="col-12 col-md-4">
                             <label for="codigobarras" class="form-label small fw-semibold">Código de Barras</label>
-                            <input type="text" class="form-control" id="codigobarras" name="codigobarras" maxlength="10">
+                            <input type="text" class="form-control" id="codigobarras" name="codigobarras" maxlength="50">
                         </div>
 
                         <div class="col-12 col-md-4">
                             <label for="precioventa" class="form-label small fw-semibold">Precio Venta (S/) <span class="text-danger">*</span></label>
                             <input type="number" step="0.01" min="0" class="form-control" id="precioventa" name="precioventa" required>
                         </div>
-
 
                         <div class="col-12 col-md-8">
                             <label for="imagen" class="form-label small fw-semibold">Imagen del Producto (Opcional)</label>
@@ -196,6 +209,7 @@
     function limpiarFormulario() {
         document.getElementById('modalTitulo').textContent = 'Nuevo Producto';
         document.getElementById('idproducto').value = '';
+        document.getElementById('nombre').value = '';
         document.getElementById('descripcion').value = '';
         document.getElementById('idcategoria').value = '';
         document.getElementById('idmarca').value = '';
@@ -214,7 +228,8 @@
     function editarProducto(p) {
         document.getElementById('modalTitulo').textContent = 'Editar Producto';
         document.getElementById('idproducto').value = p.idproducto;
-        document.getElementById('descripcion').value = p.descripcion;
+        document.getElementById('nombre').value = p.nombre || '';
+        document.getElementById('descripcion').value = p.descripcion || '';
         document.getElementById('idcategoria').value = p.idcategoria;
         document.getElementById('idmarca').value = p.idmarca;
         document.getElementById('modelo').value = p.modelo || '';
