@@ -63,3 +63,10 @@ $routes->group('compras', ['filter' => 'auth'], function ($routes) {
     $routes->post('guardar', 'CompraController::guardar');
     $routes->get('detalles/(:num)', 'CompraController::detalles/$1');
 });
+
+$routes->group('ventas', static function ($routes) {
+    $routes->get('', 'VentaController::index');
+    $routes->get('crear', 'VentaController::crear');
+    $routes->post('guardar', 'VentaController::guardar');
+    $routes->get('detalles/(:num)', 'VentaController::detalles/$1');
+});
