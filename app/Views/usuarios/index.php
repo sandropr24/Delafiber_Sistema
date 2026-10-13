@@ -13,7 +13,7 @@
     </button>
 </div>
 
-<div class="card border-0 shadow-sm w-100">
+<div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
@@ -59,23 +59,23 @@
                             </td>
                             <td class="small text-muted"><?= esc($u['telefono'] ?? '-') ?></td>
                             <td class="text-center">
-                                <a href="<?= base_url('usuarios/cambiarestado/' . $u['idusuario']) ?>" 
-                                   class="badge <?= $u['estado'] == 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' ?> text-decoration-none"
-                                   title="Clic para alternar estado">
+                                <a href="<?= base_url('usuarios/cambiarestado/' . $u['idusuario']) ?>"
+                                    class="badge <?= $u['estado'] == 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' ?> text-decoration-none"
+                                    title="Clic para alternar estado">
                                     <?= $u['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
                                 </a>
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-primary" 
-                                            onclick="editarUsuario(<?= esc(json_encode($u)) ?>)" 
-                                            title="Editar Usuario">
+                                    <button type="button" class="btn btn-outline-primary me-2"
+                                        onclick="editarUsuario(<?= esc(json_encode($u)) ?>)"
+                                        title="Editar Usuario">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <a href="<?= base_url('usuarios/eliminar/' . $u['idusuario']) ?>" 
-                                       class="btn btn-outline-danger" 
-                                       onclick="return confirm('¿Seguro que deseas eliminar al usuario <?= esc($u['nombreusuario']) ?>? Esta acción no se puede deshacer.')" 
-                                       title="Eliminar Usuario">
+                                    <a href="<?= base_url('usuarios/eliminar/' . $u['idusuario']) ?>"
+                                        class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('¿Seguro que deseas eliminar al usuario <?= esc($u['nombreusuario']) ?>? Esta acción no se puede deshacer.')"
+                                        title="Eliminar Usuario">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </div>
@@ -125,7 +125,7 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="telefono" class="form-label small fw-semibold">Teléfono</label>
-                            <input type="text" class="form-control" id="telefono" name="telefono" placeholder="999888777">
+                            <input type="text" class="form-control" id="telefono" name="telefono" maxlength="9">
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="email" class="form-label small fw-semibold">Correo Electrónico</label>
@@ -141,7 +141,7 @@
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
                             <label for="nombreusuario" class="form-label small fw-semibold">Usuario <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nombreusuario" name="nombreusuario" required placeholder="ej. spachas">
+                            <input type="text" class="form-control" id="nombreusuario" name="nombreusuario">
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="rol" class="form-label small fw-semibold">Rol <span class="text-danger">*</span></label>
@@ -154,7 +154,7 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="claveacceso" class="form-label small fw-semibold" id="labelClave">Contraseña <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="claveacceso" name="claveacceso" placeholder="••••••••">
+                            <input type="password" class="form-control" id="claveacceso" name="claveacceso">
                             <small class="text-muted" id="helpClave" style="display: none; font-size: 0.75rem;">Dejar en blanco para conservar la actual.</small>
                         </div>
                     </div>
@@ -186,7 +186,7 @@
         document.getElementById('nombreusuario').value = '';
         document.getElementById('rol').value = '';
         document.getElementById('claveacceso').value = '';
-        
+
         document.getElementById('claveacceso').required = true;
         document.getElementById('helpClave').style.display = 'none';
     }
@@ -205,7 +205,7 @@
         document.getElementById('nombreusuario').value = u.nombreusuario;
         document.getElementById('rol').value = u.rol;
         document.getElementById('claveacceso').value = '';
-        
+
         document.getElementById('claveacceso').required = false;
         document.getElementById('helpClave').style.display = 'block';
 

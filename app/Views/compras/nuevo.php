@@ -27,8 +27,8 @@
 
         <div class="row">
             <div class="col-lg-4 mb-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white py-3 border-bottom-0">
+                <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
+                    <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
                         <h6 class="m-0 font-weight-bold text-primary">
                             <i class="fas fa-file-invoice me-2"></i>Información General
                         </h6>
@@ -103,8 +103,8 @@
             </div>
 
             <div class="col-lg-8 mb-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white py-3 border-bottom-0">
+                <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
+                    <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
                         <h6 class="m-0 font-weight-bold text-primary">
                             <i class="fas fa-boxes me-2"></i>Detalle de Ítems
                         </h6>

@@ -12,7 +12,7 @@
     </button>
 </div>
 
-<div class="card border-0 shadow-sm w-100">
+<div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
@@ -46,20 +46,20 @@
                             </td>
                             <td class="small text-muted"><?= esc($c['telefono'] ?? '-') ?></td>
                             <td class="small text-muted"><?= esc($c['email'] ?? '-') ?></td>
-                            <td class="small text-muted text-truncate" style="max-width: 220px;">
+                            <td class="small text-muted text-truncate" style="max-width: 220px;" title="<?= esc($c['direccion'] ?? '') ?>">
                                 <?= esc($c['direccion'] ?? '-') ?>
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-primary" 
-                                            onclick="editarCliente(<?= esc(json_encode($c)) ?>)" 
-                                            title="Editar">
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="editarCliente(<?= esc(json_encode($c, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>)"
+                                        title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <a href="<?= base_url('clientes/eliminar/' . $c['idpersona']) ?>" 
-                                       class="btn btn-outline-danger" 
-                                       onclick="return confirm('¿Deseas eliminar a este cliente?')" 
-                                       title="Eliminar">
+                                    <a href="<?= base_url('clientes/eliminar/' . $c['idpersona']) ?>"
+                                        class="btn btn-outline-danger"
+                                        onclick="return confirm('¿Deseas eliminar a este cliente?')"
+                                        title="Eliminar">
                                         <i class="bi bi-trash"></i>
                                     </a>
                                 </div>
@@ -72,11 +72,10 @@
     </div>
 </div>
 
-<!-- Modal Cliente -->
 <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
-            <form action="<?= base_url('clientes/guardar') ?>" method="POST">
+            <form action="<?= base_url('clientes/guardar') ?>" method="POST" autocomplete="off">
                 <?= csrf_field() ?>
                 <input type="hidden" name="idpersona" id="idpersona">
 
@@ -96,27 +95,27 @@
                         </div>
                         <div class="col-12 col-md-8">
                             <label for="numerodoc" class="form-label small fw-semibold">N° Documento <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" required  maxlength="8">
+                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" required pattern="\d+" title="Solo números" maxlength="8">
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="nombres" class="form-label small fw-semibold" id="labelNombres">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nombres" name="nombres" required>
+                            <input type="text" class="form-control" id="nombres" name="nombres" required maxlength="150">
                         </div>
                         <div class="col-12 col-md-6" id="contenedorApellidos">
                             <label for="apellidos" class="form-label small fw-semibold">Apellidos</label>
-                            <input type="text" class="form-control" id="apellidos" name="apellidos">
+                            <input type="text" class="form-control" id="apellidos" name="apellidos" maxlength="150">
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="telefono" class="form-label small fw-semibold">Teléfono</label>
-                            <input type="text" class="form-control" id="telefono" name="telefono" >
+                            <input type="text" class="form-control" id="telefono" name="telefono" pattern="\d*" title="Solo números" maxlength="9">
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="email" class="form-label small fw-semibold">Correo Electrónico</label>
-                            <input type="email" class="form-control" id="email" name="email" >
+                            <input type="email" class="form-control" id="email" name="email" maxlength="100">
                         </div>
                         <div class="col-12">
                             <label for="direccion" class="form-label small fw-semibold">Dirección</label>
-                            <input type="text" class="form-control" id="direccion" name="direccion">
+                            <input type="text" class="form-control" id="direccion" name="direccion" maxlength="255">
                         </div>
                     </div>
                 </div>
@@ -144,20 +143,19 @@
             contenedorApellidos.style.display = 'none';
             document.getElementById('apellidos').value = '';
             inputNumDoc.setAttribute('maxlength', '11');
-            if (inputNumDoc.value.length > 11) {
-                inputNumDoc.value = inputNumDoc.value.slice(0, 11);
-            }
         } else if (tipo === 'DNI') {
             labelNombres.innerHTML = 'Nombres <span class="text-danger">*</span>';
             contenedorApellidos.style.display = 'block';
             inputNumDoc.setAttribute('maxlength', '8');
-            if (inputNumDoc.value.length > 8) {
-                inputNumDoc.value = inputNumDoc.value.slice(0, 8);
-            }
         } else {
             labelNombres.innerHTML = 'Nombres <span class="text-danger">*</span>';
             contenedorApellidos.style.display = 'block';
-            inputNumDoc.setAttribute('maxlength', '12'); 
+            inputNumDoc.setAttribute('maxlength', '12');
+        }
+
+        const max = parseInt(inputNumDoc.getAttribute('maxlength'));
+        if (inputNumDoc.value.length > max) {
+            inputNumDoc.value = inputNumDoc.value.slice(0, max);
         }
     }
 

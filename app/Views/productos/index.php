@@ -12,7 +12,6 @@
     </button>
 </div>
 
-<!-- Errores de validación -->
 <?php if (session()->getFlashdata('errors')): ?>
     <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
         <ul class="mb-0 ps-3">
@@ -24,7 +23,7 @@
     </div>
 <?php endif; ?>
 
-<div class="card border-0 shadow-sm">
+<div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
@@ -50,13 +49,13 @@
                         <tr>
                             <td class="ps-4">
                                 <?php if (!empty($p['imagen']) && is_file(FCPATH . 'uploads/productos/' . $p['imagen'])): ?>
-                                    <img src="<?= base_url('uploads/productos/' . esc($p['imagen'])) ?>" 
-                                         alt="<?= esc($p['descripcion']) ?>" 
-                                         class="rounded border object-fit-cover shadow-sm" 
-                                         style="width: 44px; height: 44px;">
+                                    <img src="<?= base_url('uploads/productos/' . esc($p['imagen'])) ?>"
+                                        alt="<?= esc($p['descripcion']) ?>"
+                                        class="rounded border object-fit-cover shadow-sm"
+                                        style="width: 44px; height: 44px;">
                                 <?php else: ?>
-                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center text-secondary" 
-                                         style="width: 44px; height: 44px;">
+                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center text-secondary"
+                                        style="width: 44px; height: 44px;">
                                         <i class="bi bi-image fs-5"></i>
                                     </div>
                                 <?php endif; ?>
@@ -68,15 +67,15 @@
                             <td class="text-muted small font-monospace"><?= esc($p['codigobarras'] ?: '-') ?></td>
                             <td class="text-end fw-bold text-dark">S/ <?= number_format($p['precioventa'], 2) ?></td>
                             <td class="text-center">
-                                <a href="<?= base_url('productos/cambiarestado/' . $p['idproducto']) ?>" 
-                                   class="badge <?= $p['estado'] == 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' ?> text-decoration-none"
-                                   title="Clic para cambiar estado">
+                                <a href="<?= base_url('productos/cambiarestado/' . $p['idproducto']) ?>"
+                                    class="badge <?= $p['estado'] == 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' ?> text-decoration-none"
+                                    title="Clic para cambiar estado">
                                     <?= $p['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
                                 </a>
                             </td>
                             <td class="text-end pe-4">
-                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                        onclick="editarProducto(<?= esc(json_encode($p)) ?>)">
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                    onclick="editarProducto(<?= esc(json_encode($p)) ?>)">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                             </td>
@@ -88,7 +87,6 @@
     </div>
 </div>
 
-<!-- Modal -->
 <div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
@@ -104,7 +102,7 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label for="descripcion" class="form-label small fw-semibold">Descripción del Producto <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="descripcion" name="descripcion" required placeholder="Ej. Cable Drop Fibra Óptica 1 Hilo 1000m">
+                            <input type="text" class="form-control" id="descripcion" name="descripcion" required>
                         </div>
 
                         <div class="col-12 col-md-6">
@@ -129,20 +127,20 @@
 
                         <div class="col-12 col-md-4">
                             <label for="modelo" class="form-label small fw-semibold">Modelo</label>
-                            <input type="text" class="form-control" id="modelo" name="modelo" placeholder="Ej. GJYXFCH-1B">
+                            <input type="text" class="form-control" id="modelo" name="modelo">
                         </div>
 
                         <div class="col-12 col-md-4">
                             <label for="codigobarras" class="form-label small fw-semibold">Código de Barras</label>
-                            <input type="text" class="form-control" id="codigobarras" name="codigobarras" placeholder="Ej. 775123456789">
+                            <input type="text" class="form-control" id="codigobarras" name="codigobarras" maxlength="10">
                         </div>
 
                         <div class="col-12 col-md-4">
                             <label for="precioventa" class="form-label small fw-semibold">Precio Venta (S/) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0" class="form-control" id="precioventa" name="precioventa" required placeholder="0.00">
+                            <input type="number" step="0.01" min="0" class="form-control" id="precioventa" name="precioventa" required>
                         </div>
 
-                        
+
                         <div class="col-12 col-md-8">
                             <label for="imagen" class="form-label small fw-semibold">Imagen del Producto (Opcional)</label>
                             <input type="file" class="form-control" id="imagen" name="imagen" accept="image/png, image/jpeg, image/webp" onchange="previsualizarImagen(event)">

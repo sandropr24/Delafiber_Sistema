@@ -13,7 +13,7 @@
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 mb-4">
+    <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
         <div class="card-header bg-white py-3">
             <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-list me-1"></i> Historial de Compras</h6>
         </div>
@@ -55,7 +55,7 @@
                                     </td>
                                     <td class="text-center">
                                         <a href="<?= base_url('compras/detalles/' . $c['idcompra']) ?>" class="btn btn-outline-info btn-sm rounded-pill px-3" title="Ver detalles">
-                                            <i class="fas fa-eye me-1"></i> Ver
+                                            <i class="bi bi-eye-fill"></i>
                                         </a>
                                     </td>
                                 </tr>

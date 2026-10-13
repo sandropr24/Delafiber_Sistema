@@ -11,7 +11,7 @@
     </button>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">

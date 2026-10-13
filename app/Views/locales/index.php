@@ -23,7 +23,7 @@
     </div>
 <?php endif; ?>
 
-<div class="card border-0 shadow-sm w-100">
+<div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
@@ -55,13 +55,13 @@
                             </td>
                             <td class="text-muted small"><?= esc($l['direccion']) ?></td>
                             <td class="text-end pe-4">
-                                <button type="button" class="btn btn-sm btn-outline-primary me-1" 
-                                        onclick="editarLocal(<?= esc(json_encode($l)) ?>)">
+                                <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                    onclick="editarLocal(<?= esc(json_encode($l)) ?>)">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <a href="<?= base_url('locales/eliminar/' . $l['idlocal']) ?>" 
-                                   class="btn btn-sm btn-outline-danger" 
-                                   onclick="return confirm('¿Seguro que deseas eliminar <?= esc($l['nombrelocal']) ?>?')">
+                                <a href="<?= base_url('locales/eliminar/' . $l['idlocal']) ?>"
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('¿Seguro que deseas eliminar <?= esc($l['nombrelocal']) ?>?')">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </td>
