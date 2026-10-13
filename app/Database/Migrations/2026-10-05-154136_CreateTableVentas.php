@@ -12,7 +12,7 @@ class CreateTableVentas extends Migration
             'idventa'       => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
             'idcliente'     => ['type' => 'INT', 'constraint' => 11],
             'idlocal'       => ['type' => 'INT', 'constraint' => 11],
-            'idpedido'      => ['type' => 'INT', 'constraint' => 11],
+            'idpedido'      => ['type' => 'INT', 'constraint' => 11, 'null' => true],
             'idcajero'      => ['type' => 'INT', 'constraint' => 11],
             'tipodocumento' => ['type' => 'VARCHAR', 'constraint' => 20],
             'serie'         => ['type' => 'VARCHAR', 'constraint' => 10],
@@ -22,12 +22,14 @@ class CreateTableVentas extends Migration
             'fecha'         => ['type' => 'DATETIME'],
             'total'         => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
         ]);
+
         $this->forge->addPrimaryKey('idventa');
         $this->forge->addUniqueKey(['tipodocumento', 'serie', 'numero']);
         $this->forge->addForeignKey('idcliente', 'personas', 'idpersona', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idlocal', 'locales', 'idlocal', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idpedido', 'pedido', 'idpedido', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idcajero', 'usuarios', 'idusuario', 'CASCADE', 'RESTRICT');
+
         $this->forge->createTable('ventas', true);
     }
 
