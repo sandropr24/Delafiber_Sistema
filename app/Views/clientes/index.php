@@ -51,16 +51,16 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-primary"
+                                    <button type="button" class="btn btn-light text-primary border-0 me-1"
                                         onclick="editarCliente(<?= esc(json_encode($c, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>)"
                                         title="Editar">
-                                        <i class="bi bi-pencil"></i>
+                                        <i class="bi bi-pencil-square fs-5"></i>
                                     </button>
                                     <a href="<?= base_url('clientes/eliminar/' . $c['idpersona']) ?>"
-                                        class="btn btn-outline-danger"
+                                        class="btn btn-light text-danger border-0"
                                         onclick="return confirm('¿Deseas eliminar a este cliente?')"
                                         title="Eliminar">
-                                        <i class="bi bi-trash"></i>
+                                        <i class="bi bi-trash3 fs-5"></i>
                                     </a>
                                 </div>
                             </td>

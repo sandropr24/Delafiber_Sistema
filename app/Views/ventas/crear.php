@@ -13,12 +13,6 @@
         </a>
     </div>
 
-    <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i><?= session()->getFlashdata('error') ?>
-        </div>
-    <?php endif; ?>
-
     <form action="<?= base_url('ventas/guardar') ?>" method="POST" autocomplete="off" id="formVenta">
         <?= csrf_field() ?>
 
@@ -33,7 +27,7 @@
                     <div class="card-body p-4">
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-secondary">Local / Sucursal <span class="text-danger">*</span></label>
-                            <select name="idlocal" class="form-select" required>
+                            <select name="idlocal" id="selectLocal" class="form-select" required>
                                 <option value="">Seleccione local...</option>
                                 <?php if (!empty($locales)): ?>
                                     <?php foreach ($locales as $loc): ?>
@@ -163,6 +157,8 @@
 
 <?= $this->section('scripts') ?>
 <script>
+    const stockPorLocal = <?= $stockPorLocal ?? '{}' ?>;
+
     document.getElementById('selectProducto').addEventListener('change', function() {
         const option = this.options[this.selectedIndex];
         const precio = option.getAttribute('data-precio') || 0;
@@ -170,20 +166,49 @@
     });
 
     document.getElementById('btnAgregarItem').addEventListener('click', function() {
-        const select = document.getElementById('selectProducto');
-        const option = select.options[select.selectedIndex];
+        const selectLocal = document.getElementById('selectLocal');
+        const selectProducto = document.getElementById('selectProducto');
+        const option = selectProducto.options[selectProducto.selectedIndex];
         const cantInput = document.getElementById('inputCantidad');
         const precioInput = document.getElementById('inputPrecio');
 
-        if (!select.value) {
+        if (!selectLocal.value) {
+            alert('Por favor, seleccione un Local / Sucursal antes de agregar productos.');
+            selectLocal.focus();
+            return;
+        }
+
+        if (!selectProducto.value) {
             alert('Por favor seleccione un producto.');
             return;
         }
 
-        const idproducto = select.value;
+        const idlocal = selectLocal.value;
+        const idproducto = selectProducto.value;
         const nombre = option.getAttribute('data-nombre');
-        const cantidad = parseInt(cantInput.value) || 1;
+        const cantidadAgregar = parseInt(cantInput.value) || 1;
         const precio = parseFloat(precioInput.value) || parseFloat(option.getAttribute('data-precio')) || 0;
+
+        const stockDisponible = (stockPorLocal[idlocal] && stockPorLocal[idlocal][idproducto] !== undefined) ?
+            stockPorLocal[idlocal][idproducto] :
+            0;
+
+        if (cantidadAgregar > stockDisponible) {
+            alert(`¡Stock bajo / insuficiente!\nEl producto "${nombre}" solo cuenta con ${stockDisponible} unidades disponibles en este local.`);
+            return;
+        }
+
+        const filaExistente = document.getElementById(`row-${idproducto}`);
+        let cantidadActualEnTabla = 0;
+        if (filaExistente) {
+            cantidadActualEnTabla = parseInt(filaExistente.querySelector('.input-cantidad').value) || 0;
+        }
+
+        const totalAcumulado = cantidadActualEnTabla + cantidadAgregar;
+        if (totalAcumulado > stockDisponible) {
+            alert(`¡No puedes agregar más!\nEl stock máximo disponible en este local es ${stockDisponible} y ya tienes ${cantidadActualEnTabla} en la lista.`);
+            return;
+        }
 
         const filaVacia = document.getElementById('filaVacia');
         if (filaVacia) {
@@ -192,13 +217,12 @@
 
         const tbody = document.getElementById('carritoBody');
 
-        const filaExistente = document.getElementById(`row-${idproducto}`);
         if (filaExistente) {
             const inputCant = filaExistente.querySelector('.input-cantidad');
-            inputCant.value = parseInt(inputCant.value) + cantidad;
+            inputCant.value = totalAcumulado;
             actualizarSubtotal(idproducto, precio);
             cantInput.value = 1;
-            select.value = '';
+            selectProducto.value = '';
             precioInput.value = '';
             return;
         }
@@ -211,14 +235,14 @@
                 <input type="hidden" name="detalles[${idproducto}][idproducto]" value="${idproducto}">
             </td>
             <td class="text-center">
-                <input type="number" name="detalles[${idproducto}][cantidad]" value="${cantidad}" min="1" class="form-control form-control-sm text-center input-cantidad" onchange="actualizarSubtotal('${idproducto}', ${precio})" onkeyup="actualizarSubtotal('${idproducto}', ${precio})">
+                <input type="number" name="detalles[${idproducto}][cantidad]" value="${cantidadAgregar}" min="1" max="${stockDisponible}" class="form-control form-control-sm text-center input-cantidad" onchange="actualizarSubtotal('${idproducto}', ${precio})" onkeyup="actualizarSubtotal('${idproducto}', ${precio})">
             </td>
             <td class="text-end text-secondary">
                 S/ ${precio.toFixed(2)}
                 <input type="hidden" name="detalles[${idproducto}][precioventa]" value="${precio}">
             </td>
             <td class="text-end fw-bold text-dark lbl-subtotal" id="subtotal-${idproducto}">
-                S/ ${(cantidad * precio).toFixed(2)}
+                S/ ${(cantidadAgregar * precio).toFixed(2)}
             </td>
             <td class="text-center">
                 <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="eliminarFila('${idproducto}')">
@@ -228,7 +252,7 @@
         `;
 
         tbody.appendChild(tr);
-        select.value = '';
+        selectProducto.value = '';
         cantInput.value = 1;
         precioInput.value = '';
         recalcularTotal();
@@ -236,9 +260,28 @@
 
     function actualizarSubtotal(idproducto, precio) {
         const row = document.getElementById(`row-${idproducto}`);
-        const cantidad = parseInt(row.querySelector('.input-cantidad').value) || 1;
-        const subtotal = cantidad * precio;
+        const inputCant = row.querySelector('.input-cantidad');
+        const selectLocal = document.getElementById('selectLocal');
+        const idlocal = selectLocal.value;
 
+        const stockDisponible = (stockPorLocal[idlocal] && stockPorLocal[idlocal][idproducto] !== undefined) ?
+            stockPorLocal[idlocal][idproducto] :
+            999999;
+
+        let cantidad = parseInt(inputCant.value) || 1;
+
+        if (cantidad > stockDisponible) {
+            alert(`La cantidad ingresada supera el stock disponible (${stockDisponible}).`);
+            inputCant.value = stockDisponible;
+            cantidad = stockDisponible;
+        }
+
+        if (cantidad < 1) {
+            inputCant.value = 1;
+            cantidad = 1;
+        }
+
+        const subtotal = cantidad * precio;
         row.querySelector('.lbl-subtotal').textContent = `S/ ${subtotal.toFixed(2)}`;
         recalcularTotal();
     }

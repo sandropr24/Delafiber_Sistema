@@ -55,14 +55,16 @@
                             </td>
                             <td class="text-muted small"><?= esc($l['direccion']) ?></td>
                             <td class="text-end pe-4">
-                                <button type="button" class="btn btn-sm btn-outline-primary me-1"
-                                    onclick="editarLocal(<?= esc(json_encode($l)) ?>)">
-                                    <i class="bi bi-pencil"></i>
+                                <button type="button" class="btn btn-sm btn-light text-primary border-0 me-1"
+                                    onclick="editarLocal(<?= esc(json_encode($l)) ?>)"
+                                    title="Editar">
+                                    <i class="bi bi-pencil-square fs-5"></i>
                                 </button>
                                 <a href="<?= base_url('locales/eliminar/' . $l['idlocal']) ?>"
-                                    class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('¿Seguro que deseas eliminar <?= esc($l['nombrelocal']) ?>?')">
-                                    <i class="bi bi-trash"></i>
+                                    class="btn btn-sm btn-light text-danger border-0"
+                                    onclick="return confirm('¿Seguro que deseas eliminar <?= esc($l['nombrelocal']) ?>?')"
+                                    title="Eliminar">
+                                    <i class="bi bi-trash3 fs-5"></i>
                                 </a>
                             </td>
                         </tr>

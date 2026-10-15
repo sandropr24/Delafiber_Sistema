@@ -56,11 +56,12 @@
                                             Min: <?= $item['minima'] ?> | Máx: <?= $item['maxima'] ?>
                                         </span>
                                     </td>
-                                    <td class="text-center px-4">
-                                        <a href="<?= base_url('kardex/historial/' . $item['idkardex']) ?>" class="btn btn-outline-info btn-sm rounded-pill px-3" title="Ver Historial de Movimientos en Kardex">
-                                            <i class="bi bi-eye-fill"></i>
+                                    <td class="text-center px-4 align-middle">
+                                        <a href="<?= base_url('kardex/historial/' . $item['idkardex']) ?>" class="text-secondary link-primary fs-5" title="Ver Historial de Movimientos en Kardex">
+                                            <i class="bi bi-eye"></i>
                                         </a>
                                     </td>
+
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>

@@ -23,13 +23,6 @@
     </div>
 <?php endif; ?>
 
-<?php if (session()->getFlashdata('mensaje')): ?>
-    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-        <i class="bi bi-check-circle me-1"></i> <?= session()->getFlashdata('mensaje') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
 <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -83,9 +76,10 @@
                                 </a>
                             </td>
                             <td class="text-end pe-4">
-                                <button type="button" class="btn btn-sm btn-outline-primary"
-                                    onclick="editarProducto(<?= esc(json_encode($p), 'attr') ?>)">
-                                    <i class="bi bi-pencil"></i>
+                                <button type="button" class="btn btn-sm btn-light text-primary border-0 me-1"
+                                    onclick="editarProducto(<?= esc(json_encode($p)) ?>)"
+                                    title="Editar Producto">
+                                    <i class="bi bi-pencil-square fs-5"></i>
                                 </button>
                             </td>
                         </tr>

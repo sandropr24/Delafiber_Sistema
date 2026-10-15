@@ -31,15 +31,18 @@
                         <tr>
                             <td class="ps-4 text-muted small"><?= $i + 1 ?></td>
                             <td class="fw-semibold text-dark"><?= esc($m['marca']) ?></td>
-                            <td class="text-end pe-4">
-                                <button type="button" class="btn btn-sm btn-outline-primary me-1"
-                                    onclick="editarMarca(<?= esc(json_encode($m)) ?>)">
-                                    <i class="bi bi-pencil"></i>
+                            <td class="text-end pe-4 align-middle text-nowrap">
+                                <button type="button" class="btn btn-sm btn-light text-primary border-0 me-1"
+                                    onclick="editarMarca(<?= esc(json_encode($m)) ?>)"
+                                    title="Editar Marca">
+                                    <i class="bi bi-pencil-square fs-5"></i>
                                 </button>
+
                                 <a href="<?= base_url('marcas/eliminar/' . $m['idmarca']) ?>"
-                                    class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('¿Eliminar la marca <?= esc($m['marca']) ?>?')">
-                                    <i class="bi bi-trash"></i>
+                                    class="btn btn-sm btn-light text-danger border-0"
+                                    onclick="return confirm('¿Eliminar la marca <?= esc($m['marca']) ?>?')"
+                                    title="Eliminar Marca">
+                                    <i class="bi bi-trash3 fs-5"></i>
                                 </a>
                             </td>
                         </tr>

@@ -33,14 +33,16 @@
                             <td class="ps-4 text-muted small"><?= $i + 1 ?></td>
                             <td class="fw-semibold text-dark"><?= esc($cat['categoria']) ?></td>
                             <td class="text-end pe-4">
-                                <button type="button" class="btn btn-sm btn-outline-primary me-1"
-                                    onclick="editarCategoria(<?= esc(json_encode($cat)) ?>)">
-                                    <i class="bi bi-pencil"></i>
+                                <button type="button" class="btn btn-sm btn-light text-primary border-0 me-1"
+                                    onclick="editarCategoria(<?= esc(json_encode($cat)) ?>)"
+                                    title="Editar">
+                                    <i class="bi bi-pencil-square fs-5"></i>
                                 </button>
                                 <a href="<?= base_url('categorias/eliminar/' . $cat['idcategoria']) ?>"
-                                    class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('¿Eliminar la categoría <?= esc($cat['categoria']) ?>?')">
-                                    <i class="bi bi-trash"></i>
+                                    class="btn btn-sm btn-light text-danger border-0"
+                                    onclick="return confirm('¿Eliminar la categoría <?= esc($cat['categoria']) ?>?')"
+                                    title="Eliminar">
+                                    <i class="bi bi-trash3 fs-5"></i>
                                 </a>
                             </td>
                         </tr>

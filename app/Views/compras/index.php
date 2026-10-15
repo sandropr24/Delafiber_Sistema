@@ -54,8 +54,8 @@
                                         S/ <?= number_format($c['total'], 2) ?>
                                     </td>
                                     <td class="text-center">
-                                        <a href="<?= base_url('compras/detalles/' . $c['idcompra']) ?>" class="btn btn-outline-info btn-sm rounded-pill px-3" title="Ver detalles">
-                                            <i class="bi bi-eye-fill"></i>
+                                        <a href="<?= base_url('compras/detalles/' . $c['idcompra']) ?>" class="text-secondary link-primary fs-5" title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
                                         </a>
                                     </td>
                                 </tr>

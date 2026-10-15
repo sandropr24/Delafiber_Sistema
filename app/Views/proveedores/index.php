@@ -65,11 +65,16 @@
                                     </td>
                                     <td class="text-center px-4">
                                         <div class="d-flex justify-content-center gap-1">
-                                            <button class="btn btn-sm btn-outline-primary" onclick='editarProveedor(<?= json_encode($prov) ?>)' title="Editar proveedor">
-                                                <i class="bi bi-pencil"></i>
+                                            <button class="btn btn-sm btn-light text-primary border-0 me-1"
+                                                onclick='editarProveedor(<?= json_encode($prov) ?>)'
+                                                title="Editar proveedor">
+                                                <i class="bi bi-pencil-square fs-5"></i>
                                             </button>
-                                            <a href="<?= base_url('proveedores/eliminar/' . $prov['idproveedor']) ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Estás seguro de eliminar este proveedor?')" title="Eliminar proveedor">
-                                                <i class="bi bi-trash"></i>
+                                            <a href="<?= base_url('proveedores/eliminar/' . $prov['idproveedor']) ?>"
+                                                class="btn btn-sm btn-light text-danger border-0 fs-5"
+                                                onclick="return confirm('¿Estás seguro de eliminar este proveedor?')"
+                                                title="Eliminar proveedor">
+                                                <i class="bi bi-trash3 fs-5"></i>
                                             </a>
                                         </div>
                                     </td>

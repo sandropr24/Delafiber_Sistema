@@ -67,16 +67,16 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-primary me-2"
+                                    <button type="button" class="btn btn-light text-primary border-0 me-1"
                                         onclick="editarUsuario(<?= esc(json_encode($u)) ?>)"
                                         title="Editar Usuario">
-                                        <i class="bi bi-pencil"></i>
+                                        <i class="bi bi-pencil-square fs-5"></i>
                                     </button>
                                     <a href="<?= base_url('usuarios/eliminar/' . $u['idusuario']) ?>"
-                                        class="btn btn-sm btn-outline-danger"
+                                        class="btn btn-sm btn-light text-danger border-0 fs-5"
                                         onclick="return confirm('¿Seguro que deseas eliminar al usuario <?= esc($u['nombreusuario']) ?>? Esta acción no se puede deshacer.')"
                                         title="Eliminar Usuario">
-                                        <i class="bi bi-trash"></i>
+                                        <i class="bi bi-trash3 fs-5"></i>
                                     </a>
                                 </div>
                             </td>
