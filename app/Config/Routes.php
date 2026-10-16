@@ -9,16 +9,14 @@ $routes->post('login', 'Auth::autenticar');
 $routes->get('logout', 'Auth::logout', ['filter' => 'auth']);
 $routes->get('dashboard', 'Dashboard::index', ['filter' => 'auth']);
 
-$routes->group('categorias', ['filter' => 'auth'], static function ($routes) {
-    $routes->get('/', 'CategoriaController::index');
-    $routes->post('guardar', 'CategoriaController::guardar');
-    $routes->get('eliminar/(:num)', 'CategoriaController::eliminar/$1');
-});
-
-$routes->group('marcas', [' filter' => 'auth'], static function ($routes) {
-    $routes->get('/', 'MarcaController::index');
-    $routes->post('guardar', 'MarcaController::guardar');
-    $routes->get('eliminar/(:num)', 'MarcaController::eliminar/$1');
+$routes->group('catalogos', function ($routes) {
+    $routes->get('', 'CatalogoController::index');
+    $routes->post('guardar-categoria', 'CatalogoController::guardarCategoria');
+    $routes->post('guardar-marca', 'CatalogoController::guardarMarca');
+    $routes->post('actualizar-categoria', 'CatalogoController::actualizarCategoria');
+    $routes->post('actualizar-marca', 'CatalogoController::actualizarMarca');
+    $routes->get('eliminar-categoria/(:num)', 'CatalogoController::eliminarCategoria/$1');
+    $routes->get('eliminar-marca/(:num)', 'CatalogoController::eliminarMarca/$1');
 });
 
 $routes->group('productos', ['filter' => 'auth'], static function ($routes) {

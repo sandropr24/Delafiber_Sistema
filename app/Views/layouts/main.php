@@ -41,14 +41,12 @@
                             <span>Almacenes</span>
                         </a>
                     <?php endif; ?>
-                    <a href="<?= base_url('categorias') ?>" class="sidebar-link <?= url_is('categorias*') ? 'active' : '' ?>">
+
+                    <a href="<?= base_url('catalogos') ?>" class="sidebar-link <?= url_is('catalogos*') ? 'active' : '' ?>">
                         <i class="bi bi-tags"></i>
-                        <span>Categorías</span>
+                        <span>Catálogos</span>
                     </a>
-                    <a href="<?= base_url('marcas') ?>" class="sidebar-link <?= url_is('marcas*') ? 'active' : '' ?>">
-                        <i class="bi bi-bag-check-fill"></i>
-                        <span>Marcas</span>
-                    </a>
+
                     <a href="<?= base_url('productos') ?>" class="sidebar-link <?= url_is('productos*') ? 'active' : '' ?>">
                         <i class="bi bi-box-seam"></i>
                         <span>Productos</span>
