@@ -4,16 +4,18 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\DetVentaModel;
+use App\Models\KardexModel;
 use App\Models\VentaModel;
 use App\Models\PersonaModel;
 use App\Models\LocalModel;
 use App\Models\ProductoModel;
+use App\Models\TipoPagoModel;
 
 class VentaController extends BaseController
 {
     public function index()
     {
-        $ventaModel = new VentaModel();
+        $ventaModel = model(VentaModel::class);
         $data = [
             'titulo' => 'Historial de Ventas',
             'ventas' => $ventaModel->select('ventas.*, CONCAT(personas.nombres, " ", personas.apellidos) as cliente, locales.nombrelocal as local')
@@ -29,6 +31,8 @@ class VentaController extends BaseController
         $personaModel  = model(PersonaModel::class);
         $localModel    = model(LocalModel::class);
         $productoModel = model(ProductoModel::class);
+        $kardexModel   = model(KardexModel::class);
+        $tipoPagoModel = model(TipoPagoModel::class);
 
         $clientes = $personaModel->builder()
             ->whereNotIn('idpersona', static function ($builder) {
@@ -38,11 +42,19 @@ class VentaController extends BaseController
             ->get()
             ->getResultArray();
 
+        $kardexData = $kardexModel->findAll();
+        $stockPorLocal = [];
+        foreach ($kardexData as $k) {
+            $stockPorLocal[$k['idlocal']][$k['idproducto']] = (int)$k['stockactual'];
+        }
+
         $data = [
-            'titulo'    => 'Registrar Nueva Venta',
-            'clientes'  => $clientes,
-            'locales'   => $localModel->findAll(),
-            'productos' => $productoModel->findAll()
+            'titulo'        => 'Registrar Nueva Venta',
+            'clientes'      => $clientes,
+            'locales'       => $localModel->findAll(),
+            'productos'     => $productoModel->findAll(),
+            'tipospago'     => $tipoPagoModel->findAll(),
+            'stockPorLocal' => json_encode($stockPorLocal)
         ];
 
         return view('ventas/crear', $data);
@@ -50,15 +62,22 @@ class VentaController extends BaseController
 
     public function guardar()
     {
-        $ventaModel = new VentaModel();
+        $ventaModel = model(VentaModel::class);
+
+        $idCliente = $this->request->getPost('idcliente');
+
+        if (empty($idCliente) || $idCliente === 'false' || $idCliente === false) {
+            return redirect()->back()->with('error', 'Por favor, seleccione un cliente válido antes de procesar la venta.')->withInput();
+        }
 
         $dataVenta = [
-            'idcliente'     => $this->request->getPost('idcliente'),
+            'idcliente'     => $idCliente,
             'idlocal'       => $this->request->getPost('idlocal'),
             'idpedido'      => $this->request->getPost('idpedido') ?: null,
             'idcajero'      => session()->get('idusuario') ?? 1,
             'tipodocumento' => $this->request->getPost('tipodocumento'),
             'serie'         => $this->request->getPost('serie'),
+            'cdr'           => null,
             'numero'        => $this->request->getPost('numero'),
             'estafacturado' => 0,
             'fecha'         => date('Y-m-d H:i:s'),
@@ -66,17 +85,23 @@ class VentaController extends BaseController
         ];
 
         $detalles = $this->request->getPost('detalles');
+        $pagos    = $this->request->getPost('pagos');
 
         if (empty($detalles)) {
-            return redirect()->back()->with('error', 'Debes agregar al menos un producto a la venta.');
+            return redirect()->back()->with('error', 'Debes agregar al menos un producto a la venta.')->withInput();
         }
 
-        $resultado = $ventaModel->registrarVenta($dataVenta, $detalles);
+        if (empty($pagos)) {
+            return redirect()->back()->with('error', 'Debes registrar al menos una forma de pago.')->withInput();
+        }
+
+        $resultado = $ventaModel->registrarVenta($dataVenta, $detalles, $pagos);
 
         if ($resultado) {
-            return redirect()->to('/ventas')->with('success', 'Venta registrada y stock descontado con éxito.');
+            return redirect()->to('/ventas')->with('success', 'Venta registrada exitosamente.');
         } else {
-            return redirect()->back()->with('error', 'Error al procesar la venta. Inténtalo de nuevo.');
+            $errorMsg = session()->getFlashdata('error') ?? 'El modelo no pudo registrar la venta.';
+            return redirect()->back()->with('error', $errorMsg)->withInput();
         }
     }
 
@@ -84,7 +109,6 @@ class VentaController extends BaseController
     {
         $ventaModel    = model(VentaModel::class);
         $detVentaModel = model(DetVentaModel::class);
-
 
         $venta = $ventaModel->select('ventas.*, CONCAT(personas.nombres, " ", personas.apellidos) as cliente, personas.numerodoc, locales.nombrelocal as local')
             ->join('personas', 'personas.idpersona = ventas.idcliente', 'left')
@@ -108,5 +132,60 @@ class VentaController extends BaseController
         ];
 
         return view('ventas/detalles', $data);
+    }
+
+   public function guardarClienteExpress()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403);
+        }
+
+        $clienteModel = model(PersonaModel::class);
+
+        $documento = $this->request->getPost('documento');
+        $nombre    = $this->request->getPost('nombre');
+        $telefono  = $this->request->getPost('telefono') ?? '';
+
+        if (empty($documento) || empty($nombre)) {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'El documento y el nombre son obligatorios.'
+            ]);
+        }
+
+        $data = [
+            'apellidos' => '-',
+            'nombres'   => $nombre,
+            'tipodoc'   => strlen($documento) == 11 ? 'RUC' : 'DNI',
+            'numerodoc' => $documento,
+            'direccion' => '-',
+            'telefono'  => $telefono,
+            'email'     => ''
+        ];
+
+        try {
+            if ($clienteModel->skipValidation(true)->insert($data)) {
+                $idNewCliente = $clienteModel->getInsertID();
+
+                return $this->response->setJSON([
+                    'status'    => 'success',
+                    'message'   => 'Cliente registrado con éxito.',
+                    'idcliente' => $idNewCliente,
+                    'nombre'    => $nombre,
+                    'documento' => $documento
+                ]);
+            } else {
+                $errores = implode(" - ", $clienteModel->errors());
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Error de validación del modelo: ' . $errores
+                ]);
+            }
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Error BD: ' . $e->getMessage()
+            ]);
+        }
     }
 }

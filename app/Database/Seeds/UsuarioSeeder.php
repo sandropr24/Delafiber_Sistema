@@ -13,7 +13,7 @@ class UsuarioSeeder extends Seeder
         if ($persona) {
             $usuario = [
                 'idpersona'     => $persona['idpersona'],
-                'nombreusuario' => 'admin',
+                'nombreusuario' => 'sandro',
                 'claveacceso'   => password_hash('sandro24', PASSWORD_BCRYPT),
                 'rol'           => 'Administrador',
                 'estado'        => 1

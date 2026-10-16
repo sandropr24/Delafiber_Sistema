@@ -62,6 +62,7 @@ $routes->group('compras', ['filter' => 'auth'], function ($routes) {
     $routes->get('detalles/(:num)', 'CompraController::detalles/$1');
 });
 
+$routes->post('clientes/guardar-express', 'VentaController::guardarClienteExpress');
 $routes->group('ventas', static function ($routes) {
     $routes->get('', 'VentaController::index');
     $routes->get('crear', 'VentaController::crear');
