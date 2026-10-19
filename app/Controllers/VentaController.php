@@ -8,6 +8,7 @@ use App\Models\KardexModel;
 use App\Models\VentaModel;
 use App\Models\PersonaModel;
 use App\Models\LocalModel;
+use App\Models\PagoVentaModel;
 use App\Models\ProductoModel;
 use App\Models\TipoPagoModel;
 
@@ -107,10 +108,14 @@ class VentaController extends BaseController
 
     public function detalles($idventa)
     {
-        $ventaModel    = model(VentaModel::class);
-        $detVentaModel = model(DetVentaModel::class);
+        $ventaModel     = model(VentaModel::class);
+        $detVentaModel  = model(DetVentaModel::class);
+        $pagoVentaModel = model(PagoVentaModel::class);
 
-        $venta = $ventaModel->select('ventas.*, CONCAT(personas.nombres, " ", personas.apellidos) as cliente, personas.numerodoc, locales.nombrelocal as local')
+        $venta = $ventaModel->select('ventas.*, 
+                                      CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, "")) as cliente, 
+                                      personas.numerodoc, 
+                                      locales.nombrelocal as local')
             ->join('personas', 'personas.idpersona = ventas.idcliente', 'left')
             ->join('locales', 'locales.idlocal = ventas.idlocal', 'left')
             ->where('ventas.idventa', $idventa)
@@ -120,21 +125,27 @@ class VentaController extends BaseController
             return redirect()->to(base_url('ventas'))->with('error', 'La venta solicitada no existe.');
         }
 
-        $detalles = $detVentaModel->select('detventa.*, productos.nombre as producto, productos.codigobarras')
+        $detalles = $detVentaModel->select('detventa.*, productos.nombre as producto')
             ->join('productos', 'productos.idproducto = detventa.idproducto', 'left')
             ->where('detventa.idventa', $idventa)
+            ->findAll();
+
+        $pagos = $pagoVentaModel->select('pagoventa.*, tipospago.tipopago')
+            ->join('tipospago', 'tipospago.idtipopago = pagoventa.idtipopago', 'left')
+            ->where('pagoventa.idventa', $idventa)
             ->findAll();
 
         $data = [
             'titulo'   => 'Detalle de Venta N° ' . $idventa,
             'venta'    => $venta,
-            'detalles' => $detalles
+            'detalles' => $detalles,
+            'pagos'    => $pagos
         ];
 
         return view('ventas/detalles', $data);
     }
 
-   public function guardarClienteExpress()
+    public function guardarClienteExpress()
     {
         if (!$this->request->isAJAX()) {
             return $this->response->setStatusCode(403);
