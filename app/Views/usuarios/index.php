@@ -115,13 +115,12 @@
                             <label for="tipodoc" class="form-label small fw-semibold">Tipo Doc. <span class="text-danger">*</span></label>
                             <select class="form-select" id="tipodoc" name="tipodoc" required>
                                 <option value="DNI">DNI</option>
-                                <option value="RUC">RUC</option>
                                 <option value="CE">C. Extranjería</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="numerodoc" class="form-label small fw-semibold">N° Documento <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" required>
+                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" maxlength="8" required>
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="telefono" class="form-label small fw-semibold">Teléfono</label>

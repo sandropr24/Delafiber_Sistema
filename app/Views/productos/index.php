@@ -140,7 +140,7 @@
 
                         <div class="col-12 col-md-4">
                             <label for="codigobarras" class="form-label small fw-semibold">Código de Barras</label>
-                            <input type="text" class="form-control" id="codigobarras" name="codigobarras" maxlength="50">
+                            <input type="text" class="form-control" id="codigobarras" name="codigobarras" maxlength="13">
                         </div>
 
                         <div class="col-12 col-md-4">

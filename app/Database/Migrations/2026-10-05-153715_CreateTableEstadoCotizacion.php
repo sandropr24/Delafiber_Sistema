@@ -10,7 +10,7 @@ class CreateTableEstadoCotizacion extends Migration
     {
         $this->forge->addField([
             'idestadocotizacion' => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
-            'estadocotizacion'   => ['type' => 'VARCHAR', 'constraint' => 40, 'unique' => true]
+            'estadoco'   => ['type' => 'VARCHAR', 'constraint' => 40, 'unique' => true]
         ]);
         $this->forge->addPrimaryKey('idestadocotizacion');
         $this->forge->createTable('estadocotizacion', true);

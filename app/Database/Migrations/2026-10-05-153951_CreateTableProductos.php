@@ -12,6 +12,7 @@ class CreateProductos extends Migration
             'idproducto'   => ['type' => 'INT', 'auto_increment' => true],
             'idcategoria'  => ['type' => 'INT'],
             'descripcion'  => ['type' => 'VARCHAR', 'constraint' => 150],
+            'imagen'       => ['type' => 'VARCHAR', 'constraint' => 200],
             'idmarca'      => ['type' => 'INT'],
             'modelo'       => ['type' => 'VARCHAR', 'constraint' => 80, 'null' => true],
             'codigobarras' => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true, 'unique' => true],

@@ -58,11 +58,11 @@
                                                 <td><span class="fw-semibold text-dark"><?= esc($cat['categoria']) ?></span></td>
                                                 <td class="text-center">
                                                     <button type="button"
-                                                        class="btn btn-sm btn-outline-warning btn-editar-categoria"
+                                                        class="btn btn-light text-primary border-0 me-1 btn-editar-categoria"
                                                         data-id="<?= $cat['idcategoria'] ?>"
                                                         data-nombre="<?= esc($cat['categoria']) ?>"
                                                         title="Editar">
-                                                        <i class="bi bi-pencil fs-6"></i>
+                                                        <i class="bi bi-pencil-square fs-6"></i>
                                                     </button>
                                                     <a href="<?= base_url('catalogos/eliminar-categoria/' . $cat['idcategoria']) ?>"
                                                         class="btn btn-sm btn-outline-danger"
@@ -123,11 +123,11 @@
                                                 <td><span class="fw-semibold text-dark"><?= esc($mar['marca']) ?></span></td>
                                                 <td class="text-center">
                                                     <button type="button"
-                                                        class="btn btn-sm btn-outline-warning btn-editar-marca"
+                                                        class="btn btn-light text-primary border-0 me-1 btn-editar-marca"
                                                         data-id="<?= $mar['idmarca'] ?>"
                                                         data-nombre="<?= esc($mar['marca']) ?>"
                                                         title="Editar">
-                                                        <i class="bi bi-pencil fs-6"></i>
+                                                        <i class="bi bi-pencil-square fs-6"></i>
                                                     </button>
                                                     <a href="<?= base_url('catalogos/eliminar-marca/' . $mar['idmarca']) ?>"
                                                         class="btn btn-sm btn-outline-danger"
