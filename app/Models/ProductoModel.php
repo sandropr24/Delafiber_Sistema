@@ -26,7 +26,7 @@ class ProductoModel extends Model
         'idproducto'   => 'permit_empty|is_natural_no_zero',
         'idcategoria'  => 'required|is_natural_no_zero',
         'idmarca'      => 'required|is_natural_no_zero',
-        'nombre'       => 'required|min_length[2]|max_length[150]', 
+        'nombre'       => 'required|min_length[2]|max_length[150]',
         'descripcion'  => 'permit_empty|max_length[150]',
         'modelo'       => 'permit_empty|max_length[80]',
         'codigobarras' => 'permit_empty|max_length[50]|is_unique[productos.codigobarras,idproducto,{idproducto}]',
@@ -59,5 +59,25 @@ class ProductoModel extends Model
             ->join('marcas', 'marcas.idmarca = productos.idmarca')
             ->orderBy('productos.idproducto', 'DESC')
             ->findAll();
+    }
+
+    public function buscarConRelaciones($q = null)
+    {
+        $builder = $this->select('productos.*, categorias.categoria, marcas.marca')
+            ->join('categorias', 'categorias.idcategoria = productos.idcategoria')
+            ->join('marcas', 'marcas.idmarca = productos.idmarca');
+
+        if (!empty($q)) {
+            $builder->groupStart()
+                ->like('productos.nombre', $q)
+                ->orLike('productos.descripcion', $q)
+                ->orLike('productos.modelo', $q)
+                ->orLike('productos.codigobarras', $q)
+                ->orLike('categorias.categoria', $q)
+                ->orLike('marcas.marca', $q)
+                ->groupEnd();
+        }
+
+        return $builder->orderBy('productos.idproducto', 'DESC')->findAll();
     }
 }

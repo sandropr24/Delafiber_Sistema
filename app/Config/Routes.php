@@ -20,6 +20,7 @@ $routes->group('catalogos', function ($routes) {
 });
 
 $routes->group('productos', ['filter' => 'auth'], static function ($routes) {
+    $routes->get('buscar_tabla', 'ProductoController::buscar_tabla');
     $routes->get('/', 'ProductoController::index');
     $routes->post('guardar', 'ProductoController::guardar');
     $routes->get('cambiarestado/(:num)', 'ProductoController::cambiarEstado/$1');

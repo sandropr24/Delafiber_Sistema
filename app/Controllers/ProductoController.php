@@ -31,6 +31,19 @@ class ProductoController extends BaseController
         return view('productos/index', $data);
     }
 
+    public function buscar_tabla()
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to(base_url('productos'));
+        }
+
+        $q = $this->request->getGet('q');
+
+        $productos = $this->productoModel->buscarConRelaciones($q);
+
+        return $this->response->setJSON($productos);
+    }
+
     public function guardar()
     {
         $id = $this->request->getPost('idproducto');

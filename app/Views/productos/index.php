@@ -1,92 +1,104 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('contenido') ?>
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h4 class="fw-bold mb-1">Catálogo de Productos</h4>
-        <p class="text-muted small mb-0">Gestión de insumos, materiales y equipos de telecomunicaciones.</p>
+<div class="container-fluid px-4 py-4" id="viewProductos" data-url-buscar="<?= site_url('productos/buscar_tabla') ?>">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Catálogo de Productos</h4>
+            <p class="text-muted small mb-0">Gestión de insumos, materiales y equipos de telecomunicaciones.</p>
+        </div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="limpiarFormulario()">
+            <i class="bi bi-plus-lg me-1"></i> Nuevo Producto
+        </button>
     </div>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="limpiarFormulario()">
-        <i class="bi bi-plus-lg me-1"></i> Nuevo Producto
-    </button>
-</div>
 
-<?php if (session()->getFlashdata('errors')): ?>
-    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-        <ul class="mb-0 ps-3">
-            <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                <li><?= esc($error) ?></li>
-            <?php endforeach; ?>
-        </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <?php if (session()->getFlashdata('errors')): ?>
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <ul class="mb-0 ps-3">
+                <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                    <li><?= esc($error) ?></li>
+                <?php endforeach; ?>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <div class="card border rounded-3 shadow-sm p-3 mb-4" style="border-color: #e0e0e0 !important;">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="inputBuscarTablaProductos" class="form-control border-start-0" placeholder="Buscar por nombre, descripción, marca o categoría...">
+                </div>
+            </div>
+        </div>
     </div>
-<?php endif; ?>
 
-<div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr class="small text-uppercase text-secondary">
-                    <th class="ps-4" style="width: 60px;">Foto</th>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Categoría</th>
-                    <th>Marca</th>
-                    <th>Modelo</th>
-                    <th>Cód. Barras</th>
-                    <th class="text-end">P. Venta</th>
-                    <th class="text-center">Estado</th>
-                    <th class="text-end pe-4" style="width: 110px;">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($productos)): ?>
-                    <tr>
-                        <td colspan="10" class="text-center text-muted py-4">No hay productos registrados aún.</td>
+    <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr class="small text-uppercase text-secondary">
+                        <th class="ps-4" style="width: 60px;">Foto</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
+                        <th>Cód. Barras</th>
+                        <th class="text-end">P. Venta</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-4" style="width: 110px;">Acciones</th>
                     </tr>
-                <?php else: ?>
-                    <?php foreach ($productos as $p): ?>
+                </thead>
+                <tbody id="tbodyProductos">
+                    <?php if (empty($productos)): ?>
                         <tr>
-                            <td class="ps-4">
-                                <?php if (!empty($p['imagen']) && is_file(FCPATH . 'uploads/productos/' . $p['imagen'])): ?>
-                                    <img src="<?= base_url('uploads/productos/' . esc($p['imagen'])) ?>"
-                                        alt="<?= esc($p['nombre']) ?>"
-                                        class="rounded border object-fit-cover shadow-sm"
-                                        style="width: 44px; height: 44px;">
-                                <?php else: ?>
-                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center text-secondary"
-                                        style="width: 44px; height: 44px;">
-                                        <i class="bi bi-image fs-5"></i>
-                                    </div>
-                                <?php endif; ?>
-                            </td>
-                            <td class="fw-semibold text-dark"><?= esc($p['nombre']) ?></td>
-                            <td class="text-muted small"><?= esc($p['descripcion'] ?: '-') ?></td>
-                            <td><span class="badge bg-light text-dark border"><?= esc($p['categoria']) ?></span></td>
-                            <td><?= esc($p['marca']) ?></td>
-                            <td class="text-muted small"><?= esc($p['modelo'] ?: '-') ?></td>
-                            <td class="text-muted small font-monospace"><?= esc($p['codigobarras'] ?: '-') ?></td>
-                            <td class="text-end fw-bold text-dark">S/ <?= number_format($p['precioventa'], 2) ?></td>
-                            <td class="text-center">
-                                <a href="<?= base_url('productos/cambiarestado/' . $p['idproducto']) ?>"
-                                    class="badge <?= $p['estado'] == 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' ?> text-decoration-none"
-                                    title="Clic para cambiar estado">
-                                    <?= $p['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
-                                </a>
-                            </td>
-                            <td class="text-end pe-4">
-                                <button type="button" class="btn btn-sm btn-light text-primary border-0 me-1"
-                                    onclick="editarProducto(<?= esc(json_encode($p)) ?>)"
-                                    title="Editar Producto">
-                                    <i class="bi bi-pencil-square fs-5"></i>
-                                </button>
-                            </td>
+                            <td colspan="10" class="text-center text-muted py-4">No hay productos registrados aún.</td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    <?php else: ?>
+                        <?php foreach ($productos as $p): ?>
+                            <tr>
+                                <td class="ps-4">
+                                    <?php if (!empty($p['imagen']) && is_file(FCPATH . 'uploads/productos/' . $p['imagen'])): ?>
+                                        <img src="<?= base_url('uploads/productos/' . esc($p['imagen'])) ?>"
+                                            alt="<?= esc($p['nombre']) ?>"
+                                            class="rounded border object-fit-cover shadow-sm"
+                                            style="width: 44px; height: 44px;">
+                                    <?php else: ?>
+                                        <div class="bg-light rounded border d-flex align-items-center justify-content-center text-secondary"
+                                            style="width: 44px; height: 44px;">
+                                            <i class="bi bi-image fs-5"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="fw-semibold text-dark"><?= esc($p['nombre']) ?></td>
+                                <td class="text-muted small"><?= esc($p['descripcion'] ?: '-') ?></td>
+                                <td><span class="badge bg-light text-dark border"><?= esc($p['categoria']) ?></span></td>
+                                <td><?= esc($p['marca']) ?></td>
+                                <td class="text-muted small"><?= esc($p['modelo'] ?: '-') ?></td>
+                                <td class="text-muted small font-monospace"><?= esc($p['codigobarras'] ?: '-') ?></td>
+                                <td class="text-end fw-bold text-dark">S/ <?= number_format($p['precioventa'], 2) ?></td>
+                                <td class="text-center">
+                                    <a href="<?= base_url('productos/cambiarestado/' . $p['idproducto']) ?>"
+                                        class="badge <?= $p['estado'] == 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' ?> text-decoration-none"
+                                        title="Clic para cambiar estado">
+                                        <?= $p['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
+                                    </a>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button type="button" class="btn btn-sm btn-light text-primary border-0 me-1"
+                                        onclick="editarProducto(<?= esc(json_encode($p)) ?>)"
+                                        title="Editar Producto">
+                                        <i class="bi bi-pencil-square fs-5"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -179,73 +191,11 @@
         </div>
     </div>
 </div>
-
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
-    function previsualizarImagen(event) {
-        const input = event.target;
-        const img = document.getElementById('previewImg');
-        const icon = document.getElementById('previewIcon');
-
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                img.src = e.target.result;
-                img.style.display = 'block';
-                icon.style.display = 'none';
-            }
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function limpiarFormulario() {
-        document.getElementById('modalTitulo').textContent = 'Nuevo Producto';
-        document.getElementById('idproducto').value = '';
-        document.getElementById('nombre').value = '';
-        document.getElementById('descripcion').value = '';
-        document.getElementById('idcategoria').value = '';
-        document.getElementById('idmarca').value = '';
-        document.getElementById('modelo').value = '';
-        document.getElementById('codigobarras').value = '';
-        document.getElementById('precioventa').value = '';
-        document.getElementById('imagen').value = '';
-        document.getElementById('divEstado').style.display = 'none';
-        document.getElementById('estado').value = '1';
-
-        document.getElementById('previewImg').src = '';
-        document.getElementById('previewImg').style.display = 'none';
-        document.getElementById('previewIcon').style.display = 'block';
-    }
-
-    function editarProducto(p) {
-        document.getElementById('modalTitulo').textContent = 'Editar Producto';
-        document.getElementById('idproducto').value = p.idproducto;
-        document.getElementById('nombre').value = p.nombre || '';
-        document.getElementById('descripcion').value = p.descripcion || '';
-        document.getElementById('idcategoria').value = p.idcategoria;
-        document.getElementById('idmarca').value = p.idmarca;
-        document.getElementById('modelo').value = p.modelo || '';
-        document.getElementById('codigobarras').value = p.codigobarras || '';
-        document.getElementById('precioventa').value = p.precioventa;
-        document.getElementById('imagen').value = '';
-        document.getElementById('divEstado').style.display = 'block';
-        document.getElementById('estado').value = p.estado;
-
-        const img = document.getElementById('previewImg');
-        const icon = document.getElementById('previewIcon');
-        if (p.imagen) {
-            img.src = '<?= base_url('uploads/productos/') ?>/' + p.imagen;
-            img.style.display = 'block';
-            icon.style.display = 'none';
-        } else {
-            img.src = '';
-            img.style.display = 'none';
-            icon.style.display = 'block';
-        }
-
-        new bootstrap.Modal(document.getElementById('modalProducto')).show();
-    }
+    const BASE_URL = "<?= base_url() ?>";
 </script>
+<script src="<?= base_url('js/productos/crear.js') ?>"></script>
 <?= $this->endSection() ?>
