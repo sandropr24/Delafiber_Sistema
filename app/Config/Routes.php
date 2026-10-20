@@ -52,6 +52,7 @@ $routes->group('proveedores', ['filter' => 'auth'], function ($routes) {
 });
 
 $routes->group('kardex', ['filter' => 'auth'], function ($routes) {
+    $routes->get('buscar_tabla', 'KardexController::buscar_tabla');
     $routes->get('', 'KardexController::index');
     $routes->get('historial/(:num)', 'KardexController::historial/$1');
 });

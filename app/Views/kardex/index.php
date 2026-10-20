@@ -2,12 +2,33 @@
 
 <?= $this->section('contenido') ?>
 
-<div class="container-fluid px-4 py-4">
-    <!-- Cabecera de la Sección -->
+<div class="container-fluid px-4 py-4" id="viewKardex" data-url-buscar="<?= base_url('kardex/buscar_tabla') ?>">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1"><?= esc($titulo) ?></h1>
             <p class="text-muted small mb-0">Visualización en tiempo real de existencias, costos promedio y stock por almacén.</p>
+        </div>
+    </div>
+
+    <div class="card border rounded-3 shadow-sm p-3 mb-4" style="border-color: #e0e0e0 !important;">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-7">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="inputBuscarKardex" class="form-control border-start-0" placeholder="Buscar por producto o local...">
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="input-group">
+                    <label class="input-group-text bg-light" for="selectLocal"><i class="bi bi-building text-muted me-1"></i> Local / Almacén</label>
+                    <select class="form-select" id="selectLocal">
+                        <option value="">Todos los locales</option>
+                        <?php foreach ($locales as $loc): ?>
+                            <option value="<?= $loc['idlocal'] ?>"><?= esc($loc['nombrelocal']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -19,7 +40,7 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="datatablesSimple" width="100%" cellspacing="0">
+                <table class="table table-hover align-middle mb-0" width="100%" cellspacing="0">
                     <thead class="text-uppercase fs-7 text-secondary tracking-wider" style="background-color: #f1f3f5; border-bottom: 2px solid #dee2e6;">
                         <tr>
                             <th class="py-3 px-4" style="width: 50px;">#</th>
@@ -31,7 +52,7 @@
                             <th class="py-3 text-center" style="width: 120px;">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white">
+                    <tbody class="bg-white" id="tbodyKardex">
                         <?php if (!empty($stock)): ?>
                             <?php foreach ($stock as $key => $item): ?>
                                 <tr style="border-bottom: 1px solid #f0f0f0;">
@@ -61,7 +82,6 @@
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     </td>
-
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
@@ -81,4 +101,8 @@
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script src="<?= base_url('js/kardex/index.js') ?>"></script>
 <?= $this->endSection() ?>

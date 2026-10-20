@@ -14,8 +14,8 @@ class CatalogoController extends BaseController
 
         $data = [
             'titulo'     => 'Gestión de Catálogos',
-            'categorias' => $categoriaModel->findAll(),
-            'marcas'     => $marcaModel->findAll()
+            'categorias' => $categoriaModel->orderBy('categoria', 'ASC')->findAll(),
+            'marcas'     => $marcaModel->orderBy('marca', 'ASC')->findAll(),
         ];
 
         return view('catalogos/index', $data);

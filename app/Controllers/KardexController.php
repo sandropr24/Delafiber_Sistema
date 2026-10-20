@@ -4,27 +4,45 @@ namespace App\Controllers;
 
 use App\Models\KardexModel;
 use App\Models\MovimientoModel;
+use App\Models\LocalModel;
 
 class KardexController extends BaseController
 {
     protected $kardexModel;
     protected $movimientoModel;
+    protected $localModel;
 
     public function __construct()
     {
         helper(['url', 'form']);
         $this->kardexModel     = model(KardexModel::class);
         $this->movimientoModel = model(MovimientoModel::class);
+        $this->localModel      = model(LocalModel::class);
     }
 
     public function index()
     {
         $data = [
-            'titulo' => 'Control de Inventario - Saldos Actuales',
-            'stock'  => $this->kardexModel->obtenerStockGeneral()
+            'titulo'  => 'Control de Inventario - Saldos Actuales',
+            'stock'   => $this->kardexModel->obtenerStockGeneral(),
+            'locales' => $this->localModel->orderBy('nombrelocal', 'ASC')->findAll(),
         ];
 
         return view('kardex/index', $data);
+    }
+
+    public function buscar_tabla()
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to(base_url('kardex'));
+        }
+
+        $q       = $this->request->getGet('q');
+        $idlocal = $this->request->getGet('idlocal');
+
+        $stock = $this->kardexModel->buscarStockFiltrado($q, $idlocal);
+
+        return $this->response->setJSON($stock);
     }
 
     public function historial($idkardex)
