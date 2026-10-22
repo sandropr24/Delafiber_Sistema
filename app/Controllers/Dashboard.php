@@ -11,8 +11,8 @@ class Dashboard extends BaseController
 
         $ventasHoy = $db->table('ventas')
             ->selectSum('total', 'monto_hoy')
-            ->where('fecha>=', $hoy . '00:00:00')
-            ->where('fecha<=', $hoy . '23:59:59')
+            ->where('fecha >=', $hoy . ' 00:00:00')
+            ->where('fecha <=', $hoy . ' 23:59:59')
             ->get()
             ->getRowArray();
 

@@ -142,20 +142,28 @@
                 </div>
             </header>
 
-            <main class="content-area">
-                <?php if (session()->getFlashdata('mensaje') || session()->getFlashdata('success')): ?>
-                    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                        <i class="bi bi-check-circle-fill me-2"></i> <?= session()->getFlashdata('mensaje') ?? session()->getFlashdata('success') ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
+            <main class="content-area position-relative">
+                <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+                    <?php if (session()->getFlashdata('mensaje') || session()->getFlashdata('success')): ?>
+                        <div class="alert alert-success alert-dismissible fade show shadow-lg border-0 text-white bg-success mb-2" role="alert" style="min-width: 280px;">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                                <div><?= session()->getFlashdata('mensaje') ?? session()->getFlashdata('success') ?></div>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <?php endif; ?>
 
-                <?php if (session()->getFlashdata('error')): ?>
-                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= session()->getFlashdata('error') ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
+                    <?php if (session()->getFlashdata('error')): ?>
+                        <div class="alert alert-danger alert-dismissible fade show shadow-lg border-0 text-white bg-danger mb-2" role="alert" style="min-width: 280px;">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                                <div><?= session()->getFlashdata('error') ?></div>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <?php endif; ?>
+                </div>
 
                 <?= $this->renderSection('contenido') ?>
             </main>
@@ -175,6 +183,17 @@
                 sidebar.classList.toggle('show');
             });
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(function() {
+                let alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    alert.classList.remove('show');
+                    alert.classList.add('fade');
+                    setTimeout(() => alert.remove(), 300);
+                });
+            }, 3000);
+        });
     </script>
     <?= $this->renderSection('scripts') ?>
 </body>

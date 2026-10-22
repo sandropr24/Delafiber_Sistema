@@ -6,7 +6,7 @@
     <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
         <div>
             <h4 class="fw-bold text-dark mb-1">
-                ¡Hola, <?= esc($nombreUsuario ?? session()->get('nombreusuario') ?? 'Usuario') ?>! 
+                ¡Hola, <?= esc($nombreUsuario ?? session()->get('nombreusuario') ?? 'Usuario') ?>!
             </h4>
             <p class="text-muted small mb-0">
                 Resumen de movimientos para el rol de <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 fw-semibold"><?= esc($rol ?? session()->get('rol')) ?></span>

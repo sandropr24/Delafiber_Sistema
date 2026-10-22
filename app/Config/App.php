@@ -133,7 +133,9 @@ class App extends BaseConfig
      * @see https://www.php.net/manual/en/timezones.php for list of timezones
      *      supported by PHP.
      */
-    public string $appTimezone = 'UTC';
+    // Cambia 'UTC' por la zona horaria de Perú
+    public string $appTimezone = 'America/Lima';
+
 
     /**
      * --------------------------------------------------------------------------

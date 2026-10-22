@@ -1,7 +1,7 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('contenido') ?>
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid px-4 py-4" id="viewCatalogos">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1"><?= esc($titulo) ?></h1>
@@ -64,12 +64,14 @@
                                                         title="Editar">
                                                         <i class="bi bi-pencil-square fs-6"></i>
                                                     </button>
-                                                    <a href="<?= base_url('catalogos/eliminar-categoria/' . $cat['idcategoria']) ?>"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        onclick="return confirm('¿Estás seguro de eliminar esta categoría?');"
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-danger btn-eliminar-categoria"
+                                                        data-id="<?= $cat['idcategoria'] ?>"
+                                                        data-nombre="<?= esc($cat['categoria']) ?>"
+                                                        data-url="<?= base_url('catalogos/eliminar-categoria/' . $cat['idcategoria']) ?>"
                                                         title="Eliminar">
                                                         <i class="bi bi-trash3 fs-6"></i>
-                                                    </a>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -85,7 +87,6 @@
                 </div>
             </div>
         </div>
-
 
         <div class="tab-pane fade" id="marcas-pane" role="tabpanel">
             <div class="row g-4">
@@ -129,12 +130,14 @@
                                                         title="Editar">
                                                         <i class="bi bi-pencil-square fs-6"></i>
                                                     </button>
-                                                    <a href="<?= base_url('catalogos/eliminar-marca/' . $mar['idmarca']) ?>"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        onclick="return confirm('¿Estás seguro de eliminar esta marca?');"
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-danger btn-eliminar-marca"
+                                                        data-id="<?= $mar['idmarca'] ?>"
+                                                        data-nombre="<?= esc($mar['marca']) ?>"
+                                                        data-url="<?= base_url('catalogos/eliminar-marca/' . $mar['idmarca']) ?>"
                                                         title="Eliminar">
                                                         <i class="bi bi-trash3 fs-6"></i>
-                                                    </a>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -150,10 +153,8 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
-
 
 <div class="modal fade" id="modalEditarCategoria" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -203,48 +204,5 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        let activeTab = localStorage.getItem("activeCatalogoTab");
-        if (activeTab) {
-            let tabTrigger = document.querySelector(`[data-bs-target="${activeTab}"]`);
-            if (tabTrigger) {
-                let tab = new bootstrap.Tab(tabTrigger);
-                tab.show();
-            }
-        }
-
-        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(function(element) {
-            element.addEventListener('shown.bs.tab', function(event) {
-                localStorage.setItem("activeCatalogoTab", event.target.getAttribute("data-bs-target"));
-            });
-        });
-
-        document.querySelectorAll('.btn-editar-categoria').forEach(button => {
-            button.addEventListener('click', function() {
-                let id = this.getAttribute('data-id');
-                let nombre = this.getAttribute('data-nombre');
-
-                document.getElementById('edit_idcategoria').value = id;
-                document.getElementById('edit_nombre_categoria').value = nombre;
-
-                let modal = new bootstrap.Modal(document.getElementById('modalEditarCategoria'));
-                modal.show();
-            });
-        });
-
-        document.querySelectorAll('.btn-editar-marca').forEach(button => {
-            button.addEventListener('click', function() {
-                let id = this.getAttribute('data-id');
-                let nombre = this.getAttribute('data-nombre');
-
-                document.getElementById('edit_idmarca').value = id;
-                document.getElementById('edit_nombre_marca').value = nombre;
-
-                let modal = new bootstrap.Modal(document.getElementById('modalEditarMarca'));
-                modal.show();
-            });
-        });
-    });
-</script>
+<script src="<?= base_url('js/catalogos/index.js') ?>"></script>
 <?= $this->endSection() ?>
