@@ -1,63 +1,96 @@
+:root {
+  --primary-color: #d90429;
+  --primary-dark: #b80322;
+  --bg-dark: #0f172a;
+}
+
 body.login-body-custom {
-  background: linear-gradient(135deg, #160a2b 0%, #0b0516 100%) !important;
-  min-height: 100vh;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-family: "Inter", sans-serif;
+  background-color: #f8fafc;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
 }
 
-.login-wrapper-box {
-  width: 100%;
-  max-width: 400px;
-  padding: 15px;
+.login-split-container {
+  min-height: 100vh;
 }
 
-.login-card-clean {
-  border: none !important;
-  border-radius: 16px !important;
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4) !important;
-  background-color: #ffffff !important;
+.login-brand-side {
+  background: url("../img/banner-rosa.png") center/contain no-repeat;
+  background-color: #0f172a;
+  color: #ffffff;
 }
 
-.login-logo-fixed {
-  max-height: 50px !important;
-  width: auto !important;
+.login-logo-brand {
+  height: 48px;
+  width: auto;
   object-fit: contain;
 }
 
+.login-feature-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.feature-icon {
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-form-side {
+  background-color: #ffffff;
+}
+
+.login-form-box {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-logo-fixed {
+  height: 65px;
+  width: auto;
+  object-fit: contain;
+}
+
+.input-group-text {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
 .form-control {
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  color: #1e293b;
   font-size: 0.95rem;
 }
 
 .form-control:focus {
-  box-shadow: 0 0 0 0.25rem rgba(255, 37, 75, 0.15);
-  border-color: #ff254b;
-}
-
-.input-group-text {
-  background-color: #f8f9fa;
-  border-top-left-radius: 0.5rem;
-  border-bottom-left-radius: 0.5rem;
-  color: #6c757d;
+  background-color: #ffffff;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(217, 4, 41, 0.15);
 }
 
 .btn-login-marca {
-  background-color: #ff254b !important;
-  border-color: #ff254b !important;
-  color: #fff !important;
-  padding: 0.75rem !important;
-  border-radius: 8px !important;
-  font-weight: 600 !important;
-  box-shadow: 0 4px 12px rgba(255, 37, 75, 0.25) !important;
-  transition: all 0.2s ease-in-out !important;
+  background-color: var(--primary-color);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: none;
+  transition: all 0.2s ease-in-out;
 }
 
 .btn-login-marca:hover {
-  background-color: #e01e3e !important;
-  border-color: #e01e3e !important;
-  transform: translateY(-1px);
+  background-color: var(--primary-dark);
+  color: #ffffff;
 }
