@@ -63,7 +63,7 @@
                             <label for="serie" class="form-label fw-semibold small text-uppercase text-muted">Serie / Nro <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="fas fa-hashtag"></i></span>
-                                <input type="text" class="form-control" name="serie" id="serie" placeholder="Ej. F001-000123" maxlength="10" required>
+                                <input type="text" class="form-control" name="serie" id="serie" placeholder="Ej. F001-000123" maxlength="13" required>
                             </div>
                         </div>
 
@@ -233,8 +233,8 @@
                     S/ ${subtotal}
                 </td>
                 <td class="text-center">
-                    <button type="button" class="btn btn-outline-danger btn-sm rounded-circle btnEliminar" title="Eliminar ítem">
-                        <i class="fas fa-trash-alt"></i>
+                    <button type="button" class="btn btn-outline-danger btn-sm btnEliminar" title="Eliminar ítem">
+                        <i class="bi bi-trash"></i>
                     </button>
                 </td>
             `;

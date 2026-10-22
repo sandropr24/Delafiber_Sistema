@@ -20,7 +20,7 @@ class KardexModel extends Model
 
     public function obtenerStockGeneral()
     {
-        return $this->select('kardex.*, productos.descripcion as producto, locales.nombrelocal as local')
+        return $this->select('kardex.*, productos.nombre as producto, locales.nombrelocal as local')
             ->join('productos', 'productos.idproducto = kardex.idproducto')
             ->join('locales', 'locales.idlocal = kardex.idlocal')
             ->findAll();

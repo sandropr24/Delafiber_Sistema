@@ -7,7 +7,7 @@
             <h4 class="fw-bold mb-1">Catálogo de Productos</h4>
             <p class="text-muted small mb-0">Gestión de insumos, materiales y equipos de telecomunicaciones.</p>
         </div>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="limpiarFormulario()">
+        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="limpiarFormulario()">
             <i class="bi bi-plus-lg me-1"></i> Nuevo Producto
         </button>
     </div>
@@ -46,7 +46,7 @@
                         <th>Marca</th>
                         <th>Modelo</th>
                         <th>Cód. Barras</th>
-                        <th class="text-end">P. Venta</th>
+                        <th class="text-end" style="white-space: nowrap;">P. Venta</th>
                         <th class="text-center">Estado</th>
                         <th class="text-end pe-4" style="width: 110px;">Acciones</th>
                     </tr>
@@ -64,7 +64,7 @@
                                         <img src="<?= base_url('uploads/productos/' . esc($p['imagen'])) ?>"
                                             alt="<?= esc($p['nombre']) ?>"
                                             class="rounded border object-fit-cover shadow-sm"
-                                            style="width: 44px; height: 44px;">
+                                            style="width: 44px; height: 44px; background: #f8f9fa; padding: 2px;">
                                     <?php else: ?>
                                         <div class="bg-light rounded border d-flex align-items-center justify-content-center text-secondary"
                                             style="width: 44px; height: 44px;">
@@ -73,21 +73,21 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="fw-semibold text-dark"><?= esc($p['nombre']) ?></td>
-                                <td class="text-muted small"><?= esc($p['descripcion'] ?: '-') ?></td>
+                                <td class="text-muted small text-truncate" style="max-width: 220px;"><?= esc($p['descripcion'] ?: '-') ?></td>
                                 <td><span class="badge bg-light text-dark border"><?= esc($p['categoria']) ?></span></td>
                                 <td><?= esc($p['marca']) ?></td>
                                 <td class="text-muted small"><?= esc($p['modelo'] ?: '-') ?></td>
                                 <td class="text-muted small font-monospace"><?= esc($p['codigobarras'] ?: '-') ?></td>
-                                <td class="text-end fw-bold text-dark">S/ <?= number_format($p['precioventa'], 2) ?></td>
+                                <td class="text-end fw-bold text-dark" style="white-space: nowrap;">S/ <?= number_format($p['precioventa'], 2) ?></td>
                                 <td class="text-center">
                                     <a href="<?= base_url('productos/cambiarestado/' . $p['idproducto']) ?>"
-                                        class="badge <?= $p['estado'] == 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' ?> text-decoration-none"
+                                        class="badge <?= $p['estado'] == 1 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' ?> text-decoration-none px-2 py-1"
                                         title="Clic para cambiar estado">
                                         <?= $p['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
                                     </a>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <button type="button" class="btn btn-sm btn-light text-primary border-0 me-1"
+                                    <button type="button" class="btn btn-sm btn-light text-primary border-0 me-1 shadow-sm"
                                         onclick="editarProducto(<?= esc(json_encode($p)) ?>)"
                                         title="Editar Producto">
                                         <i class="bi bi-pencil-square fs-5"></i>

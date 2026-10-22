@@ -202,7 +202,7 @@ class CompraController extends BaseController
             return redirect()->to(base_url('compras'))->with('error', 'La compra solicitada no existe.');
         }
 
-        $detalles = $detCompraModel->select('detcompras.*, productos.descripcion as producto')
+        $detalles = $detCompraModel->select('detcompras.*, productos.nombre as producto')
             ->join('productos', 'productos.idproducto = detcompras.idproducto', 'left')
             ->where('detcompras.idcompra', $idcompra)
             ->findAll();

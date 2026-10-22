@@ -121,19 +121,15 @@
                             <button class="btn btn-light rounded-circle border p-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" style="width: 38px; height: 38px;">
                                 <i class="bi bi-person-fill fs-5 text-secondary"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li>
-                                    <h6 class="dropdown-header"><?= esc($userName) ?> (<?= esc($userRol) ?>)</h6>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2 mt-2" style="min-width: 220px; border-radius: 10px;">
+                                <li class="px-3 py-2 border-bottom mb-1">
+                                    <span class="d-block fw-bold text-dark small"><?= esc($userName) ?></span>
+                                    <span class="text-muted small text-truncate d-block" style="font-size: 0.8rem;"><?= esc($userEmail) ?></span>
                                 </li>
                                 <li>
-                                    <span class="dropdown-item-text small text-muted"><?= esc($userEmail) ?></span>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <a href="<?= base_url('logout') ?>" class="dropdown-item text-danger">
-                                        <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
+                                    <a class="dropdown-item py-2 px-3 text-danger d-flex align-items-center gap-2" href="<?= base_url('logout') ?>">
+                                        <i class="bi bi-box-arrow-right fs-5"></i>
+                                        <span class="fw-semibold small">Cerrar Sesión</span>
                                     </a>
                                 </li>
                             </ul>
