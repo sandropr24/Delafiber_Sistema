@@ -11,10 +11,10 @@ class CreateKardex extends Migration
         $this->forge->addField([
             'idkardex'      => ['type' => 'INT', 'auto_increment' => true],
             'idproducto'    => ['type' => 'INT'],
-            'minima'        => ['type' => 'INT', 'default' => 0],
-            'maxima'        => ['type' => 'INT', 'default' => 0],
+            'minima'        => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
+            'maxima'        => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
             'idlocal'       => ['type' => 'INT'],
-            'stockactual'   => ['type' => 'INT', 'default' => 0],
+            'stockactual'   => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
             'costopromedio' => ['type' => 'DECIMAL', 'constraint' => '10,2', 'default' => 0.00],
         ]);
         $this->forge->addPrimaryKey('idkardex');

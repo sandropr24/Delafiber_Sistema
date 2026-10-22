@@ -12,7 +12,7 @@ class CreateTableDetVenta extends Migration
             'iddetventa'    => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
             'idventa'       => ['type' => 'INT', 'constraint' => 11],
             'idproducto'    => ['type' => 'INT', 'constraint' => 11],
-            'cantidad'      => ['type' => 'INT', 'constraint' => 11],
+            'cantidad'      => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
             'precioventa'   => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
             'costounitario' => ['type' => 'DECIMAL', 'constraint' => [10, 2]]
         ]);

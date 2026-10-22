@@ -12,7 +12,7 @@ class CreateTableDetCompras extends Migration
             'iddetcompra'  => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
             'idcompra'     => ['type' => 'INT', 'constraint' => 11],
             'idproducto'   => ['type' => 'INT', 'constraint' => 11],
-            'cantidad'     => ['type' => 'INT', 'constraint' => 11],
+            'cantidad'     => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
             'preciocompra' => ['type' => 'DECIMAL', 'constraint' => [10, 2]]
         ]);
         $this->forge->addPrimaryKey('iddetcompra');

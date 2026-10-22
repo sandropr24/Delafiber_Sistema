@@ -12,7 +12,7 @@ class CreateTableDetCotizacion extends Migration
             'iddetcotizacion' => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
             'idcotizacion'    => ['type' => 'INT', 'constraint' => 11],
             'idproducto'      => ['type' => 'INT', 'constraint' => 11],
-            'cantidad'        => ['type' => 'INT', 'constraint' => 11],
+            'cantidad'        => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
             'preciounitario'  => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
             'total'           => ['type' => 'DECIMAL', 'constraint' => [10, 2]]
         ]);

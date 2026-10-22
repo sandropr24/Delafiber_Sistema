@@ -15,8 +15,8 @@ class CreateTableMovimientos extends Migration
             'idusuario'     => ['type' => 'INT', 'constraint' => 11],
             'tipo'          => ['type' => 'VARCHAR', 'constraint' => 40],
             'fecha'         => ['type' => 'DATETIME'],
-            'cantidad'      => ['type' => 'INT', 'constraint' => 11],
-            'saldo'         => ['type' => 'INT', 'constraint' => 11],
+            'cantidad'      => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
+            'saldo'         => ['type' => 'DECIMAL', 'constraint' => [10, 2]],
             'descripcion'   => ['type' => 'VARCHAR', 'constraint' => 150, 'null' => true],
             'motivo'        => ['type' => 'VARCHAR', 'constraint' => 150, 'null' => true]
         ]);
