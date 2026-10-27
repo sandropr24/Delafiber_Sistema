@@ -38,7 +38,7 @@
                             <th class="py-3">Rol</th>
                             <th class="py-3">Teléfono</th>
                             <th class="py-3 text-center" style="width: 110px;">Estado</th>
-                            <th class="pe-4 py-3 text-end" style="width: 120px;">Acciones</th>
+                            <th class="pe-4 py-3 text-end" style="width: 100px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white">
@@ -72,13 +72,7 @@
                                         <span class="fw-semibold text-primary"><?= esc($u['nombreusuario']) ?></span>
                                     </td>
                                     <td>
-                                        <?php if ($u['rol'] === 'Administrador'): ?>
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Administrador</span>
-                                        <?php elseif ($u['rol'] === 'Almacenero'): ?>
-                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">Almacenero</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1"><?= esc($u['rol']) ?></span>
-                                        <?php endif; ?>
+                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1"><?= esc($u['rol'] ?? 'Sin rol') ?></span>
                                     </td>
                                     <td class="small text-secondary"><?= esc($u['telefono'] ?? '-') ?></td>
                                     <td class="text-center">
@@ -93,19 +87,11 @@
                                             <button type="button"
                                                 class="btn btn-sm btn-light border text-secondary hover-primary shadow-sm rounded-circle p-2 d-inline-flex align-items-center justify-content-center"
                                                 style="width: 32px; height: 32px;"
-                                                onclick="editarUsuario(<?= esc(json_encode($u)) ?>)"
+                                                onclick="editarUsuario(<?= esc(json_encode($u), 'attr') ?>)"
                                                 data-bs-toggle="tooltip"
                                                 title="Editar Usuario">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
-                                            <a href="<?= base_url('usuarios/eliminar/' . $u['idusuario']) ?>"
-                                                class="btn btn-sm btn-light border text-danger hover-danger shadow-sm rounded-circle p-2 d-inline-flex align-items-center justify-content-center"
-                                                style="width: 32px; height: 32px;"
-                                                onclick="return confirm('¿Seguro que deseas eliminar al usuario <?= esc($u['nombreusuario']) ?>? Esta acción no se puede deshacer.')"
-                                                data-bs-toggle="tooltip"
-                                                title="Eliminar Usuario">
-                                                <i class="bi bi-trash3"></i>
-                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -177,12 +163,13 @@
                             <input type="text" class="form-control" id="nombreusuario" name="nombreusuario" required>
                         </div>
                         <div class="col-12 col-md-4">
-                            <label for="rol" class="form-label small fw-bold text-secondary text-uppercase">Rol <span class="text-danger">*</span></label>
-                            <select class="form-select" id="rol" name="rol" required>
+                            <label for="idrol" class="form-label small fw-bold text-secondary text-uppercase">Rol <span class="text-danger">*</span></label>
+                            <select class="form-select" id="idrol" name="idrol" required>
                                 <option value="">Seleccione un rol</option>
-                                <option value="Administrador">Administrador</option>
-                                <option value="Almacenero">Almacenero</option>
-                                <option value="Cajero">Cajero</option>
+                                <!-- Ajusta los ID según corresponda a tu tabla roles -->
+                                <option value="1">Administrador</option>
+                                <option value="2">Almacenero</option>
+                                <option value="3">Cajero</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-4">

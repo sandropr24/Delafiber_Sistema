@@ -10,7 +10,7 @@ function limpiarFormulario() {
   document.getElementById("email").value = "";
   document.getElementById("direccion").value = "";
   document.getElementById("nombreusuario").value = "";
-  document.getElementById("rol").value = "";
+  document.getElementById("idrol").value = "";
   document.getElementById("claveacceso").value = "";
 
   document.getElementById("claveacceso").required = true;
@@ -29,7 +29,7 @@ function editarUsuario(u) {
   document.getElementById("email").value = u.email || "";
   document.getElementById("direccion").value = u.direccion || "";
   document.getElementById("nombreusuario").value = u.nombreusuario;
-  document.getElementById("rol").value = u.rol;
+  document.getElementById("idrol").value = u.idrol || "";
   document.getElementById("claveacceso").value = "";
 
   document.getElementById("claveacceso").required = false;

@@ -39,7 +39,7 @@ class UsuarioController extends BaseController
             'tipodoc'       => 'required',
             'numerodoc'     => 'required|max_length[20]|is_unique[personas.numerodoc,idpersona,' . ($idPersona ?: 'NULL') . ']',
             'nombreusuario' => 'required|max_length[50]|is_unique[usuarios.nombreusuario,idusuario,' . ($idUsuario ?: 'NULL') . ']',
-            'rol'           => 'required',
+            'idrol'         => 'required|integer', 
             'email'         => 'permit_empty|valid_email|max_length[100]',
             'claveacceso'   => empty($idUsuario) ? 'required|min_length[4]' : 'permit_empty|min_length[4]',
         ];
@@ -82,7 +82,7 @@ class UsuarioController extends BaseController
         $datosUsuario = [
             'idpersona'     => $idPersona,
             'nombreusuario' => trim((string) $this->request->getPost('nombreusuario')),
-            'rol'           => $this->request->getPost('rol'),
+            'idrol'         => $this->request->getPost('idrol'), // Actualizado a idrol
             'estado'        => 1,
         ];
 
@@ -122,20 +122,5 @@ class UsuarioController extends BaseController
         $this->usuarioModel->update($id, ['estado' => $nuevoEstado]);
 
         return redirect()->to(base_url('usuarios'))->with('mensaje', 'Estado del usuario actualizado.');
-    }
-
-    public function eliminar($id = null): RedirectResponse
-    {
-        if (empty($id) || !$this->usuarioModel->find($id)) {
-            return redirect()->to(base_url('usuarios'))->with('error', 'El usuario no existe.');
-        }
-
-        if ((int) $id === (int) session()->get('idusuario')) {
-            return redirect()->to(base_url('usuarios'))->with('error', 'No puedes eliminar tu propia cuenta activa.');
-        }
-
-        $this->usuarioModel->delete($id);
-
-        return redirect()->to(base_url('usuarios'))->with('mensaje', 'Usuario eliminado con éxito.');
     }
 }

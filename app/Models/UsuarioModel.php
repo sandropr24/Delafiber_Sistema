@@ -15,9 +15,9 @@ class UsuarioModel extends Model
 
    protected $allowedFields    = [
       'idpersona',
+      'idrol',
       'nombreusuario',
       'claveacceso',
-      'rol',
       'estado'
    ];
 
@@ -26,12 +26,11 @@ class UsuarioModel extends Model
    protected $beforeInsert     = ['hashearClave'];
    protected $beforeUpdate     = ['hashearClave'];
 
-
-   //Busca usuario activo por nombreusuario.
    public function BuscarPorNombre(string $nombreusuario, bool $soloActivos = true): ?array
    {
-      $builder = $this->select('usuarios.*, personas.nombres, personas.apellidos, personas.email, personas.numerodoc')
+      $builder = $this->select('usuarios.*, personas.nombres, personas.apellidos, personas.email, personas.numerodoc, roles.rol as rol')
          ->join('personas', 'personas.idpersona = usuarios.idpersona')
+         ->join('roles', 'roles.idrol = usuarios.idrol')
          ->where('usuarios.nombreusuario', $nombreusuario);
 
       if ($soloActivos) {
@@ -41,12 +40,13 @@ class UsuarioModel extends Model
       return $builder->first();
    }
 
-   public function obtenerUsuariosConPersona() : array 
+   public function obtenerUsuariosConPersona(): array
    {
-         return $this->select('usuarios.*, personas.nombres, personas.apellidos, personas.numerodoc, personas.telefono, personas.email, personas.direccion')
-               ->join('personas', 'personas.idpersona = usuarios.idpersona')
-               ->orderBy('usuarios.idusuario', 'DESC')
-               ->findAll();
+      return $this->select('usuarios.*, personas.nombres, personas.apellidos, personas.numerodoc, personas.telefono, personas.email, personas.direccion, roles.rol as rol')
+         ->join('personas', 'personas.idpersona = usuarios.idpersona')
+         ->join('roles', 'roles.idrol = usuarios.idrol')
+         ->orderBy('usuarios.idusuario', 'DESC')
+         ->findAll();
    }
 
    protected function hashearClave(array $data)
