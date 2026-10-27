@@ -18,6 +18,7 @@ class PersonaModel extends Model
         'direccion',
         'telefono',
         'email',
+        'estado', 
     ];
 
     protected $validationRules = [
@@ -29,5 +30,6 @@ class PersonaModel extends Model
         'direccion' => 'permit_empty|max_length[150]',
         'telefono'  => 'permit_empty|max_length[20]',
         'email'     => 'permit_empty|valid_email|max_length[100]',
+        'estado'    => 'permit_empty|in_list[0,1]',
     ];
 }

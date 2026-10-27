@@ -36,13 +36,12 @@ $routes->group('usuarios', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'UsuarioController::index');
     $routes->post('guardar', 'UsuarioController::guardar');
     $routes->get('cambiarestado/(:num)', 'UsuarioController::cambiarEstado/$1');
-    $routes->get('eliminar/(:num)', 'UsuarioController::eliminar/$1');
 });
 
 $routes->group('clientes', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'ClienteController::index');
     $routes->post('guardar', 'ClienteController::guardar');
-    $routes->get('eliminar/(:num)', 'ClienteController::eliminar/$1');
+    $routes->get('cambiarestado/(:num)', 'ClienteController::cambiarEstado/$1');
 });
 
 $routes->group('proveedores', ['filter' => 'auth'], function ($routes) {

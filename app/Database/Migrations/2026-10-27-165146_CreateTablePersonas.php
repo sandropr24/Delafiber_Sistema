@@ -20,10 +20,10 @@ class CreateTablePersonas extends Migration
                 'constraint' => ['NATURAL', 'JURIDICA'],
                 'default'    => 'NATURAL',
             ],
-            'apellidos' => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
-            'nombres'   => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
+            'apellidos'   => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
+            'nombres'     => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
             'razonsocial' => ['type' => 'VARCHAR', 'constraint' => 150, 'null' => true],
-            'tipodoc' => [
+            'tipodoc'     => [
                 'type'       => 'ENUM',
                 'constraint' => ['DNI', 'RUC', 'CE', 'PASAPORTE'],
             ],
@@ -32,6 +32,7 @@ class CreateTablePersonas extends Migration
             'telefono'      => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
             'email'         => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => true],
             'codigocliente' => ['type' => 'VARCHAR', 'constraint' => 30, 'null' => true],
+            'estado'        => ['type' => 'TINYINT', 'constraint' => 1, 'default' => 1],
         ]);
         $this->forge->addKey('idpersona', true);
         $this->forge->addUniqueKey(['tipodoc', 'numerodoc']);

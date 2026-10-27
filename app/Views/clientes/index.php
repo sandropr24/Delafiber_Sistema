@@ -23,13 +23,14 @@
                     <th>Teléfono</th>
                     <th>Email</th>
                     <th>Dirección</th>
-                    <th class="text-end pe-4" style="width: 120px;">Acciones</th>
+                    <th class="text-center" style="width: 110px;">Estado</th>
+                    <th class="text-end pe-4" style="width: 100px;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($clientes)): ?>
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">No hay clientes registrados en el sistema.</td>
+                        <td colspan="8" class="text-center text-muted py-4">No hay clientes registrados en el sistema.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($clientes as $i => $c): ?>
@@ -49,19 +50,20 @@
                             <td class="small text-muted text-truncate" style="max-width: 220px;" title="<?= esc($c['direccion'] ?? '') ?>">
                                 <?= esc($c['direccion'] ?? '-') ?>
                             </td>
+                            <td class="text-center">
+                                <a href="<?= base_url('clientes/cambiarestado/' . $c['idpersona']) ?>"
+                                    class="badge <?= (($c['estado'] ?? 1) == 1) ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?> text-decoration-none px-2 py-1 fw-semibold"
+                                    title="Clic para alternar estado">
+                                    <?= (($c['estado'] ?? 1) == 1) ? 'Activo' : 'Inactivo' ?>
+                                </a>
+                            </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-light text-primary border-0 me-1"
-                                        onclick="editarCliente(<?= esc(json_encode($c, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>)"
+                                    <button type="button" class="btn btn-light text-primary border-0"
+                                        onclick="editarCliente(<?= esc(json_encode($c, JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>)"
                                         title="Editar">
                                         <i class="bi bi-pencil-square fs-5"></i>
                                     </button>
-                                    <a href="<?= base_url('clientes/eliminar/' . $c['idpersona']) ?>"
-                                        class="btn btn-light text-danger border-0"
-                                        onclick="return confirm('¿Deseas eliminar a este cliente?')"
-                                        title="Eliminar">
-                                        <i class="bi bi-trash3 fs-5"></i>
-                                    </a>
                                 </div>
                             </td>
                         </tr>

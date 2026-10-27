@@ -66,6 +66,8 @@ class ClienteController extends BaseController
 
         if (!empty($idPersona)) {
             $datosPersona['idpersona'] = $idPersona;
+        } else {
+            $datosPersona['estado'] = 1;
         }
 
         if (!$this->personaModel->save($datosPersona)) {
@@ -78,32 +80,15 @@ class ClienteController extends BaseController
         return redirect()->to(base_url('clientes'))->with('mensaje', $mensaje);
     }
 
-    public function eliminar($id = null): RedirectResponse
+    public function cambiarEstado($id = null): RedirectResponse
     {
-        if (empty($id) || !$this->personaModel->find($id)) {
+        if (empty($id) || !$cliente = $this->personaModel->find($id)) {
             return redirect()->to(base_url('clientes'))->with('error', 'El cliente no existe.');
         }
 
-        $db = $this->personaModel->builder()->db();
+        $nuevoEstado = ((int) ($cliente['estado'] ?? 1) === 1) ? 0 : 1;
+        $this->personaModel->update($id, ['estado' => $nuevoEstado]);
 
-        $esUsuario = $db->table('usuarios')->where('idpersona', $id)->countAllResults();
-        if ($esUsuario > 0) {
-            return redirect()->to(base_url('clientes'))->with('error', 'No se puede eliminar: esta persona está asignada como usuario del sistema.');
-        }
-
-        if ($db->tableExists('ventas')) {
-            $columnaVentas = $db->fieldExists('idcliente', 'ventas') ? 'idcliente' : ($db->fieldExists('idpersona', 'ventas') ? 'idpersona' : null);
-
-            if ($columnaVentas !== null) {
-                $tieneVentas = $db->table('ventas')->where($columnaVentas, $id)->countAllResults();
-                if ($tieneVentas > 0) {
-                    return redirect()->to(base_url('clientes'))->with('error', 'No se puede eliminar: el cliente registra compras o comprobantes.');
-                }
-            }
-        }
-
-        $this->personaModel->delete($id);
-
-        return redirect()->to(base_url('clientes'))->with('mensaje', 'Cliente eliminado con éxito.');
+        return redirect()->to(base_url('clientes'))->with('mensaje', 'Estado del cliente actualizado correctamente.');
     }
 }
