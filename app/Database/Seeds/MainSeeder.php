@@ -8,6 +8,7 @@ class MainSeeder extends Seeder
 {
     public function run()
     {
+        $this->call('RolSeeder');
         $this->call('PersonaSeeder');
         $this->call('UsuarioSeeder');
         $this->call('TipoPagoSeeder');

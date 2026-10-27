@@ -10,14 +10,17 @@ class PersonaSeeder extends Seeder
     {
         $data = [
             [
-                'nombres'   => 'Sandro',
-                'apellidos' => 'Pachas Romani',
-                'tipodoc'   => 'DNI',
-                'numerodoc' => '60807449',
-                'telefono'  => '987654321',
-                'direccion' => 'Calle Jose 123',
-                'email'     => 'sandro24@gmail.com',
-            ]
+                'tipopersona'   => 'NATURAL',
+                'apellidos'     => 'Pachas Romani',
+                'nombres'       => 'Sandro Steven',
+                'razonsocial'   => null,
+                'tipodoc'       => 'DNI',
+                'numerodoc'     => '60807449',
+                'direccion'     => 'Av. Las Flores 123, Lima',
+                'telefono'      => '987654321',
+                'email'         => 'sandroromanipr24@gmail.com',
+                'codigocliente' => 'CLI-001',
+            ],
         ];
 
         $this->db->table('personas')->insertBatch($data);

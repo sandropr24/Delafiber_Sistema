@@ -10,16 +10,23 @@ class UsuarioSeeder extends Seeder
     {
         $persona = $this->db->table('personas')->where('numerodoc', '60807449')->get()->getRowArray();
 
-        if ($persona) {
-            $usuario = [
-                'idpersona'     => $persona['idpersona'],
-                'nombreusuario' => 'sandro',
-                'claveacceso'   => password_hash('sandro24', PASSWORD_BCRYPT),
-                'rol'           => 'Administrador',
-                'estado'        => 1
-            ];
+        $rol = $this->db->table('roles')->where('rol', 'Administrador')->get()->getRowArray();
 
-            $this->db->table('usuarios')->insert($usuario);
+        if ($persona && $rol) {
+
+            $usuarioExiste = $this->db->table('usuarios')->where('nombreusuario', 'sandro')->countAllResults();
+
+            if ($usuarioExiste === 0) {
+                $usuario = [
+                    'idpersona'     => $persona['idpersona'],
+                    'idrol'         => $rol['idrol'],
+                    'nombreusuario' => 'sandro',
+                    'claveacceso'   => password_hash('sandro24', PASSWORD_BCRYPT),
+                    'estado'        => 1
+                ];
+
+                $this->db->table('usuarios')->insert($usuario);
+            }
         }
     }
 }
