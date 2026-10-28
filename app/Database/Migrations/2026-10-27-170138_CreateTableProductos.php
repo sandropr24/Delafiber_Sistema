@@ -38,7 +38,7 @@ class CreateTableProductos extends Migration
         ]);
         $this->forge->addKey('idproducto', true);
         $this->forge->addForeignKey('idcategoria', 'categorias', 'idcategoria', 'CASCADE', 'RESTRICT');
-        $this->forge->addForeignKey('idmarca', 'marcas', 'idmarca', 'SET NULL', 'RESTRICT');
+        $this->forge->addForeignKey('idmarca', 'marcas', 'idmarca', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idunidad', 'unidadesmedida', 'idunidad', 'CASCADE', 'RESTRICT');
         $this->forge->createTable('productos');
 

@@ -15,8 +15,8 @@ $routes->group('catalogos', function ($routes) {
     $routes->post('guardar-marca', 'CatalogoController::guardarMarca');
     $routes->post('actualizar-categoria', 'CatalogoController::actualizarCategoria');
     $routes->post('actualizar-marca', 'CatalogoController::actualizarMarca');
-    $routes->get('eliminar-categoria/(:num)', 'CatalogoController::eliminarCategoria/$1');
-    $routes->get('eliminar-marca/(:num)', 'CatalogoController::eliminarMarca/$1');
+    $routes->get('cambiar-estado-categoria/(:num)', 'CatalogoController::cambiarEstadoCategoria/$1');
+    $routes->get('cambiar-estado-marca/(:num)', 'CatalogoController::cambiarEstadoMarca/$1');
 });
 
 $routes->group('productos', ['filter' => 'auth'], static function ($routes) {

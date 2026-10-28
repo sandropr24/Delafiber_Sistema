@@ -9,7 +9,7 @@ class RolSeeder extends Seeder
     public function run()
     {
         $roles = [
-            ['rol' => 'administrador'],
+            ['rol' => 'Administrador'],
             ['rol' => 'Operador'],
             ['rol' => 'Vendedor'],
         ];
