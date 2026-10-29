@@ -24,10 +24,6 @@ class CreateTableCompras extends Migration
         $this->forge->addUniqueKey(['idproveedor', 'tipocomprobante', 'serie', 'numero']);
         $this->forge->addForeignKey('idproveedor', 'proveedores', 'idproveedor', 'CASCADE', 'RESTRICT');
         $this->forge->createTable('compras');
-
-        $this->db->query("ALTER TABLE compras MODIFY fecharegistro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
-        $this->db->query("ALTER TABLE compras ADD CONSTRAINT chk_compra_tc CHECK (tipocambio > 0)");
-        $this->db->query("ALTER TABLE compras ADD CONSTRAINT chk_compra_total CHECK (total >= 0)");
     }
 
     public function down()

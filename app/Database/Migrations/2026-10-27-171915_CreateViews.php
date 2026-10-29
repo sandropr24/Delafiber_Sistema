@@ -71,7 +71,7 @@ class CreateViews extends Migration
             CREATE VIEW vw_reporte_ventas AS
             SELECT v.idventa, DATE(v.fecha) AS fecha, l.nombre AS linea, c.canal,
                    v.idvendedor, e.idtecnico, dv.idproducto, pr.nombre AS producto,
-                   dv.cantidad, dv.total AS importe,
+                   dv.cantidad, ROUND(dv.cantidad * dv.precioventa, 2) AS importe,
                    ROUND(dv.cantidad * dv.costounitario, 2) AS costo
             FROM ventas v
             JOIN estadoventa ev ON ev.idestado = v.idestado AND ev.estado = 'Emitida'

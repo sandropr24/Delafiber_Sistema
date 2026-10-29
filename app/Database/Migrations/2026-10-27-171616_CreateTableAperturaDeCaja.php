@@ -25,13 +25,7 @@ class CreateTableAperturaDeCaja extends Migration
         $this->forge->addKey('idapertura', true);
         $this->forge->addForeignKey('idcaja', 'cajas', 'idcaja', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idusuario', 'usuarios', 'idusuario', 'CASCADE', 'RESTRICT');
-        $this->forge->createTable('aperturacaja');
-
-        $this->db->query("ALTER TABLE aperturacaja MODIFY fechaapertura DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
-        $this->db->query("ALTER TABLE aperturacaja ADD idcaja_abierta INT GENERATED ALWAYS AS (IF(estado = 'ABIERTA', idcaja, NULL)) STORED");
-        $this->db->query("ALTER TABLE aperturacaja ADD UNIQUE (idcaja_abierta)");
-        $this->db->query("ALTER TABLE aperturacaja ADD CONSTRAINT chk_apertura_monto CHECK (montoinicial >= 0)");
-        $this->db->query("ALTER TABLE aperturacaja ADD CONSTRAINT chk_apertura_estado CHECK (estado = 'ABIERTA' OR fechacierre IS NOT NULL)");
+        $this->forge->createTable('aperturacaja'); 
     }
 
     public function down()

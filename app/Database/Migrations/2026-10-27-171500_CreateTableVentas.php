@@ -62,14 +62,6 @@ class CreateTableVentas extends Migration
         $this->forge->addForeignKey('idpedido', 'pedido', 'idpedido', 'SET NULL', 'RESTRICT');
         $this->forge->addForeignKey('idusuarioanula', 'usuarios', 'idusuario', 'SET NULL', 'RESTRICT');
         $this->forge->createTable('ventas');
-
-        $this->db->query("ALTER TABLE ventas MODIFY fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
-        $this->db->query("ALTER TABLE ventas ADD CONSTRAINT chk_vta_inicial CHECK (montoinicial >= 0)");
-        $this->db->query("ALTER TABLE ventas ADD CONSTRAINT chk_vta_cuotas CHECK (nrocuotas > 0)");
-        $this->db->query("ALTER TABLE ventas ADD CONSTRAINT chk_vta_descuento CHECK (descuento >= 0)");
-        $this->db->query("ALTER TABLE ventas ADD CONSTRAINT chk_vta_total CHECK (total >= 0)");
-        $this->db->query("ALTER TABLE ventas ADD CONSTRAINT chk_vta_calc CHECK (total = subtotal + montoigv - descuento)");
-        $this->db->query("ALTER TABLE ventas ADD CONSTRAINT chk_vta_formapago CHECK (formapago <> 'CUOTAS' OR (nrocuotas IS NOT NULL AND frecuenciacuotas IS NOT NULL))");
     }
 
     public function down()

@@ -18,11 +18,7 @@ class CreateTableDetPedido extends Migration
         $this->forge->addKey('iddetpedido', true);
         $this->forge->addForeignKey('idpedido', 'pedido', 'idpedido', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idproducto', 'productos', 'idproducto', 'CASCADE', 'RESTRICT');
-        $this->forge->createTable('detpedido');
-
-        $this->db->query("ALTER TABLE detpedido ADD total DECIMAL(10,2) GENERATED ALWAYS AS (ROUND(cantidad * preciounitario, 2)) STORED");
-        $this->db->query("ALTER TABLE detpedido ADD CONSTRAINT chk_detped_cant CHECK (cantidad > 0)");
-        $this->db->query("ALTER TABLE detpedido ADD CONSTRAINT chk_detped_precio CHECK (preciounitario >= 0)");
+        $this->forge->createTable('detpedido'); 
     }
 
     public function down()

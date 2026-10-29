@@ -33,10 +33,7 @@ class CreateTableEntregas extends Migration
         $this->forge->addForeignKey('idventa', 'ventas', 'idventa', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idtecnico', 'usuarios', 'idusuario', 'SET NULL', 'RESTRICT');
         $this->forge->addForeignKey('idpagoventa', 'pagoventa', 'idpagoventa', 'SET NULL', 'RESTRICT');
-        $this->forge->createTable('entregas');
-
-        $this->db->query("ALTER TABLE entregas ADD CONSTRAINT chk_ent_tipo CHECK (tipoentrega = 'RECOJO_TIENDA' OR (direccion IS NOT NULL AND telefono IS NOT NULL AND idtecnico IS NOT NULL))");
-        $this->db->query("ALTER TABLE entregas ADD CONSTRAINT chk_ent_estado CHECK (estado <> 'ENTREGADO' OR fechaentrega IS NOT NULL)");
+        $this->forge->createTable('entregas');  
     }
 
     public function down()

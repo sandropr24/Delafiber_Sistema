@@ -19,10 +19,6 @@ class CreateTableDetCotizacion extends Migration
         $this->forge->addForeignKey('idcotizacion', 'cotizacion', 'idcotizacion', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idproducto', 'productos', 'idproducto', 'CASCADE', 'RESTRICT');
         $this->forge->createTable('detcotizacion');
-
-        $this->db->query("ALTER TABLE detcotizacion ADD total DECIMAL(10,2) GENERATED ALWAYS AS (ROUND(cantidad * preciounitario, 2)) STORED");
-        $this->db->query("ALTER TABLE detcotizacion ADD CONSTRAINT chk_detcot_cant CHECK (cantidad > 0)");
-        $this->db->query("ALTER TABLE detcotizacion ADD CONSTRAINT chk_detcot_precio CHECK (preciounitario >= 0)");
     }
 
     public function down()

@@ -30,10 +30,7 @@ class CreateTablePagoVenta extends Migration
         $this->forge->addForeignKey('idapertura', 'aperturacaja', 'idapertura', 'SET NULL', 'RESTRICT');
         $this->forge->addForeignKey('idusuariocobro', 'usuarios', 'idusuario', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idcuenta', 'cuentasbancarias', 'idcuenta', 'SET NULL', 'RESTRICT');
-        $this->forge->createTable('pagoventa');
-
-        $this->db->query("ALTER TABLE pagoventa MODIFY fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
-        $this->db->query("ALTER TABLE pagoventa ADD CONSTRAINT chk_pago_monto CHECK (monto > 0)");
+        $this->forge->createTable('pagoventa'); 
     }
 
     public function down()

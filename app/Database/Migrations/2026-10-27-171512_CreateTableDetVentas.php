@@ -20,12 +20,7 @@ class CreateTableDetVentas extends Migration
         $this->forge->addKey('iddetventa', true);
         $this->forge->addForeignKey('idventa', 'ventas', 'idventa', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idproducto', 'productos', 'idproducto', 'CASCADE', 'RESTRICT');
-        $this->forge->createTable('detventa');
-
-        $this->db->query("ALTER TABLE detventa ADD total DECIMAL(10,2) GENERATED ALWAYS AS (ROUND(cantidad * precioventa, 2)) STORED");
-        $this->db->query("ALTER TABLE detventa ADD CONSTRAINT chk_detvta_cant CHECK (cantidad > 0)");
-        $this->db->query("ALTER TABLE detventa ADD CONSTRAINT chk_detvta_precio CHECK (precioventa >= 0)");
-        $this->db->query("ALTER TABLE detventa ADD CONSTRAINT chk_detvta_costo CHECK (costounitario >= 0)");
+        $this->forge->createTable('detventa');   
     }
 
     public function down()

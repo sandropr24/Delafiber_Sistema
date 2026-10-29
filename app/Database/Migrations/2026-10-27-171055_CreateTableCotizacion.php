@@ -31,13 +31,7 @@ class CreateTableCotizacion extends Migration
         $this->forge->addForeignKey('idlocal', 'locales', 'idlocal', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idusuario', 'usuarios', 'idusuario', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idpersona', 'personas', 'idpersona', 'CASCADE', 'RESTRICT');
-        $this->forge->createTable('cotizacion');
-
-        $this->db->query("ALTER TABLE cotizacion MODIFY fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
-        $this->db->query("ALTER TABLE cotizacion ADD CONSTRAINT chk_cot_venc CHECK (fechavencimiento >= DATE(fecha))");
-        $this->db->query("ALTER TABLE cotizacion ADD CONSTRAINT chk_cot_tc CHECK (tipocambio > 0)");
-        $this->db->query("ALTER TABLE cotizacion ADD CONSTRAINT chk_cot_igv CHECK (porcentajeigv >= 0)");
-        $this->db->query("ALTER TABLE cotizacion ADD CONSTRAINT chk_cot_tot CHECK (total = subtotal + montoigv)");
+        $this->forge->createTable('cotizacion');  
     }
 
     public function down()

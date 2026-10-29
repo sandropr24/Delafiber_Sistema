@@ -29,10 +29,7 @@ class CreateTableTipoCambio extends Migration
             ],
         ]);
         $this->forge->addKey('idtipocambio', true);
-        $this->forge->createTable('tipocambio');
-
-        $this->db->query("ALTER TABLE tipocambio ADD CONSTRAINT chk_tc_compra CHECK (compra > 0)");
-        $this->db->query("ALTER TABLE tipocambio ADD CONSTRAINT chk_tc_venta CHECK (venta > 0)");
+        $this->forge->createTable('tipocambio'); 
     }
 
     public function down()

@@ -16,10 +16,7 @@ class CreateTableComboDetalles extends Migration
         $this->forge->addKey(['idcombo', 'idproducto'], true);
         $this->forge->addForeignKey('idcombo', 'productos', 'idproducto', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idproducto', 'productos', 'idproducto', 'CASCADE', 'RESTRICT');
-        $this->forge->createTable('combo_detalle');
-
-        $this->db->query("ALTER TABLE combo_detalle ADD CONSTRAINT chk_combo_cant CHECK (cantidad > 0)");
-        $this->db->query("ALTER TABLE combo_detalle ADD CONSTRAINT chk_combo_diff CHECK (idcombo <> idproducto)");
+        $this->forge->createTable('combo_detalle');   
     }
 
     public function down()

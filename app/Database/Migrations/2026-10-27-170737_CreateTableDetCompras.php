@@ -19,9 +19,6 @@ class CreateTableDetCompras extends Migration
         $this->forge->addForeignKey('idcompra', 'compras', 'idcompra', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idproducto', 'productos', 'idproducto', 'CASCADE', 'RESTRICT');
         $this->forge->createTable('detcompra');
-
-        $this->db->query("ALTER TABLE detcompra ADD CONSTRAINT chk_detcomp_cant CHECK (cantidad > 0)");
-        $this->db->query("ALTER TABLE detcompra ADD CONSTRAINT chk_detcomp_precio CHECK (preciocompra >= 0)");
     }
 
     public function down()

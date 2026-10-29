@@ -21,9 +21,7 @@ class CreateTableKardex extends Migration
         $this->forge->addUniqueKey(['idproducto', 'idlocal']);
         $this->forge->addForeignKey('idproducto', 'productos', 'idproducto', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idlocal', 'locales', 'idlocal', 'CASCADE', 'RESTRICT');
-        $this->forge->createTable('kardex');
-
-        $this->db->query("ALTER TABLE kardex ADD CONSTRAINT chk_kardex_stock CHECK (stockactual >= 0)");
+        $this->forge->createTable('kardex');  
     }
 
     public function down()

@@ -25,11 +25,7 @@ class CreateTableCuotas extends Migration
         $this->forge->addKey('idcuota', true);
         $this->forge->addUniqueKey(['idventa', 'nrocuota']);
         $this->forge->addForeignKey('idventa', 'ventas', 'idventa', 'CASCADE', 'RESTRICT');
-        $this->forge->createTable('cuotas');
-
-        $this->db->query("ALTER TABLE cuotas ADD CONSTRAINT chk_cuota_monto CHECK (monto > 0)");
-        $this->db->query("ALTER TABLE cuotas ADD CONSTRAINT chk_cuota_pagado CHECK (montopagado >= 0)");
-        $this->db->query("ALTER TABLE cuotas ADD CONSTRAINT chk_cuota_limite CHECK (montopagado <= monto)");
+        $this->forge->createTable('cuotas');    
     }
 
     public function down()

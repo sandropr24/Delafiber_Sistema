@@ -40,14 +40,7 @@ class CreateTableProductos extends Migration
         $this->forge->addForeignKey('idcategoria', 'categorias', 'idcategoria', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idmarca', 'marcas', 'idmarca', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idunidad', 'unidadesmedida', 'idunidad', 'CASCADE', 'RESTRICT');
-        $this->forge->createTable('productos');
-
-        $this->db->query("ALTER TABLE productos ADD CONSTRAINT chk_prod_costo CHECK (preciocosto >= 0)");
-        $this->db->query("ALTER TABLE productos ADD CONSTRAINT chk_prod_venta CHECK (precioventa >= 0)");
-        $this->db->query("ALTER TABLE productos ADD CONSTRAINT chk_prod_serie CHECK (tipo = 'PRODUCTO' OR controlaserie = 0)");
-        $this->db->query("ALTER TABLE productos ADD CONSTRAINT chk_prod_stock_serv CHECK (tipo <> 'SERVICIO' OR controlastock = 0)");
-        $this->db->query("ALTER TABLE productos ADD CONSTRAINT chk_prod_stock_combo CHECK (tipo <> 'COMBO' OR controlastock = 0)");
-        $this->db->query("ALTER TABLE productos ADD CONSTRAINT chk_prod_marca CHECK (tipo = 'SERVICIO' OR idmarca IS NOT NULL)");
+        $this->forge->createTable('productos');   
     }
 
     public function down()

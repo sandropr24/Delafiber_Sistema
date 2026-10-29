@@ -37,11 +37,6 @@ class CreateTablePersonas extends Migration
         $this->forge->addKey('idpersona', true);
         $this->forge->addUniqueKey(['tipodoc', 'numerodoc']);
         $this->forge->createTable('personas');
-
-        $this->db->query("ALTER TABLE personas ADD CONSTRAINT chk_personas_tipo CHECK (
-            (tipopersona = 'NATURAL' AND nombres IS NOT NULL AND apellidos IS NOT NULL) OR
-            (tipopersona = 'JURIDICA' AND razonsocial IS NOT NULL)
-        )");
     }
 
     public function down()

@@ -28,12 +28,7 @@ class CreateTableCreditosInternet extends Migration
         $this->forge->addForeignKey('idventa', 'ventas', 'idventa', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idpersona', 'personas', 'idpersona', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('idusuariocobro', 'usuarios', 'idusuario', 'SET NULL', 'RESTRICT');
-        $this->forge->createTable('creditosinternet');
-
-        $this->db->query("ALTER TABLE creditosinternet MODIFY fecharegistro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
-        $this->db->query("ALTER TABLE creditosinternet ADD CONSTRAINT chk_cred_monto CHECK (monto > 0)");
-        $this->db->query("ALTER TABLE creditosinternet ADD CONSTRAINT chk_cred_cuotas CHECK (nrocuotas > 0)");
-        $this->db->query("ALTER TABLE creditosinternet ADD CONSTRAINT chk_cred_estado CHECK (estado = 'PENDIENTE' OR fechacobro IS NOT NULL)");
+        $this->forge->createTable('creditosinternet');  
     }
 
     public function down()
