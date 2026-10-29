@@ -1,56 +1,17 @@
-function previsualizarImagen(event) {
-  const input = event.target;
-  const img = document.getElementById("previewImg");
-  const icon = document.getElementById("previewIcon");
+const $ = (id) => document.getElementById(id);
 
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      img.src = e.target.result;
-      img.style.display = "block";
-      icon.style.display = "none";
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
+const AYUDA_TIPO = {
+  PRODUCTO: "Equipo físico: puede controlar stock y número de serie.",
+  SERVICIO: "Servicio técnico: solo necesita nombre, categoría, unidad y precios.",
+  COMBO: "Kit o combo: no maneja stock ni serie propios y requiere una marca.",
+};
 
-function limpiarFormulario() {
-  document.getElementById("modalTitulo").textContent = "Nuevo Producto";
-  document.getElementById("idproducto").value = "";
-  document.getElementById("nombre").value = "";
-  document.getElementById("descripcion").value = "";
-  document.getElementById("idcategoria").value = "";
-  document.getElementById("idmarca").value = "";
-  document.getElementById("modelo").value = "";
-  document.getElementById("codigobarras").value = "";
-  document.getElementById("precioventa").value = "";
-  document.getElementById("imagen").value = "";
-  document.getElementById("divEstado").style.display = "none";
-  document.getElementById("estado").value = "1";
+function mostrarVistaPrevia(src) {
+  const img = $("previewImg");
+  const icon = $("previewIcon");
 
-  document.getElementById("previewImg").src = "";
-  document.getElementById("previewImg").style.display = "none";
-  document.getElementById("previewIcon").style.display = "block";
-}
-
-function editarProducto(p) {
-  document.getElementById("modalTitulo").textContent = "Editar Producto";
-  document.getElementById("idproducto").value = p.idproducto;
-  document.getElementById("nombre").value = p.nombre || "";
-  document.getElementById("descripcion").value = p.descripcion || "";
-  document.getElementById("idcategoria").value = p.idcategoria;
-  document.getElementById("idmarca").value = p.idmarca;
-  document.getElementById("modelo").value = p.modelo || "";
-  document.getElementById("codigobarras").value = p.codigobarras || "";
-  document.getElementById("precioventa").value = p.precioventa;
-  document.getElementById("imagen").value = "";
-  document.getElementById("divEstado").style.display = "block";
-  document.getElementById("estado").value = p.estado;
-
-  const img = document.getElementById("previewImg");
-  const icon = document.getElementById("previewIcon");
-  if (p.imagen) {
-    img.src = BASE_URL + "uploads/productos/" + p.imagen;
+  if (src) {
+    img.src = src;
     img.style.display = "block";
     icon.style.display = "none";
   } else {
@@ -58,72 +19,171 @@ function editarProducto(p) {
     img.style.display = "none";
     icon.style.display = "block";
   }
+}
 
-  new bootstrap.Modal(document.getElementById("modalProducto")).show();
+function previsualizarImagen(event) {
+  const input = event.target;
+
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = (e) => mostrarVistaPrevia(e.target.result);
+    reader.readAsDataURL(input.files[0]);
+  } else {
+    mostrarVistaPrevia(null);
+  }
+}
+
+function asegurarOpcion(select, valor, texto) {
+  if (!valor) return;
+  const existe = [...select.options].some((o) => o.value == valor);
+  if (!existe) {
+    select.add(new Option((texto || "Registro #" + valor) + " (inactiva)", valor));
+  }
+}
+
+
+function aplicarTipo(reiniciar = true) {
+  const tipo = $("tipo").value;
+
+  document.querySelectorAll("[data-oculto-en]").forEach((el) => {
+    const ocultar = el.dataset.ocultoEn.split(",").includes(tipo);
+    el.classList.toggle("d-none", ocultar);
+
+    el.querySelectorAll("input, select").forEach((campo) => {
+      campo.disabled = ocultar;
+      if (!ocultar) return;
+      if (campo.type === "checkbox") campo.checked = false;
+      else campo.value = "";
+    });
+  });
+
+  if (tipo === "SERVICIO") mostrarVistaPrevia(null);
+
+  if (tipo === "PRODUCTO" && reiniciar) {
+    $("controlastock").checked = true;
+  }
+
+  if (tipo === "SERVICIO" && reiniciar && !$("idunidad").value) {
+    const opcion = [...$("idunidad").options].find((o) => /servicio/i.test(o.text));
+    if (opcion) $("idunidad").value = opcion.value;
+  }
+
+  $("tipoAyuda").textContent = AYUDA_TIPO[tipo] || "";
+}
+
+function limpiarFormulario() {
+  $("modalTitulo").textContent = "Nuevo Producto";
+  $("idproducto").value = "";
+  $("tipo").value = "PRODUCTO";
+  $("idcategoria").value = "";
+  $("idmarca").value = "";
+  $("nombre").value = "";
+  $("descripcion").value = "";
+  $("modelo").value = "";
+  $("codigobarras").value = "";
+  $("idunidad").value = "";
+  $("preciocosto").value = "0";
+  $("monedacosto").value = "USD";
+  $("precioventa").value = "";
+  $("garantiameses").value = "0";
+  $("controlaserie").checked = false;
+  $("imagen").value = "";
+  $("divEstado").style.display = "none";
+  $("estado").value = "1";
+
+  mostrarVistaPrevia(null);
+  aplicarTipo(true);
+}
+
+function cargarFormulario(d) {
+  const esEdicion = !!d.idproducto;
+
+  $("modalTitulo").textContent = esEdicion ? "Editar Producto" : "Nuevo Producto";
+  $("idproducto").value = d.idproducto || "";
+  $("tipo").value = d.tipo || "PRODUCTO";
+
+  asegurarOpcion($("idcategoria"), d.idcategoria, d.categoria);
+  asegurarOpcion($("idmarca"), d.idmarca, d.marca);
+  $("idcategoria").value = d.idcategoria || "";
+  $("idmarca").value = d.idmarca || "";
+
+  $("nombre").value = d.nombre || "";
+  $("descripcion").value = d.descripcion || "";
+  $("modelo").value = d.modelo || "";
+  $("codigobarras").value = d.codigobarras || "";
+  $("idunidad").value = d.idunidad || "";
+  $("preciocosto").value = d.preciocosto ?? "0";
+  $("monedacosto").value = d.monedacosto || "USD";
+  $("precioventa").value = d.precioventa ?? "";
+  $("garantiameses").value = d.garantiameses ?? "0";
+  $("imagen").value = "";
+
+  aplicarTipo(false);
+  $("controlastock").checked = String(d.controlastock) === "1";
+  $("controlaserie").checked = String(d.controlaserie) === "1";
+  if (d.tipo === "SERVICIO") $("idmarca").value = "";
+
+  $("divEstado").style.display = esEdicion ? "block" : "none";
+  $("estado").value = d.estado ?? "1";
+
+  mostrarVistaPrevia(d.imagen ? BASE_URL + "uploads/productos/" + d.imagen : null);
+}
+
+function abrirModalProducto() {
+  bootstrap.Modal.getOrCreateInstance($("modalProducto")).show();
+}
+
+function editarProducto(p) {
+  cargarFormulario(p);
+  abrirModalProducto();
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  const viewContainer = document.getElementById("viewProductos");
+  const viewContainer = $("viewProductos");
   if (!viewContainer) return;
 
-  const urlBuscar = viewContainer.getAttribute("data-url-buscar");
-  const inputBuscar = document.getElementById("inputBuscarTablaProductos");
-  const tbodyProductos = document.getElementById("tbodyProductos");
+  $("tipo").addEventListener("change", () => aplicarTipo(true));
+  aplicarTipo(true);
 
-  if (inputBuscar) {
-    inputBuscar.addEventListener("input", function () {
-      let q = this.value.trim();
-
-      fetch(urlBuscar + "?q=" + encodeURIComponent(q), {
-        headers: { "X-Requested-With": "XMLHttpRequest" },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          tbodyProductos.innerHTML = "";
-
-          if (data.length === 0) {
-            tbodyProductos.innerHTML = `
-                        <tr>
-                            <td colspan="10" class="text-center text-muted py-4">No se encontraron productos coincidentes.</td>
-                        </tr>
-                    `;
-            return;
-          }
-
-          data.forEach((p) => {
-            let imagenHtml = "";
-            if (p.imagen) {
-              imagenHtml = `<img src="${BASE_URL}uploads/productos/${p.imagen}" alt="${p.nombre}" class="rounded border object-fit-cover shadow-sm" style="width: 44px; height: 44px;">`;
-            } else {
-              imagenHtml = `<div class="bg-light rounded border d-flex align-items-center justify-content-center text-secondary" style="width: 44px; height: 44px;"><i class="bi bi-image fs-5"></i></div>`;
-            }
-
-            let estadoBadge =
-              parseInt(p.estado) === 1
-                ? `<a href="${BASE_URL}productos/cambiarestado/${p.idproducto}" class="badge bg-success-subtle text-success text-decoration-none" title="Clic para cambiar estado">Activo</a>`
-                : `<a href="${BASE_URL}productos/cambiarestado/${p.idproducto}" class="badge bg-danger-subtle text-danger text-decoration-none" title="Clic para cambiar estado">Inactivo</a>`;
-
-            let tr = document.createElement("tr");
-            tr.innerHTML = `
-                        <td class="ps-4">${imagenHtml}</td>
-                        <td class="fw-semibold text-dark">${p.nombre}</td>
-                        <td class="text-muted small">${p.descripcion || "-"}</td>
-                        <td><span class="badge bg-light text-dark border">${p.categoria || ""}</span></td>
-                        <td>${p.marca || ""}</td>
-                        <td class="text-muted small">${p.modelo || "-"}</td>
-                        <td class="text-muted small font-monospace">${p.codigobarras || "-"}</td>
-                        <td class="text-end fw-bold text-dark">S/ ${parseFloat(p.precioventa).toFixed(2)}</td>
-                        <td class="text-center">${estadoBadge}</td>
-                        <td class="text-end pe-4">
-                            <button type="button" class="btn btn-sm btn-light text-primary border-0 me-1" onclick='editarProducto(${JSON.stringify(p)})' title="Editar Producto">
-                                <i class="bi bi-pencil-square fs-5"></i>
-                            </button>
-                        </td>
-                    `;
-            tbodyProductos.appendChild(tr);
-          });
-        })
-        .catch((err) => console.error("Error al buscar productos:", err));
-    });
+  if (typeof FORM_PREVIO !== "undefined" && FORM_PREVIO) {
+    cargarFormulario(FORM_PREVIO);
+    abrirModalProducto();
   }
+
+  const urlBuscar = viewContainer.getAttribute("data-url-buscar");
+  const tbody = $("tbodyProductos");
+  let temporizador = null;
+  let ultimaPeticion = 0;
+
+  function buscar() {
+    const params = new URLSearchParams({
+      q: $("inputBuscarTablaProductos").value.trim(),
+      categoria: $("filtroCategoria").value,
+      tipo: $("filtroTipo").value,
+      estado: $("filtroEstado").value,
+    });
+
+    const numero = ++ultimaPeticion;
+
+    fetch(urlBuscar + "?" + params.toString(), {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      })
+      .then((html) => {
+        if (numero === ultimaPeticion) tbody.innerHTML = html;
+      })
+      .catch((err) => console.error("Error al buscar productos:", err));
+  }
+
+  $("inputBuscarTablaProductos").addEventListener("input", () => {
+    clearTimeout(temporizador);
+    temporizador = setTimeout(buscar, 300);
+  });
+
+  ["filtroCategoria", "filtroTipo", "filtroEstado"].forEach((id) => {
+    $(id).addEventListener("change", buscar);
+  });
 });

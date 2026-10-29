@@ -122,10 +122,11 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light text-uppercase fs-7 text-secondary">
                             <tr>
-                                <th style="width: 80px;" class="ps-4">ID</th>
+                                <th style="width: 70px;" class="ps-4">ID</th>
                                 <th>Nombre de Marca</th>
+                                <th class="text-center" style="width: 130px;">Productos</th>
                                 <th class="text-center" style="width: 110px;">Estado</th>
-                                <th style="width: 100px;" class="text-end pe-4">Acciones</th>
+                                <th style="width: 130px;" class="text-end pe-4">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -135,6 +136,9 @@
                                     <tr class="<?= $marcaActiva ? '' : 'text-muted' ?>">
                                         <td class="ps-4 fw-bold text-muted"><?= (int) $mar['idmarca'] ?></td>
                                         <td><span class="fw-semibold text-dark"><?= esc($mar['marca']) ?></span></td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-dark border"><?= (int) ($mar['total_productos'] ?? 0) ?></span>
+                                        </td>
                                         <td class="text-center">
                                             <?php if (array_key_exists('estado', $mar)): ?>
                                                 <form action="<?= base_url('catalogos/cambiar-estado-marca/' . $mar['idmarca']) ?>" method="POST" class="d-inline">
@@ -160,7 +164,7 @@
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-5">
+                                    <td colspan="5" class="text-center text-muted py-5">
                                         <i class="bi bi-c-circle fs-1 text-secondary-emphasis d-block mb-2"></i>
                                         <p class="mb-0">Aún no hay marcas. Crea la primera con "Nueva Marca".</p>
                                     </td>
@@ -168,6 +172,9 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
                 </div>
             </div>
         </div>

@@ -10,7 +10,7 @@ class MarcaModel extends Model
     protected  $primaryKey = 'idmarca';
     protected  $useAutoIncrement = true;
     protected  $returnType = 'array';
-    protected  $allowedFields = ['marca'];
+    protected  $allowedFields = ['marca' , 'estado'];
 
     protected $validationRules = [
         'idmarca' => 'permit_empty|numeric',
