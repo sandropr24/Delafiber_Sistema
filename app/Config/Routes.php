@@ -70,3 +70,9 @@ $routes->group('ventas', static function ($routes) {
     $routes->post('guardar', 'VentaController::guardar');
     $routes->get('detalles/(:num)', 'VentaController::detalles/$1');
 });
+
+$routes->group('entregas', function($routes) {
+    $routes->get('/', 'EntregaController::index');
+    $routes->get('buscar_tabla', 'EntregaController::buscar_tabla');
+    $routes->post('cambiar_estado', 'EntregaController::cambiar_estado');
+});

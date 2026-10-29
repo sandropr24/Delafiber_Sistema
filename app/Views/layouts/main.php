@@ -56,6 +56,10 @@
                         <i class="bi bi-journal-text"></i>
                         <span>Kardex & Stock</span>
                     </a>
+                    <a href="<?= base_url('entregas') ?>" class="sidebar-link <?= url_is('entregas*') ? 'active' : '' ?>">
+                        <i class="bi bi-send"></i>
+                        <span>Entregas</span>
+                    </a>
                 <?php endif; ?>
 
                 <?php if (in_array($userRol, ['Administrador', 'Cajero'], true)): ?>
