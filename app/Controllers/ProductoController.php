@@ -13,7 +13,7 @@ class ProductoController extends BaseController
 
     private const CAMPOS_FORM = [
         'idproducto', 'tipo', 'idcategoria', 'idmarca', 'nombre', 'descripcion', 'modelo',
-        'codigobarras', 'idunidad', 'preciocosto', 'monedacosto', 'precioventa',
+        'codigobarras', 'idunidad', 'precioventa',
         'garantiameses', 'controlastock', 'controlaserie', 'estado',
     ];
 
@@ -86,7 +86,6 @@ class ProductoController extends BaseController
         $idCategoria = (int) $this->request->getPost('idcategoria') ?: null;
         $idMarca     = (int) $this->request->getPost('idmarca') ?: null;
         $idUnidad    = (int) $this->request->getPost('idunidad') ?: null;
-        $monedaPost  = strtoupper((string) $this->request->getPost('monedacosto'));
         $estadoPost  = $this->request->getPost('estado');
         $errores     = [];
 
@@ -130,9 +129,10 @@ class ProductoController extends BaseController
             'controlastock' => ($esProducto && $this->request->getPost('controlastock')) ? 1 : 0,
             'controlaserie' => ($esProducto && $this->request->getPost('controlaserie')) ? 1 : 0,
             'garantiameses' => (int) $this->request->getPost('garantiameses'),
-            'preciocosto'   => $this->request->getPost('preciocosto') !== '' ? $this->request->getPost('preciocosto') : 0,
-            'monedacosto'   => in_array($monedaPost, ['PEN', 'USD'], true) ? $monedaPost : 'USD',
-            'precioventa'   => $this->request->getPost('precioventa'),
+            // Precio sugerido opcional: la BD actual exige un DECIMAL no nulo.
+            // Un valor de 0 indica que aún no se ha definido precio sugerido.
+            'precioventa'   => trim((string) $this->request->getPost('precioventa')) === ''
+                ? '0.00' : $this->request->getPost('precioventa'),
             'estado'        => in_array($estadoPost, ['0', '1'], true) ? (int) $estadoPost : 1,
         ];
 

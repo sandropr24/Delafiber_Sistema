@@ -7,13 +7,12 @@ $clasesTipo = [
 ?>
 <?php if (empty($productos)): ?>
     <tr>
-        <td colspan="10" class="text-center text-muted py-4">No se encontraron productos.</td>
+        <td colspan="9" class="text-center text-muted py-4">No se encontraron productos.</td>
     </tr>
 <?php else: ?>
     <?php foreach ($productos as $p): ?>
         <?php
         $activo   = ((int) $p['estado'] === 1);
-        $simbolo  = ($p['monedacosto'] ?? 'USD') === 'USD' ? 'US$' : 'S/';
         ?>
         <tr class="<?= $activo ? '' : 'text-muted' ?>">
             <td class="ps-4">
@@ -46,12 +45,8 @@ $clasesTipo = [
             <td><span class="badge bg-light text-dark border"><?= esc($p['categoria']) ?></span></td>
             <td><?= !empty($p['marca']) ? esc($p['marca']) : '<span class="text-muted">—</span>' ?></td>
             <td class="text-muted small font-monospace"><?= esc($p['codigobarras'] ?: '-') ?></td>
-
-            <td class="text-end text-muted" style="white-space: nowrap;">
-                <?= $simbolo ?> <?= number_format((float) $p['preciocosto'], 2) ?>
-            </td>
             <td class="text-end fw-bold text-dark" style="white-space: nowrap;">
-                S/ <?= number_format((float) $p['precioventa'], 2) ?>
+                <?= (float) $p['precioventa'] > 0 ? 'S/ ' . number_format((float) $p['precioventa'], 2) : '<span class="text-muted fw-normal">Sin definir</span>' ?>
             </td>
 
             <td class="text-center">

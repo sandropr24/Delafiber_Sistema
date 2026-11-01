@@ -70,9 +70,8 @@
                         <th>Categoría</th>
                         <th>Marca</th>
                         <th>Código</th>
-                        <th class="text-end" style="white-space: nowrap;">P. Costo</th>
-                        <th class="text-end" style="white-space: nowrap;">P. Venta</th>
-                        <th class="text-center">Estado</th>
+                        <th class="text-end" style="width: 110px; white-space: nowrap;">P. sugerido</th>
+                        <th class="text-center" style="width: 100px;">Estado</th>
                         <th class="text-end pe-4" style="width: 90px;">Acciones</th>
                     </tr>
                 </thead>
@@ -131,7 +130,7 @@
                         </div>
 
                         <div class="col-12">
-                            <div class="form-text mt-0" id="tipoAyuda"></div>
+                            <div class="form-text mt-0 text-primary fw-medium" id="tipoAyuda"></div>
                         </div>
 
                         <div class="col-12 col-md-6">
@@ -141,20 +140,20 @@
 
                         <div class="col-12 col-md-6">
                             <label for="descripcion" class="form-label small fw-semibold">Descripción</label>
-                            <input type="text" class="form-control" id="descripcion" name="descripcion" maxlength="150">
+                            <input type="text" class="form-control" id="descripcion" name="descripcion" maxlength="250">
                         </div>
 
-                        <div class="col-12 col-md-4" data-oculto-en="SERVICIO">
+                        <div class="col-12 col-md-4" data-oculto-en="SERVICIO,COMBO">
                             <label for="modelo" class="form-label small fw-semibold">Modelo</label>
                             <input type="text" class="form-control" id="modelo" name="modelo" maxlength="80">
                         </div>
 
-                        <div class="col-12 col-md-4" data-oculto-en="SERVICIO">
+                        <div class="col-12 col-md-4" data-oculto-en="SERVICIO,COMBO">
                             <label for="codigobarras" class="form-label small fw-semibold">Código</label>
-                            <input type="text" class="form-control" id="codigobarras" name="codigobarras" maxlength="50">
+                            <input type="text" class="form-control" id="codigobarras" name="codigobarras" maxlength="13">
                         </div>
 
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-4" id="contenedorUnidad">
                             <label for="idunidad" class="form-label small fw-semibold">Unidad de medida <span class="text-danger">*</span></label>
                             <select class="form-select" id="idunidad" name="idunidad" required>
                                 <option value="">Seleccione</option>
@@ -165,21 +164,8 @@
                         </div>
 
                         <div class="col-6 col-md-3">
-                            <label for="preciocosto" class="form-label small fw-semibold">Precio costo</label>
-                            <input type="number" step="0.01" min="0" class="form-control" id="preciocosto" name="preciocosto" value="0">
-                        </div>
-
-                        <div class="col-6 col-md-3">
-                            <label for="monedacosto" class="form-label small fw-semibold">Moneda del costo</label>
-                            <select class="form-select" id="monedacosto" name="monedacosto">
-                                <option value="USD">Dólares (US$)</option>
-                                <option value="PEN">Soles (S/)</option>
-                            </select>
-                        </div>
-
-                        <div class="col-6 col-md-3">
-                            <label for="precioventa" class="form-label small fw-semibold">Precio venta (S/) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0" class="form-control" id="precioventa" name="precioventa" required>
+                            <label for="precioventa" class="form-label small fw-semibold">Precio sugerido (S/)</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="precioventa" name="precioventa" placeholder="Opcional">
                         </div>
 
                         <div class="col-6 col-md-3">
@@ -188,26 +174,26 @@
                         </div>
 
                         <div class="col-12 col-md-6" data-oculto-en="SERVICIO,COMBO">
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch mt-1">
                                 <input class="form-check-input" type="checkbox" role="switch" id="controlastock" name="controlastock" value="1" checked>
                                 <label class="form-check-label small fw-semibold" for="controlastock">Controla stock</label>
                             </div>
                         </div>
 
                         <div class="col-12 col-md-6" data-oculto-en="SERVICIO,COMBO">
-                            <div class="form-check form-switch">
+                            <div class="form-check form-switch mt-1">
                                 <input class="form-check-input" type="checkbox" role="switch" id="controlaserie" name="controlaserie" value="1">
                                 <label class="form-check-label small fw-semibold" for="controlaserie">Lleva número de serie (garantías)</label>
                             </div>
                         </div>
 
-                        <div class="col-12 col-md-8" data-oculto-en="SERVICIO">
+                        <div class="col-12 col-md-8" data-oculto-en="SERVICIO,COMBO">
                             <label for="imagen" class="form-label small fw-semibold">Imagen (opcional)</label>
                             <input type="file" class="form-control" id="imagen" name="imagen" accept="image/png, image/jpeg, image/webp" onchange="previsualizarImagen(event)">
                             <small class="text-muted" style="font-size: 0.75rem;">JPG, PNG o WEBP. Máximo 2MB.</small>
                         </div>
 
-                        <div class="col-12 col-md-4 text-center" data-oculto-en="SERVICIO">
+                        <div class="col-12 col-md-4 text-center" data-oculto-en="SERVICIO,COMBO">
                             <label class="form-label small fw-semibold d-block">Vista previa</label>
                             <div class="d-flex align-items-center justify-content-center bg-light border rounded mx-auto" style="width: 70px; height: 70px; overflow: hidden;">
                                 <img id="previewImg" src="" alt="Previsualización" class="w-100 h-100 object-fit-cover" style="display: none;">

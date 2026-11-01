@@ -46,7 +46,7 @@ class ProductoModel extends Model
         'garantiameses' => 'permit_empty|is_natural|less_than_equal_to[120]',
         'preciocosto'   => 'permit_empty|decimal|greater_than_equal_to[0]|less_than[100000000]',
         'monedacosto'   => 'permit_empty|in_list[PEN,USD]',
-        'precioventa'   => 'required|decimal|greater_than_equal_to[0]|less_than[100000000]',
+        'precioventa'   => 'permit_empty|decimal|greater_than_equal_to[0]|less_than[100000000]',
         'estado'        => 'permit_empty|in_list[0,1]',
         'imagen'        => 'permit_empty|max_length[255]',
     ];
@@ -68,12 +68,7 @@ class ProductoModel extends Model
             'is_natural'          => 'La garantía debe ser un número de meses entero.',
             'less_than_equal_to'  => 'La garantía no puede superar los 120 meses.',
         ],
-        'preciocosto' => [
-            'decimal'                  => 'Ingrese un precio de costo válido.',
-            'greater_than_equal_to'    => 'El precio de costo no puede ser negativo.',
-        ],
         'precioventa' => [
-            'required'              => 'El precio de venta es obligatorio.',
             'decimal'               => 'Ingrese un precio de venta válido.',
             'greater_than_equal_to' => 'El precio de venta no puede ser negativo.',
         ],
