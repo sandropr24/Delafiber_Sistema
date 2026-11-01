@@ -2,7 +2,8 @@ const $ = (id) => document.getElementById(id);
 
 const AYUDA_TIPO = {
   PRODUCTO: "Equipo físico: puede controlar stock y número de serie.",
-  SERVICIO: "Servicio técnico: solo necesita nombre, categoría, unidad y precios.",
+  SERVICIO:
+    "Servicio técnico: solo necesita nombre, categoría, unidad; precio sugerido opcional.",
   COMBO: "Kit o combo: no maneja stock ni serie propios y requiere una marca.",
 };
 
@@ -37,10 +38,11 @@ function asegurarOpcion(select, valor, texto) {
   if (!valor) return;
   const existe = [...select.options].some((o) => o.value == valor);
   if (!existe) {
-    select.add(new Option((texto || "Registro #" + valor) + " (inactiva)", valor));
+    select.add(
+      new Option((texto || "Registro #" + valor) + " (inactiva)", valor),
+    );
   }
 }
-
 
 function aplicarTipo(reiniciar = true) {
   const tipo = $("tipo").value;
@@ -57,14 +59,16 @@ function aplicarTipo(reiniciar = true) {
     });
   });
 
-  if (tipo === "SERVICIO") mostrarVistaPrevia(null);
+  if (tipo === "SERVICIO" || tipo === "COMBO") mostrarVistaPrevia(null);
 
   if (tipo === "PRODUCTO" && reiniciar) {
     $("controlastock").checked = true;
   }
 
   if (tipo === "SERVICIO" && reiniciar && !$("idunidad").value) {
-    const opcion = [...$("idunidad").options].find((o) => /servicio/i.test(o.text));
+    const opcion = [...$("idunidad").options].find((o) =>
+      /servicio/i.test(o.text),
+    );
     if (opcion) $("idunidad").value = opcion.value;
   }
 
@@ -98,7 +102,9 @@ function limpiarFormulario() {
 function cargarFormulario(d) {
   const esEdicion = !!d.idproducto;
 
-  $("modalTitulo").textContent = esEdicion ? "Editar Producto" : "Nuevo Producto";
+  $("modalTitulo").textContent = esEdicion
+    ? "Editar Producto"
+    : "Nuevo Producto";
   $("idproducto").value = d.idproducto || "";
   $("tipo").value = d.tipo || "PRODUCTO";
 
@@ -126,7 +132,9 @@ function cargarFormulario(d) {
   $("divEstado").style.display = esEdicion ? "block" : "none";
   $("estado").value = d.estado ?? "1";
 
-  mostrarVistaPrevia(d.imagen ? BASE_URL + "uploads/productos/" + d.imagen : null);
+  mostrarVistaPrevia(
+    d.imagen ? BASE_URL + "uploads/productos/" + d.imagen : null,
+  );
 }
 
 function abrirModalProducto() {
