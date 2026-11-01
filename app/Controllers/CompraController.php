@@ -42,7 +42,7 @@ class CompraController extends BaseController
 
         $data = [
             'titulo'      => 'Registrar Nueva Compra',
-            'productos'   => $productoModel->findAll(),
+            'productos'   => $productoModel->select('productos.*, unidadesmedida.unidad AS nombreunidad, unidadesmedida.abreviatura AS abreviaturaunidad')->join('unidadesmedida', 'unidadesmedida.idunidad = productos.idunidad', 'left')->where('productos.tipo', 'PRODUCTO')->where('productos.controlastock', 1)->where('productos.estado', 1)->findAll(),
             'proveedores' => $proveedorModel->findAll(),
             'locales'     => $localModel->findAll()
         ];
@@ -53,137 +53,130 @@ class CompraController extends BaseController
 
     public function guardar()
     {
-        $reglas = [
-            'idproveedor'     => 'required|is_not_unique[proveedores.idproveedor]',
-            'serie'           => 'required',
-            'tipocomprobante' => 'required',
-            'productos'       => 'required'
-        ];
+        $productos = $this->request->getPost('productos');
+        $cantidades = $this->request->getPost('cantidades');
+        $precios = $this->request->getPost('precios');
+        $moneda = $this->request->getPost('moneda');
+        $tipoCambio = (float) $this->request->getPost('tipocambio');
+        $idlocal = (int) $this->request->getPost('idlocal');
+        $idusuario = (int) session()->get('idusuario');
 
+        $reglas = [
+            'idproveedor' => 'required|is_not_unique[proveedores.idproveedor]',
+            'idlocal' => 'required|is_not_unique[locales.idlocal]',
+            'tipocomprobante' => 'required|in_list[FACTURA,BOLETA,GUIA]',
+            'serie' => 'required|max_length[20]',
+            'numero' => 'required|max_length[20]',
+            'fechacompra' => 'required|valid_date[Y-m-d]',
+            'moneda' => 'required|in_list[PEN,USD]',
+        ];
         if (!$this->validate($reglas)) {
-            return redirect()->back()->withInput()->with('error', 'Por favor, complete todos los campos obligatorios de forma correcta.');
+            return redirect()->back()->withInput()->with('error', 'Revise los datos del comprobante, proveedor y almacén.');
+        }
+        if (!$idusuario) {
+            return redirect()->back()->withInput()->with('error', 'La sesión no identifica al usuario responsable de la compra.');
+        }
+        if (!is_array($productos) || !$productos || !is_array($cantidades) || !is_array($precios)
+            || count($productos) !== count($cantidades) || count($productos) !== count($precios)) {
+            return redirect()->back()->withInput()->with('error', 'Agregue al menos un producto válido.');
+        }
+        if (!in_array($moneda, ['PEN', 'USD'], true) || !is_finite($tipoCambio)
+            || ($moneda === 'USD' && $tipoCambio <= 0)) {
+            return redirect()->back()->withInput()->with('error', 'El tipo de cambio debe ser mayor a cero para compras en dólares.');
+        }
+        if ($moneda === 'PEN') { $tipoCambio = 1.0; }
+
+        $productoModel = model(ProductoModel::class);
+        $items = [];
+        $total = 0.0;
+        foreach ($productos as $i => $id) {
+            $producto = $productoModel->find((int)$id);
+            $cantidadRaw = (string)($cantidades[$i] ?? '');
+            $precioRaw = (string)($precios[$i] ?? '');
+            if (!$producto || $producto['tipo'] !== 'PRODUCTO' || (int)$producto['controlastock'] !== 1
+                || !preg_match('/^\d+(?:\.\d{1,2})?$/', $cantidadRaw)
+                || !preg_match('/^\d+(?:\.\d{1,2})?$/', $precioRaw)
+                || (float)$cantidadRaw <= 0 || (float)$precioRaw < 0) {
+                return redirect()->back()->withInput()->with('error', 'Solo se pueden comprar artículos físicos con stock; revise cantidades y costos.');
+            }
+            $unidadFila = \Config\Database::connect()->table('unidadesmedida')->select('abreviatura')->where('idunidad', (int)$producto['idunidad'])->get()->getRowArray();
+            $unidad = $unidadFila['abreviatura'] ?? null;
+            $admiteDecimales = $unidad !== null && strtoupper($unidad) === 'M';
+            if (!$admiteDecimales && floor((float)$cantidadRaw) !== (float)$cantidadRaw) {
+                return redirect()->back()->withInput()->with('error', 'Este producto se compra en unidades enteras; revise la cantidad.');
+            }
+            $cantidad = (float)$cantidadRaw;
+            $precio = (float)$precioRaw;
+            $total += round($cantidad * $precio, 2);
+            $items[] = ['idproducto' => (int)$id, 'cantidad' => $cantidad, 'precio' => $precio];
+        }
+        if (!is_finite($total) || $total > 99999999.99) {
+            return redirect()->back()->withInput()->with('error', 'El importe de la compra supera el límite permitido.');
         }
 
         $db = \Config\Database::connect();
-        $db->transStart();
-
+        $db->transBegin();
         try {
-            $compraModel     = model(CompraModel::class);
-            $detCompraModel  = model(DeCompraModel::class);
-            $kardexModel     = model(KardexModel::class);
+            $compraModel = model(CompraModel::class);
+            $detalleModel = model(DeCompraModel::class);
+            $kardexModel = model(KardexModel::class);
             $movimientoModel = model(MovimientoModel::class);
-
-            $idproveedor     = $this->request->getPost('idproveedor');
-            $serie           = $this->request->getPost('serie');
-            $tipocomprobante = $this->request->getPost('tipocomprobante');
-            $fechacompra     = $this->request->getPost('fechacompra') ?? date('Y-m-d');
-            $idlocal         = $this->request->getPost('idlocal') ?? 1;
-
-            $productos       = $this->request->getPost('productos');
-            $cantidades      = $this->request->getPost('cantidades');
-            $precios         = $this->request->getPost('precios');
-
-            if (empty($productos) || !is_array($productos)) {
-                return redirect()->back()->withInput()->with('error', 'El detalle de la compra no puede estar vacío.');
-            }
-
-            $totalCompra = 0;
-            for ($i = 0; $i < count($productos); $i++) {
-                $totalCompra += ((float)$cantidades[$i] * (float)$precios[$i]);
-            }
-
             $idcompra = $compraModel->insert([
-                'idproveedor'     => $idproveedor,
-                'serie'           => $serie,
-                'tipocomprobante' => $tipocomprobante,
-                'fechacompra'     => $fechacompra,
-                'fecharegistro'   => date('Y-m-d H:i:s'),
-                'total'           => $totalCompra
+                'idproveedor' => (int)$this->request->getPost('idproveedor'),
+                'tipocomprobante' => $this->request->getPost('tipocomprobante'),
+                'serie' => trim($this->request->getPost('serie')),
+                'numero' => trim($this->request->getPost('numero')),
+                'fechacompra' => $this->request->getPost('fechacompra'),
+                'fecharegistro' => date('Y-m-d H:i:s'),
+                'moneda' => $moneda,
+                'tipocambio' => $tipoCambio,
+                'total' => round($total, 2),
             ]);
+            if (!$idcompra) { throw new \RuntimeException('No se pudo guardar la cabecera.'); }
 
-            if (!$idcompra) {
-                throw new \RuntimeException('Error al registrar la cabecera de la compra: ' . implode(', ', $compraModel->errors()));
-            }
+            foreach ($items as $item) {
+                $idproducto = $item['idproducto'];
+                $cantidad = $item['cantidad'];
+                $precio = $item['precio'];
+                if (!$detalleModel->insert([
+                    'idcompra' => $idcompra, 'idproducto' => $idproducto,
+                    'cantidad' => $cantidad, 'preciocompra' => $precio,
+                ])) { throw new \RuntimeException('No se pudo guardar un detalle.'); }
 
-            for ($i = 0; $i < count($productos); $i++) {
-                $idproducto = $productos[$i];
-                $cantidad   = (int)$cantidades[$i];
-                $precio     = (float)$precios[$i];
-
-                $detInserted = $detCompraModel->insert([
-                    'idcompra'     => $idcompra,
-                    'idproducto'   => $idproducto,
-                    'cantidad'     => $cantidad,
-                    'preciocompra' => $precio
-                ]);
-
-                if (!$detInserted) {
-                    throw new \RuntimeException('Error al registrar el detalle del producto ID ' . $idproducto . ': ' . implode(', ', $detCompraModel->errors()));
-                }
-
-                $kardexActual = $kardexModel->where('idproducto', $idproducto)
-                    ->where('idlocal', $idlocal)
-                    ->first();
-
-                $stockAnterior = $kardexActual ? (int)$kardexActual['stockactual'] : 0;
-                $nuevoStock    = $stockAnterior + $cantidad;
-                $costoAnterior = $kardexActual ? (float)$kardexActual['costopromedio'] : 0.00;
-
-                $nuevoCostoPromedio = $nuevoStock > 0
-                    ? (($stockAnterior * $costoAnterior) + ($cantidad * $precio)) / $nuevoStock
-                    : $precio;
-
-                if ($kardexActual) {
-                    $idkardex = $kardexActual['idkardex'];
-                    $kardexModel->update($idkardex, [
-                        'stockactual'   => $nuevoStock,
-                        'costopromedio' => $nuevoCostoPromedio
-                    ]);
-                } else {
-                    $idkardex = $kardexModel->insert([
-                        'idproducto'    => $idproducto,
-                        'idlocal'       => $idlocal,
-                        'stockactual'   => $nuevoStock,
-                        'costopromedio' => $nuevoCostoPromedio,
-                        'minima'        => 5,
-                        'maxima'        => 100
-                    ]);
-
-                    if (!$idkardex) {
-                        throw new \RuntimeException('Error al inicializar el Kardex para el producto ID ' . $idproducto);
+                $row = $db->query('SELECT * FROM kardex WHERE idproducto = ? AND idlocal = ? FOR UPDATE',
+                    [$idproducto, $idlocal])->getRowArray();
+                $costoPEN = $precio * $tipoCambio;
+                if ($row) {
+                    $anterior = (float)$row['stockactual'];
+                    $nuevo = $anterior + $cantidad;
+                    $costoPromedio = (($anterior * (float)$row['costopromedio']) + ($cantidad * $costoPEN)) / $nuevo;
+                    $idkardex = (int)$row['idkardex'];
+                    if (!$kardexModel->update($idkardex, ['stockactual' => $nuevo, 'costopromedio' => round($costoPromedio, 4)])) {
+                        throw new \RuntimeException('No se pudo actualizar Kardex.');
                     }
+                } else {
+                    $nuevo = $cantidad;
+                    $idkardex = $kardexModel->insert([
+                        'idproducto' => $idproducto, 'idlocal' => $idlocal,
+                        'stockactual' => $nuevo, 'costopromedio' => round($costoPEN, 4),
+                        'minima' => 0, 'maxima' => 0,
+                    ]);
+                    if (!$idkardex) { throw new \RuntimeException('No se pudo crear Kardex.'); }
                 }
-
-                $movInserted = $movimientoModel->insert([
-                    'idkardex'    => $idkardex,
-                    'idcompra'    => $idcompra,
-                    'idusuario'   => session()->get('idusuario') ?? 1,
-                    'tipo'        => 'ENTRADA',
-                    'fecha'       => date('Y-m-d H:i:s'),
-                    'cantidad'    => $cantidad,
-                    'saldo'       => $nuevoStock,
-                    'descripcion' => 'Ingreso por Compra N° ' . $idcompra,
-                    'motivo'      => 'Reabastecimiento de inventario'
-                ]);
-
-                if (!$movInserted) {
-                    throw new \RuntimeException('Error al registrar el movimiento de inventario para el producto ID ' . $idproducto);
-                }
+                if (!$movimientoModel->insert([
+                    'idkardex' => $idkardex, 'idcompra' => $idcompra, 'idusuario' => $idusuario,
+                    'tipo' => 'ENTRADA', 'fecha' => date('Y-m-d H:i:s'),
+                    'cantidad' => $cantidad, 'saldo' => $nuevo,
+                    'descripcion' => 'Compra ' . $idcompra, 'motivo' => 'Ingreso por compra',
+                ])) { throw new \RuntimeException('No se pudo registrar movimiento de stock.'); }
             }
-
-            $db->transComplete();
-
-            if ($db->transStatus() === false) {
-                throw new \RuntimeException('La transacción de la base de datos falló en el commit.');
-            }
-
-            return redirect()->to(base_url('compras'))->with('mensaje', 'Compra registrada con éxito y Kardex actualizado.');
-        } catch (\Exception $e) {
+            if ($db->transStatus() === false) { throw new \RuntimeException('Error de base de datos.'); }
+            $db->transCommit();
+            return redirect()->to(base_url('compras'))->with('mensaje', 'Compra registrada y Kardex actualizado.');
+        } catch (\Throwable $e) {
             $db->transRollback();
-
-            log_message('error', 'Error en Guardar Compra: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-
-            return redirect()->back()->withInput()->with('error', 'Ocurrió un error inesperado al procesar la compra: ' . $e->getMessage());
+            log_message('error', 'Error al guardar compra: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'No se pudo registrar la compra. Revise el comprobante y los datos.');
         }
     }
 
@@ -202,9 +195,9 @@ class CompraController extends BaseController
             return redirect()->to(base_url('compras'))->with('error', 'La compra solicitada no existe.');
         }
 
-        $detalles = $detCompraModel->select('detcompras.*, productos.nombre as producto')
-            ->join('productos', 'productos.idproducto = detcompras.idproducto', 'left')
-            ->where('detcompras.idcompra', $idcompra)
+        $detalles = $detCompraModel->select('detcompra.*, productos.nombre as producto')
+            ->join('productos', 'productos.idproducto = detcompra.idproducto', 'left')
+            ->where('detcompra.idcompra', $idcompra)
             ->findAll();
 
         $data = [

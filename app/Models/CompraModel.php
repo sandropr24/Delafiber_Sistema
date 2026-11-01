@@ -11,6 +11,9 @@ class CompraModel extends Model
     protected $allowedFields    = [
         'idproveedor',
         'serie',
+        'numero',
+        'moneda',
+        'tipocambio',
         'fechacompra',
         'fecharegistro',
         'tipocomprobante',

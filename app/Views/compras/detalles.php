@@ -51,7 +51,7 @@
 
                         <div class="col-6">
                             <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Serie / Número</span>
-                            <span class="fw-medium text-dark"><?= esc($compra['serie']) ?></span>
+                            <span class="fw-medium text-dark"><?= esc($compra['serie'] . '-' . $compra['numero']) ?></span>
                         </div>
 
                         <div class="col-6">
@@ -74,7 +74,7 @@
                     <div class="mt-4 pt-3 border-top" style="border-color: #e5e7eb !important;">
                         <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 border">
                             <span class="fw-semibold text-secondary">Total Compra:</span>
-                            <h4 class="text-success fw-bold mb-0">S/ <?= number_format($compra['total'], 2) ?></h4>
+                            <h4 class="text-success fw-bold mb-0"><?= ($compra['moneda'] === 'USD' ? 'US$' : 'S/') ?> <?= number_format($compra['total'], 2) ?></h4>
                         </div>
                     </div>
                 </div>
@@ -113,8 +113,8 @@
                                                     <?= esc($det['cantidad']) ?>
                                                 </span>
                                             </td>
-                                            <td class="text-end text-muted">S/ <?= number_format($det['preciocompra'], 2) ?></td>
-                                            <td class="pe-4 text-end fw-bold text-success">S/ <?= number_format($subtotal, 2) ?></td>
+                                            <td class="text-end text-muted"><?= ($compra['moneda'] === 'USD' ? 'US$' : 'S/') ?> <?= number_format($det['preciocompra'], 2) ?></td>
+                                            <td class="pe-4 text-end fw-bold text-success"><?= ($compra['moneda'] === 'USD' ? 'US$' : 'S/') ?> <?= number_format($subtotal, 2) ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>

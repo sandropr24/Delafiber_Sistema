@@ -60,13 +60,25 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="serie" class="form-label fw-semibold small text-uppercase text-muted">Serie / Nro <span class="text-danger">*</span></label>
+                            <label for="serie" class="form-label fw-semibold small text-uppercase text-muted">Serie <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="fas fa-hashtag"></i></span>
-                                <input type="text" class="form-control" name="serie" id="serie" placeholder="Ej. F001-000123" maxlength="13" required>
+                                <input type="text" class="form-control" name="serie" id="serie" placeholder="Ej. F001" maxlength="20" required>
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="numero" class="form-label fw-semibold small text-uppercase text-muted">Número <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="numero" id="numero" placeholder="000123" maxlength="20" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="moneda" class="form-label fw-semibold small text-uppercase text-muted">Moneda</label>
+                            <select name="moneda" id="moneda" class="form-select"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tipocambio" class="form-label fw-semibold small text-uppercase text-muted">Tipo de cambio a PEN</label>
+                            <input type="number" class="form-control" name="tipocambio" id="tipocambio" min="0.0001" step="0.0001" value="1.0000" required readonly>
+                        </div>
                         <div class="mb-3">
                             <label for="fechacompra" class="form-label fw-semibold small text-uppercase text-muted">Fecha de Compra <span class="text-danger">*</span></label>
                             <div class="input-group">
@@ -90,7 +102,7 @@
                         <div class="p-3 bg-light rounded-3 mb-4 text-center border">
                             <span class="text-uppercase small text-muted d-block fw-semibold mb-1">Total Compra</span>
                             <div class="input-group">
-                                <span class="input-group-text bg-success text-white fw-bold border-0">S/</span>
+                                <span class="input-group-text bg-success text-white fw-bold border-0" id="simboloTotalCompra">S/</span>
                                 <input type="text" class="form-control form-control-lg fw-bold text-success text-end bg-white border-0" id="totalGeneral" value="0.00" readonly>
                             </div>
                         </div>
@@ -118,7 +130,8 @@
                                         <option value="" selected disabled>Seleccionar producto...</option>
                                         <?php foreach ($productos as $prod): ?>
                                             <option value="<?= $prod['idproducto'] ?>"
-                                                data-nombre="<?= esc($prod['nombre'] ?? $prod['descripcion']) ?>"
+                                                data-nombre="<?= esc($prod['nombre'] ?? $prod['descripcion'], 'attr') ?>"
+                                                data-unidad="<?= esc($prod['abreviaturaunidad'] ?? 'UND', 'attr') ?>"
                                                 data-precio="<?= $prod['precioventa'] ?? 0 ?>">
                                                 <?= esc($prod['nombre'] ?? $prod['descripcion']) ?>
                                             </option>
@@ -126,8 +139,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label small fw-bold text-secondary">Cantidad</label>
-                                    <input type="number" class="form-control text-center" id="inputCantidad" min="1" value="1">
+                                    <label class="form-label small fw-bold text-secondary">Cantidad <span id="etiquetaUnidad" class="text-muted fw-normal"></span></label>
+                                    <input type="number" class="form-control text-center" id="inputCantidad" min="0.01" step="0.01" value="1">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold text-secondary">P. Compra (S/)</label>
@@ -148,7 +161,7 @@
                                         <th>Producto</th>
                                         <th class="text-center" style="width: 120px;">Cantidad</th>
                                         <th class="text-end" style="width: 150px;">Precio (S/)</th>
-                                        <th class="text-end" style="width: 150px;">Subtotal (S/)</th>
+                                        <th class="text-end" style="width: 150px;">Subtotal</th>
                                         <th class="text-center" style="width: 60px;">Acción</th>
                                     </tr>
                                 </thead>
@@ -169,113 +182,6 @@
     </form>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnAgregar = document.getElementById('btnAgregarItem');
-        const selectProducto = document.getElementById('selectProducto');
-        const inputCantidad = document.getElementById('inputCantidad');
-        const inputPrecio = document.getElementById('inputPrecio');
-        const tablaDetalle = document.getElementById('tablaDetalle').querySelector('tbody');
-        const filaVacia = document.getElementById('filaVacia');
-        const totalGeneral = document.getElementById('totalGeneral');
-
-        selectProducto.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const precioVenta = selectedOption.getAttribute('data-precio');
-            if (precioVenta) {
-                inputPrecio.value = parseFloat(precioVenta).toFixed(2);
-            } else {
-                inputPrecio.value = '';
-            }
-        });
-
-        btnAgregar.addEventListener('click', function() {
-            const idProd = selectProducto.value;
-            const nombreProd = selectProducto.options[selectProducto.selectedIndex]?.getAttribute('data-nombre');
-            const cantidad = parseInt(inputCantidad.value);
-            const precio = parseFloat(inputPrecio.value);
-
-            if (!idProd) {
-                alert('Por favor seleccione un producto.');
-                return;
-            }
-            if (isNaN(cantidad) || cantidad <= 0) {
-                alert('Ingrese una cantidad válida.');
-                return;
-            }
-            if (isNaN(precio) || precio < 0) {
-                alert('Ingrese un precio unitario válido.');
-                return;
-            }
-
-            const elementoVacio = document.getElementById('filaVacia');
-            if (elementoVacio) {
-                elementoVacio.remove();
-            }
-
-            const subtotal = (cantidad * precio).toFixed(2);
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>
-                    <input type="hidden" name="productos[]" value="${idProd}">
-                    <span class="fw-medium text-dark">${nombreProd}</span>
-                </td>
-                <td class="text-center">
-                    <input type="hidden" name="cantidades[]" value="${cantidad}">
-                    <span class="badge bg-secondary px-2 py-1 fs-6">${cantidad}</span>
-                </td>
-                <td class="text-end">
-                    <input type="hidden" name="precios[]" value="${precio.toFixed(2)}">
-                    S/ ${precio.toFixed(2)}
-                </td>
-                <td class="text-end fw-bold text-success class-subtotal">
-                    S/ ${subtotal}
-                </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-outline-danger btn-sm btnEliminar" title="Eliminar ítem">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            `;
-
-            tablaDetalle.appendChild(tr);
-
-            selectProducto.value = '';
-            inputCantidad.value = '1';
-            inputPrecio.value = '';
-
-            calcularTotal();
-        });
-
-        tablaDetalle.addEventListener('click', function(e) {
-            if (e.target.closest('.btnEliminar')) {
-                e.target.closest('tr').remove();
-
-                if (tablaDetalle.children.length === 0) {
-                    tablaDetalle.innerHTML = `
-                    <tr id="filaVacia">
-                        <td colspan="5" class="text-center text-muted py-5">
-                            <i class="fas fa-cart-arrow-down fa-2x mb-2 text-black-50 d-block"></i>
-                            No se han agregado productos a la compra.
-                        </td>
-                    </tr>
-                `;
-                }
-                calcularTotal();
-            }
-        });
-
-        function calcularTotal() {
-            let total = 0;
-            const subtotales = tablaDetalle.querySelectorAll('.class-subtotal');
-            subtotales.forEach(td => {
-                const valor = parseFloat(td.textContent.replace('S/', '').trim());
-                if (!isNaN(valor)) total += valor;
-            });
-            totalGeneral.value = total.toFixed(2);
-        }
-    });
-</script>
+<script src="<?= base_url('js/compras/nuevo.js') ?>"></script>
 
 <?= $this->endSection() ?>

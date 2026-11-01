@@ -62,7 +62,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <code class="text-pink fw-semibold bg-light px-2 py-1 rounded border"><?= esc($c['serie']) ?></code>
+                                        <code class="text-pink fw-semibold bg-light px-2 py-1 rounded border"><?= esc($c['serie'] . '-' . $c['numero']) ?></code>
                                     </td>
                                     <td>
                                         <span class="text-dark fw-medium d-block text-truncate" style="max-width: 280px;" title="<?= esc($c['proveedor'] ?? '') ?>">
@@ -70,7 +70,7 @@
                                         </span>
                                     </td>
                                     <td class="text-end fw-bold text-success fs-6">
-                                        S/ <?= number_format($c['total'], 2) ?>
+                                        <?= ($c['moneda'] === 'USD' ? 'US$' : 'S/') ?> <?= number_format($c['total'], 2) ?>
                                     </td>
                                     <td class="pe-4 text-center">
                                         <a href="<?= base_url('compras/detalles/' . $c['idcompra']) ?>"

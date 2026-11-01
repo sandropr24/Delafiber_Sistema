@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class DeCompraModel extends Model
 {
-    protected $table      = 'detcompras'; 
+    protected $table      = 'detcompra'; 
     protected $primaryKey = 'iddetcompra';
 
     protected $allowedFields = [
