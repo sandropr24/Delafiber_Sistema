@@ -2,6 +2,21 @@
 
 <?= $this->section('contenido') ?>
 
+<?php
+$formatearCantidad = static function ($valor, $unidad) {
+    $numero = (float) $valor;
+    $abreviatura = strtoupper(trim((string) $unidad));
+    $enteras = ['UND', 'PAR', 'CJA', 'KIT', 'ROL', 'JGO', 'PQT'];
+    if (in_array($abreviatura, $enteras, true)) {
+        return number_format($numero, 0, '.', '');
+    }
+    return $abreviatura === 'M'
+        ? number_format($numero, 2, '.', '')
+        : rtrim(rtrim(number_format($numero, 2, '.', ''), '0'), '.');
+};
+?>
+
+
 <div class="container-fluid px-4 py-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
@@ -14,7 +29,7 @@
             <h1 class="h4 fw-bold text-dark mb-1"><?= esc($kardex['producto']) ?></h1>
             <p class="text-muted small mb-0">
                 Almacén: <strong class="text-dark"><?= esc($kardex['local']) ?></strong> |
-                Stock Actual: <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5 fw-bold rounded-pill ms-1"><?= $kardex['stockactual'] ?></span>
+                Stock Actual: <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5 fw-bold rounded-pill ms-1"><?= $formatearCantidad($kardex['stockactual'], $kardex['unidad'] ?? '') ?></span>
             </p>
         </div>
         <div>
@@ -40,7 +55,7 @@
                     <?php
                     if (!empty($movimientos) && is_array($movimientos)) {
                         $ultimo = reset($movimientos);
-                        echo esc(date('d/m/Y', strtotime($ultimo['fecha'])) . ' (Saldo: ' . $ultimo['saldo'] . ')');
+                        echo esc(date('d/m/Y', strtotime($ultimo['fecha'])) . ' (Saldo: ' . $formatearCantidad($ultimo['saldo'], $kardex['unidad'] ?? '') . ')');
                     } else {
                         echo 'Sin movimientos';
                     }
@@ -76,19 +91,25 @@
                                         <?= esc(date('d/m/Y H:i', strtotime($mov['fecha']))) ?>
                                     </td>
                                     <td>
-                                        <?php $esEntrada = ($mov['tipo'] == 'ENTRADA'); ?>
-                                        <span class="badge bg-<?= $esEntrada ? 'success' : 'danger' ?>-subtle text-<?= $esEntrada ? 'success' : 'danger' ?> border border-<?= $esEntrada ? 'success' : 'danger' ?>-subtle px-2 py-1 fw-bold">
-                                            <i class="fas fa-arrow-<?= $esEntrada ? 'down' : 'up' ?> fa-xs me-1"></i> <?= esc($mov['tipo']) ?>
+                                        <?php
+                                        $tipo = strtoupper((string) $mov['tipo']);
+                                        $esEntrada = $tipo === 'ENTRADA';
+                                        $esSalida = $tipo === 'SALIDA';
+                                        $colorTipo = $esEntrada ? 'success' : ($esSalida ? 'danger' : 'warning');
+                                        $iconoTipo = $esEntrada ? 'arrow-down' : ($esSalida ? 'arrow-up' : 'exchange-alt');
+                                        ?>
+                                        <span class="badge bg-<?= $colorTipo ?>-subtle text-<?= $colorTipo ?> border border-<?= $colorTipo ?>-subtle px-2 py-1 fw-bold">
+                                            <i class="fas fa-<?= $iconoTipo ?> fa-xs me-1"></i> <?= esc($mov['tipo']) ?>
                                         </span>
                                     </td>
                                     <td class="text-dark">
                                         <?= esc($mov['motivo'] ?? $mov['descripcion']) ?>
                                     </td>
-                                    <td class="text-center fw-bold <?= $esEntrada ? 'text-success' : 'text-danger' ?>">
-                                        <?= $esEntrada ? '+' : '-' ?><?= esc($mov['cantidad']) ?>
+                                    <td class="text-center fw-bold <?= $esEntrada ? 'text-success' : ($esSalida ? 'text-danger' : 'text-warning') ?>">
+                                        <?= $esEntrada ? '+' : ($esSalida ? '-' : '') ?><?= $formatearCantidad($mov['cantidad'], $kardex['unidad'] ?? '') ?>
                                     </td>
                                     <td class="text-center fw-bold text-dark">
-                                        <?= esc($mov['saldo']) ?>
+                                        <?= $formatearCantidad($mov['saldo'], $kardex['unidad'] ?? '') ?>
                                     </td>
                                     <td class="text-secondary small">
                                         <i class="fas fa-user-circle text-muted me-1"></i> <?= esc($mov['usuario'] ?? 'Sistema') ?>

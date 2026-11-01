@@ -2,6 +2,21 @@
 
 <?= $this->section('contenido') ?>
 
+<?php
+$formatearCantidad = static function ($valor, $unidad) {
+    $numero = (float) $valor;
+    $abreviatura = strtoupper(trim((string) $unidad));
+    $enteras = ['UND', 'PAR', 'CJA', 'KIT', 'ROL', 'JGO', 'PQT'];
+    if (in_array($abreviatura, $enteras, true)) {
+        return number_format($numero, 0, '.', '');
+    }
+    return $abreviatura === 'M'
+        ? number_format($numero, 2, '.', '')
+        : rtrim(rtrim(number_format($numero, 2, '.', ''), '0'), '.');
+};
+?>
+
+
 <div class="container-fluid px-4 py-4" id="viewKardex" data-url-buscar="<?= base_url('kardex/buscar_tabla') ?>">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
@@ -108,7 +123,7 @@
                                     <td class="text-center">
                                         <?php $esCritico = $item['stockactual'] <= $item['minima']; ?>
                                         <span class="badge bg-<?= $esCritico ? 'danger' : 'success' ?>-subtle text-<?= $esCritico ? 'danger' : 'success' ?> border border-<?= $esCritico ? 'danger' : 'success' ?>-subtle px-3 py-2 fw-bold rounded-pill">
-                                            <?= esc($item['stockactual']) ?>
+                                            <?= $formatearCantidad($item['stockactual'], $item['unidad'] ?? '') ?>
                                         </span>
                                     </td>
                                     <td class="text-end fw-semibold text-dark" style="white-space: nowrap;">
@@ -119,7 +134,7 @@
                                     </td>
                                     <td class="text-center">
                                         <span class="badge bg-light text-secondary border px-2 py-1">
-                                            Min: <?= $item['minima'] ?> | Máx: <?= $item['maxima'] ?>
+                                            Min: <?= $formatearCantidad($item['minima'], $item['unidad'] ?? '') ?> | Máx: <?= $formatearCantidad($item['maxima'], $item['unidad'] ?? '') ?>
                                         </span>
                                     </td>
                                     <td class="text-center px-4 align-middle">

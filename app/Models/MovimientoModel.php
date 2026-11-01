@@ -11,6 +11,7 @@ class MovimientoModel extends Model
     protected $allowedFields    = [
         'idkardex',
         'idcompra',
+        'idventa',
         'idusuario',
         'tipo',
         'fecha',
@@ -27,6 +28,7 @@ class MovimientoModel extends Model
             ->join('usuarios', 'usuarios.idusuario = movimientos.idusuario', 'left')
             ->where('movimientos.idkardex', $idkardex)
             ->orderBy('movimientos.fecha', 'DESC')
+            ->orderBy('movimientos.idmovimiento', 'DESC')
             ->findAll();
     }
 }

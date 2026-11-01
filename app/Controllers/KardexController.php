@@ -47,8 +47,9 @@ class KardexController extends BaseController
 
     public function historial($idkardex)
     {
-        $kardexInfo = $this->kardexModel->select('kardex.*, productos.nombre as producto, locales.nombrelocal as local')
+        $kardexInfo = $this->kardexModel->select('kardex.*, productos.nombre as producto, locales.nombrelocal as local, unidadesmedida.abreviatura as unidad')
             ->join('productos', 'productos.idproducto = kardex.idproducto')
+            ->join('unidadesmedida', 'unidadesmedida.idunidad = productos.idunidad', 'left')
             ->join('locales', 'locales.idlocal = kardex.idlocal')
             ->where('kardex.idkardex', $idkardex)
             ->first();
