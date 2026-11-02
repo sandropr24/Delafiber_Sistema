@@ -37,7 +37,7 @@
                             <th class="py-3">Local / Sucursal</th>
                             <th class="py-3 text-center" style="width: 200px;">Fecha</th>
                             <th class="py-3 text-end" style="width: 150px;">Total (S/)</th>
-                            <th class="pe-4 py-3 text-center" style="width: 100px;">Acciones</th>
+                            <th class="pe-4 py-3 text-center" style="width: 120px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white">
@@ -75,6 +75,13 @@
                                             title="Ver detalles">
                                             <i class="bi bi-eye"></i>
                                         </a>
+                                        <a href="<?= base_url('ventas/nota-pdf/' . $venta['idventa']) ?>"
+                                            class="btn btn-sm btn-light border shadow-sm rounded-circle p-2 d-inline-flex align-items-center justify-content-center ms-1 js-nota-pdf"
+                                            style="width: 32px; height: 32px; color: #FF2B50;"
+                                            data-bs-toggle="modal" data-bs-target="#modalNotaVentaPdf"
+                                            title="Ver nota de venta PDF">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -95,5 +102,25 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade" id="modalNotaVentaPdf" tabindex="-1" aria-labelledby="tituloModalNotaVentaPdf" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="tituloModalNotaVentaPdf"><i class="bi bi-file-earmark-pdf me-2" style="color: #FF2B50;"></i>Nota de venta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 72vh; min-height: 420px;">
+                <iframe id="iframeNotaVentaPdf" title="Vista previa de nota de venta" style="width: 100%; height: 100%; border: 0;" loading="lazy"></iframe>
+            </div>
+            <div class="modal-footer">
+                <a id="descargarNotaVentaPdf" href="#" class="btn btn-outline-secondary" download="nota_venta.pdf"><i class="bi bi-download me-1"></i> Descargar PDF</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="<?= base_url('js/ventas/nota_venta.js') ?>"></script>
 
 <?= $this->endSection() ?>

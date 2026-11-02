@@ -71,6 +71,7 @@ $routes->group('ventas', static function ($routes) {
     $routes->get('crear', 'VentaController::crear');
     $routes->post('guardar', 'VentaController::guardar');
     $routes->get('detalles/(:num)', 'VentaController::detalles/$1');
+    $routes->get('nota-pdf/(:num)', 'NotaVentaPdfController::generar/$1');
 });
 
 $routes->group('entregas', function ($routes) {

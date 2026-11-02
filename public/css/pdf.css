@@ -1,0 +1,117 @@
+@page {
+  margin: 34px 40px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #303040;
+  margin: 0;
+}
+table {
+  border-spacing: 0;
+}
+.cabecera {
+  width: 100%;
+  border-bottom: 3px solid #ff2b50;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+}
+.cabecera td {
+  vertical-align: middle;
+  padding-bottom: 12px;
+}
+.empresa {
+  font-size: 24px;
+  font-weight: bold;
+  color: #32005a;
+}
+.subtitulo {
+  font-size: 9px;
+  color: #777;
+}
+.documento {
+  text-align: right;
+}
+.documento strong {
+  font-size: 16px;
+  color: #32005a;
+}
+.numero {
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+.datos {
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 18px;
+  background: #f8f6fb;
+}
+.datos td {
+  padding: 8px 10px;
+  vertical-align: top;
+}
+.etiqueta {
+  color: #6f6878;
+  font-size: 8px;
+  font-weight: bold;
+}
+.detalle {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 12px;
+}
+.detalle th {
+  background-color: #32005a;
+  color: #fff;
+  text-align: left;
+  padding: 10px 8px;
+  font-weight: bold;
+}
+.detalle td {
+  border-bottom: 1px solid #e9e6ed;
+  padding: 10px 8px;
+}
+.detalle tbody tr:nth-child(even) {
+  background-color: #faf9fc;
+}
+.derecha {
+  text-align: right !important;
+}
+.totales {
+  width: 42%;
+  margin-left: 58%;
+  margin-top: 18px;
+  border-collapse: collapse;
+}
+.totales td {
+  padding: 10px;
+}
+.total td {
+  background-color: #32005a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+}
+.pagos {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #e9e6ed;
+  color: #32005a;
+}
+.pie {
+  margin-top: 34px;
+  border-top: 1px solid #ddd;
+  padding-top: 12px;
+  text-align: center;
+  color: #777;
+  font-size: 9px;
+}
+.logo {
+  max-height: 58px;
+  max-width: 180px;
+}
