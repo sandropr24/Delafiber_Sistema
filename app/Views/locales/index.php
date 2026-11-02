@@ -97,9 +97,9 @@
                         <label for="tipolocal" class="form-label small fw-semibold">Tipo de Local <span class="text-danger">*</span></label>
                         <select class="form-select" id="tipolocal" name="tipolocal" required>
                             <option value="">Seleccione el tipo</option>
-                            <option value="Almacén Principal">Almacén Principal</option>
-                            <option value="Sucursal / Tienda">Sucursal / Tienda</option>
-                            <option value="Punto de Distribución">Punto de Distribución</option>
+                            <option value="TIENDA">Tienda</option>
+                            <option value="ALMACEN">Almacen</option>
+                            <option value="OFICINA">Oficina</option>
                         </select>
                     </div>
 
