@@ -17,6 +17,8 @@ $routes->group('catalogos', function ($routes) {
     $routes->post('actualizar-marca', 'CatalogoController::actualizarMarca');
     $routes->get('cambiar-estado-categoria/(:num)', 'CatalogoController::cambiarEstadoCategoria/$1');
     $routes->get('cambiar-estado-marca/(:num)', 'CatalogoController::cambiarEstadoMarca/$1');
+    $routes->get('buscarCategorias', 'CatalogoController::buscarCategorias');
+    $routes->get('buscarMarcas', 'CatalogoController::buscarMarcas');
 });
 
 $routes->group('productos', ['filter' => 'auth'], static function ($routes) {
@@ -63,7 +65,7 @@ $routes->group('compras', ['filter' => 'auth'], function ($routes) {
     $routes->get('detalles/(:num)', 'CompraController::detalles/$1');
 });
 
-$routes->post('clientes/guardar-express', 'VentaController::guardarClienteExpress');
+$routes->post('clientes/guardar-express', 'VentaController::guardarClienteExpress', ['filter' => 'auth']);
 $routes->group('ventas', static function ($routes) {
     $routes->get('', 'VentaController::index');
     $routes->get('crear', 'VentaController::crear');
@@ -71,7 +73,7 @@ $routes->group('ventas', static function ($routes) {
     $routes->get('detalles/(:num)', 'VentaController::detalles/$1');
 });
 
-$routes->group('entregas', function($routes) {
+$routes->group('entregas', function ($routes) {
     $routes->get('/', 'EntregaController::index');
     $routes->get('buscar_tabla', 'EntregaController::buscar_tabla');
     $routes->post('cambiar_estado', 'EntregaController::cambiar_estado');

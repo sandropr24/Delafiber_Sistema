@@ -21,13 +21,13 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link active fw-bold" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias-pane" type="button" role="tab">
                 <i class="bi bi-tags me-1"></i> Categorías
-                <span class="badge bg-secondary-subtle text-secondary ms-1"><?= !empty($categorias) ? count($categorias) : 0 ?></span>
+                <span class="badge bg-secondary-subtle text-secondary ms-1"><?= (int) ($totalCategorias ?? 0) ?></span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link fw-bold" id="marcas-tab" data-bs-toggle="tab" data-bs-target="#marcas-pane" type="button" role="tab">
                 <i class="bi bi-c-circle me-1"></i> Marcas
-                <span class="badge bg-secondary-subtle text-secondary ms-1"><?= !empty($marcas) ? count($marcas) : 0 ?></span>
+                <span class="badge bg-secondary-subtle text-secondary ms-1"><?= (int) ($totalMarcas ?? 0) ?></span>
             </button>
         </li>
     </ul>
@@ -48,73 +48,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (!empty($categorias)): ?>
-                                <?php foreach ($categorias as $cat): ?>
-                                    <?php $activa = ((int) ($cat['estado'] ?? 1) === 1); ?>
-                                    <tr class="<?= $activa ? '' : 'text-muted' ?>">
-                                        <td class="ps-4 fw-bold text-muted"><?= (int) $cat['idcategoria'] ?></td>
-                                        <td>
-                                            <span class="<?= $cat['nivel'] === 0 ? 'fw-bold' : 'fw-semibold' ?> text-dark"
-                                                style="padding-left: <?= $cat['nivel'] * 1.5 ?>rem">
-                                                <?php if ($cat['nivel'] > 0): ?>
-                                                    <span class="text-muted me-1">↳</span>
-                                                <?php endif; ?>
-                                                <?= esc($cat['categoria']) ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <?php if (!empty($cat['categoriapadre'])): ?>
-                                                <span class="badge bg-light text-dark border px-2 py-1"><?= esc($cat['categoriapadre']) ?></span>
-                                            <?php else: ?>
-                                                <span class="text-muted small fst-italic">Categoría Principal</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-light text-dark border"><?= (int) $cat['total_productos'] ?></span>
-                                            <?php if (!empty($cat['productos_hijos'])): ?>
-                                                <div class="text-muted" style="font-size: .7rem;">+<?= (int) $cat['productos_hijos'] ?> en subcategorías</div>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="text-center">
-                                            <form action="<?= base_url('catalogos/cambiar-estado-categoria/' . $cat['idcategoria']) ?>" method="POST" class="d-inline">
-                                                <?= csrf_field() ?>
-                                                <button type="submit" title="Clic para alternar estado"
-                                                    class="badge border <?= $activa ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' ?> px-2 py-1 fw-semibold">
-                                                    <?= $activa ? 'Activo' : 'Inactivo' ?>
-                                                </button>
-                                            </form>
-                                        </td>
-                                        <td class="text-end pe-4" style="white-space: nowrap;">
-                                            <?php if ($cat['nivel'] === 0 && $activa): ?>
-                                                <button type="button"
-                                                    class="btn btn-sm btn-light text-success border-0 shadow-sm"
-                                                    onclick="nuevaSubcategoria(<?= (int) $cat['idcategoria'] ?>)"
-                                                    title="Agregar subcategoría">
-                                                    <i class="bi bi-node-plus fs-5"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                            <button type="button"
-                                                class="btn btn-sm btn-light text-primary border-0 shadow-sm"
-                                                onclick="editarCategoria(<?= esc(json_encode($cat, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>)"
-                                                title="Editar Categoría">
-                                                <i class="bi bi-pencil-square fs-5"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-5">
-                                        <i class="bi bi-tags fs-1 text-secondary-emphasis d-block mb-2"></i>
-                                        <p class="mb-0">No hay categorías registradas aún. Crea la primera con "Nueva Categoría".</p>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
+                <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center">
+                    <span class="text-muted small" id="infoPaginacionCat">Cargando...</span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="paginacionCategorias"></ul>
+                    </nav>
+                </div>
             </div>
         </div>
+
 
         <div class="tab-pane fade" id="marcas-pane" role="tabpanel">
             <div class="card border rounded-3 shadow-sm overflow-hidden" style="border-color: #e0e0e0 !important;">
@@ -130,51 +75,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (!empty($marcas)): ?>
-                                <?php foreach ($marcas as $mar): ?>
-                                    <?php $marcaActiva = ((int) ($mar['estado'] ?? 1) === 1); ?>
-                                    <tr class="<?= $marcaActiva ? '' : 'text-muted' ?>">
-                                        <td class="ps-4 fw-bold text-muted"><?= (int) $mar['idmarca'] ?></td>
-                                        <td><span class="fw-semibold text-dark"><?= esc($mar['marca']) ?></span></td>
-                                        <td class="text-center">
-                                            <span class="badge bg-light text-dark border"><?= (int) ($mar['total_productos'] ?? 0) ?></span>
-                                        </td>
-                                        <td class="text-center">
-                                            <?php if (array_key_exists('estado', $mar)): ?>
-                                                <form action="<?= base_url('catalogos/cambiar-estado-marca/' . $mar['idmarca']) ?>" method="POST" class="d-inline">
-                                                    <?= csrf_field() ?>
-                                                    <button type="submit" title="Clic para alternar estado"
-                                                        class="badge border <?= $marcaActiva ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' ?> px-2 py-1 fw-semibold">
-                                                        <?= $marcaActiva ? 'Activo' : 'Inactivo' ?>
-                                                    </button>
-                                                </form>
-                                            <?php else: ?>
-                                                <span class="text-muted">—</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="text-end pe-4" style="white-space: nowrap;">
-                                            <button type="button"
-                                                class="btn btn-sm btn-light text-primary border-0 shadow-sm"
-                                                onclick="editarMarca(<?= esc(json_encode($mar, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>)"
-                                                title="Editar Marca">
-                                                <i class="bi bi-pencil-square fs-5"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-5">
-                                        <i class="bi bi-c-circle fs-1 text-secondary-emphasis d-block mb-2"></i>
-                                        <p class="mb-0">Aún no hay marcas. Crea la primera con "Nueva Marca".</p>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+                <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center">
+                    <span class="text-muted small" id="infoPaginacionMarc">Cargando...</span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="paginacionMarcas"></ul>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -246,5 +154,8 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-    <script src="<?= base_url('js/catalogos/index.js') ?>"></script>
+<script>
+    const BASE_URL = "<?= rtrim(base_url(), '/') ?>";
+</script>
+<script src="<?= base_url('js/catalogos/index.js') ?>"></script>
 <?= $this->endSection() ?>

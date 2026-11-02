@@ -88,6 +88,61 @@ class CategoriaModel extends Model
         return $ordenadas;
     }
 
+    /**
+     * @return array{filas: array, pagina: int, totalPaginas: int, totalRegistros: int}
+     */
+    public function obtenerCategoriasPaginadas(int $pagina, int $porPagina = 10): array
+    {
+        $porPagina        = max(1, $porPagina);
+        $totalPrincipales = $this->where('idcategoriapadre', null)->countAllResults();
+        $totalPaginas     = max(1, (int) ceil($totalPrincipales / $porPagina));
+        $pagina           = min(max(1, $pagina), $totalPaginas);
+
+        $productos = '(SELECT COUNT(*) FROM productos pr WHERE pr.idcategoria = categorias.idcategoria) AS total_productos';
+
+        $principales = $this->select("categorias.*, NULL AS categoriapadre, {$productos}", false)
+            ->where('categorias.idcategoriapadre', null)
+            ->orderBy('categorias.idcategoria', 'ASC')
+            ->findAll($porPagina, ($pagina - 1) * $porPagina);
+
+        $hijosPorPadre = [];
+        if ($principales) {
+            $hijos = $this->select("categorias.*, p.categoria AS categoriapadre, {$productos}", false)
+                ->join('categorias p', 'p.idcategoria = categorias.idcategoriapadre', 'left')
+                ->whereIn('categorias.idcategoriapadre', array_column($principales, 'idcategoria'))
+                ->orderBy('categorias.idcategoria', 'ASC')
+                ->findAll();
+
+            foreach ($hijos as $hijo) {
+                $hijosPorPadre[$hijo['idcategoriapadre']][] = $hijo;
+            }
+        }
+
+        $filas = [];
+        foreach ($principales as $padre) {
+            $lista = $hijosPorPadre[$padre['idcategoria']] ?? [];
+
+            $padre['nivel']           = 0;
+            $padre['total_hijos']     = count($lista);
+            $padre['productos_hijos'] = array_sum(array_column($lista, 'total_productos'));
+            $filas[]                  = $padre;
+
+            foreach ($lista as $hijo) {
+                $hijo['nivel']           = 1;
+                $hijo['total_hijos']     = 0;
+                $hijo['productos_hijos'] = 0;
+                $filas[]                 = $hijo;
+            }
+        }
+
+        return [
+            'filas'          => $filas,
+            'pagina'         => $pagina,
+            'totalPaginas'   => $totalPaginas,
+            'totalRegistros' => $totalPrincipales,
+        ];
+    }
+
     public function contarProductosActivos(int $idCategoria): int
     {
         $ids = array_column(

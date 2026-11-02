@@ -8,19 +8,58 @@ use CodeIgniter\HTTP\RedirectResponse;
 
 class CatalogoController extends BaseController
 {
+    private const LIMITE_PAGINA = 10;
+
     public function index(): string
     {
         $categoriaModel = model(CategoriaModel::class);
         $marcaModel     = model(MarcaModel::class);
 
-        $data = [
+        return view('catalogos/index', [
             'titulo'          => 'Gestión de Catálogos',
-            'categorias'      => $categoriaModel->obtenerCategoriasConPadre(),
             'categoriasPadre' => $categoriaModel->obtenerCategoriasPrincipales(false),
-            'marcas'          => $marcaModel->orderBy('idmarca', 'ASC')->findAll(),
-        ];
+            'totalCategorias' => $categoriaModel->countAllResults(),
+            'totalMarcas'     => $marcaModel->countAllResults(),
+        ]);
+    }
 
-        return view('catalogos/index', $data);
+    public function buscarCategorias()
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to(base_url('catalogos'));
+        }
+
+        $pagina    = (int) ($this->request->getGet('page') ?? 1);
+        $resultado = model(CategoriaModel::class)->obtenerCategoriasPaginadas($pagina, self::LIMITE_PAGINA);
+
+        return $this->response->setJSON([
+            'html'           => view('catalogos/_filas_categorias', ['categorias' => $resultado['filas']]),
+            'pagina'         => $resultado['pagina'],
+            'totalPaginas'   => $resultado['totalPaginas'],
+            'totalRegistros' => $resultado['totalRegistros'],
+        ]);
+    }
+
+    public function buscarMarcas()
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to(base_url('catalogos'));
+        }
+
+        $marcaModel   = model(MarcaModel::class);
+        $totalMarcas  = $marcaModel->countAllResults();
+        $totalPaginas = max(1, (int) ceil($totalMarcas / self::LIMITE_PAGINA));
+        $pagina       = min(max(1, (int) ($this->request->getGet('page') ?? 1)), $totalPaginas);
+
+        $marcas = $marcaModel->orderBy('idmarca', 'ASC')
+            ->findAll(self::LIMITE_PAGINA, ($pagina - 1) * self::LIMITE_PAGINA);
+
+        return $this->response->setJSON([
+            'html'           => view('catalogos/_filas_marcas', ['marcas' => $marcas]),
+            'pagina'         => $pagina,
+            'totalPaginas'   => $totalPaginas,
+            'totalRegistros' => $totalMarcas,
+        ]);
     }
 
     public function guardarCategoria(): RedirectResponse
@@ -117,7 +156,6 @@ class CatalogoController extends BaseController
 
         $categoriaModel->update($id, ['estado' => $nuevoEstado]);
 
-        // Al desactivar un padre, se desactivan sus subcategorías
         if ($nuevoEstado === 0) {
             $categoriaModel->where('idcategoriapadre', $id)->set('estado', 0)->update();
         }
