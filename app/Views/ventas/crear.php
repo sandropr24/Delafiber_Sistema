@@ -6,7 +6,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1"><?= esc($titulo) ?></h1>
-            <p class="text-muted small mb-0">Emisión de comprobantes de pago, salida automática de inventario (Kardex) y control de pagos mixtos.</p>
+            <p class="text-muted small mb-0">Registra los datos del cliente, agrega productos, selecciona la entrega y confirma el pago.</p>
         </div>
         <div>
             <a href="<?= base_url('ventas') ?>" class="btn btn-light border text-secondary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
@@ -18,13 +18,13 @@
 
     <form action="<?= base_url('ventas/guardar') ?>" method="POST" autocomplete="off" id="formVenta">
         <?= csrf_field() ?>
-        <div class="row g-4">
-            <div class="col-lg-4">
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-xl-5">
                 <div class="card border shadow-sm rounded-3 mb-4" style="border-color: #e5e7eb !important;">
                     <div class="card-header bg-light py-3 px-4 border-bottom" style="border-color: #e5e7eb !important;">
                         <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
                             <i class="bi bi-file-earmark-text text-primary"></i>
-                            Datos del comprobante
+                            1. Datos de la venta
                         </h6>
                     </div>
                     <div class="card-body p-4">
@@ -55,12 +55,40 @@
                             </div>
                         </div>
 
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Línea</label>
+                                <select name="idlinea" class="form-select" required>
+                                    <option value="">Seleccione</option>
+                                    <?php foreach ($lineas as $x): ?>
+                                        <option value="<?= esc($x['idlinea']) ?>"><?= esc($x['nombre'] ?? $x['linea'] ?? $x['idlinea']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Canal</label>
+                                <select name="idcanal" class="form-select" required>
+                                    <option value="">Seleccione</option>
+                                    <?php foreach ($canales as $x): ?>
+                                        <option value="<?= esc($x['idcanal']) ?>"><?= esc($x['nombre'] ?? $x['canal'] ?? $x['idcanal']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="idestado" class="form-select" required>
+                                    <option value="">Seleccione</option>
+                                    <?php foreach ($estadosVenta as $x): ?>
+                                        <option value="<?= esc($x['idestado']) ?>"><?= esc($x['estado']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-secondary text-uppercase">Tipo de Documento <span class="text-danger">*</span></label>
                             <select name="tipodocumento" class="form-select" required>
-                                <option value="BOLETA">Boleta de Venta</option>
-                                <option value="FACTURA">Factura</option>
-                                <option value="TICKET">Ticket de Caja</option>
+                                <option value="NOTA_VENTA">Nota de venta</option>
                             </select>
                         </div>
 
@@ -77,81 +105,49 @@
                     </div>
                 </div>
 
-                <div class="card border shadow-sm rounded-3 mb-4" style="border-color: #e5e7eb !important;">
-                    <div class="card-header bg-light py-3 px-4 border-bottom" style="border-color: #e5e7eb !important;">
-                        <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-wallet2 text-primary"></i>
-                            Formas de Pago
-                        </h6>
+                <div class="card border shadow-sm rounded-3 mb-4">
+                    <div class="card-header bg-light py-3 px-4">
+                        <h6 class="m-0 fw-bold"><i class="bi bi-truck me-2"></i>3. Modalidad de entrega</h6>
                     </div>
                     <div class="card-body p-3">
-                        <div class="row g-2 align-items-end mb-3">
-                            <div class="col-12">
-                                <label class="form-label small fw-bold text-secondary text-uppercase">Método de Pago</label>
-                                <select class="form-select form-select-sm" id="selectTipoPago">
-                                    <option value="" selected disabled>Seleccionar método...</option>
-                                    <?php foreach ($tipospago ?? [] as $tp): ?>
-                                        <option value="<?= $tp['idtipopago'] ?>" data-nombre="<?= esc($tp['tipopago']) ?>">
-                                            <?= esc($tp['tipopago']) ?>
-                                        </option>
+                        <label class="form-label">Modalidad de entrega</label>
+                        <select class="form-select mb-3" name="tipoentrega" id="tipoentrega">
+                            <option value="RECOJO_TIENDA">Recojo en tienda</option>
+                            <option value="DOMICILIO">Entrega a domicilio (sin costo)</option>
+                        </select>
+                        <div id="camposEntrega" class="d-none">
+                            <div class="mb-2">
+                                <label class="form-label">Dirección</label>
+                                <input class="form-control" name="direccion_entrega" id="direccion_entrega" maxlength="150">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Referencia</label>
+                                <input class="form-control" name="referencia_entrega" maxlength="150">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Teléfono</label>
+                                <input class="form-control" name="telefono_entrega" id="telefono_entrega" maxlength="20">
+                            </div>
+                            <div>
+                                <label class="form-label">Técnico asignado (opcional)</label>
+                                <select class="form-select" name="idtecnico_entrega" id="idtecnico_entrega">
+                                    <option value="">Seleccione</option>
+                                    <?php foreach ($tecnicosEntrega as $tecnico): ?>
+                                        <option value="<?= esc($tecnico['idusuario']) ?>"><?= esc($tecnico['nombreusuario']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-8">
-                                <label class="form-label small fw-bold text-secondary text-uppercase">Monto (S/)</label>
-                                <input type="number" class="form-control form-control-sm text-end" id="inputMontoPago" step="0.01" min="0" placeholder="0.00">
-                            </div>
-                            <div class="col-4">
-                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold shadow-sm" id="btnAgregarPago">
-                                    <i class="bi bi-plus-lg"></i> Agregar
-                                </button>
-                            </div>
                         </div>
-
-                        <div class="table-responsive border rounded-2 mb-2">
-                            <table class="table table-hover align-middle mb-0" id="tablaPagos">
-                                <thead class="bg-light text-uppercase fs-7 text-secondary border-bottom" style="border-color: #e5e7eb !important;">
-                                    <tr>
-                                        <th class="ps-3 py-2">MÉTODO</th>
-                                        <th class="text-end py-2" style="width: 80px;">MONTO</th>
-                                        <th class="pe-3 text-end py-2" style="width: 70px">ACCIONES</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pagosBody">
-                                    <tr id="filaSinPagos">
-                                        <td colspan="3" class="text-center text-muted py-3 small">Sin pagos asignados.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center small px-1 mt-2">
-                            <span class="text-secondary">Pagado: <span id="lblTotalPagado" class="text-success fw-bold">S/ 0.00</span></span>
-                            <span class="text-secondary"><span id="lblFaltanteVuelto" class="text-danger fw-bold">Faltante: S/ 0.00</span></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border shadow-sm rounded-3 bg-light" style="border-color: #e5e7eb !important;">
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="fw-bold text-secondary fs-6 text-uppercase">Total a Pagar:</span>
-                            <h3 class="fw-bold text-success mb-0" id="lblTotal">S/ 0.00</h3>
-                            <input type="hidden" name="total" id="inputTotal" value="0.00">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span class="fw-semibold">Procesar Venta</span>
-                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-8 mb-4">
+            <div class="col-12 col-xl-7">
                 <div class="card border shadow-sm rounded-3 h-100" style="border-color: #e5e7eb !important;">
                     <div class="card-header bg-light py-3 px-4 border-bottom" style="border-color: #e5e7eb !important;">
                         <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
                             <i class="bi bi-box-seam text-primary"></i>
-                            Detalle de productos
+                            2. Productos de la venta
                         </h6>
                     </div>
                     <div class="card-body p-4">
@@ -207,6 +203,74 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+
+                <div class="card border shadow-sm rounded-3 mb-4 mt-4" style="border-color: #e5e7eb !important;">
+                    <div class="card-header bg-light py-3 px-4 border-bottom" style="border-color: #e5e7eb !important;">
+                        <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-wallet2 text-primary"></i>
+                            4. Formas de pago
+                        </h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="row g-2 align-items-end mb-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-secondary text-uppercase">Método de Pago</label>
+                                <select class="form-select form-select-sm" id="selectTipoPago">
+                                    <option value="" selected disabled>Seleccionar método...</option>
+                                    <?php foreach ($tipospago ?? [] as $tp): ?>
+                                        <option value="<?= $tp['idtipopago'] ?>" data-nombre="<?= esc($tp['tipopago']) ?>">
+                                            <?= esc($tp['tipopago']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-8">
+                                <label class="form-label small fw-bold text-secondary text-uppercase">Monto (S/)</label>
+                                <input type="number" class="form-control form-control-sm text-end" id="inputMontoPago" step="0.01" min="0" placeholder="0.00">
+                            </div>
+                            <div class="col-4">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold shadow-sm" id="btnAgregarPago">
+                                    <i class="bi bi-plus-lg"></i> Agregar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive border rounded-2 mb-2">
+                            <table class="table table-hover align-middle mb-0" id="tablaPagos">
+                                <thead class="bg-light text-uppercase fs-7 text-secondary border-bottom" style="border-color: #e5e7eb !important;">
+                                    <tr>
+                                        <th class="ps-3 py-2">MÉTODO</th>
+                                        <th class="text-end py-2" style="width: 80px;">MONTO</th>
+                                        <th class="pe-3 text-end py-2" style="width: 70px">ACCIONES</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pagosBody">
+                                    <tr id="filaSinPagos">
+                                        <td colspan="3" class="text-center text-muted py-3 small">Sin pagos asignados.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center small px-1 mt-2">
+                            <span class="text-secondary">Pagado: <span id="lblTotalPagado" class="text-success fw-bold">S/ 0.00</span></span>
+                            <span class="text-secondary"><span id="lblFaltanteVuelto" class="text-danger fw-bold">Faltante: S/ 0.00</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border shadow-sm rounded-3 bg-light" style="border-color: #e5e7eb !important;">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-bold text-secondary fs-6 text-uppercase">Total a pagar:</span>
+                            <h3 class="fw-bold text-success mb-0" id="lblTotal">S/ 0.00</h3>
+                            <input type="hidden" name="total" id="inputTotal" value="0.00">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span class="fw-semibold">Procesar Venta</span>
+                        </button>
                     </div>
                 </div>
             </div>

@@ -34,6 +34,7 @@ class VentaController extends BaseController
         $productoModel = model(ProductoModel::class);
         $kardexModel   = model(KardexModel::class);
         $tipoPagoModel = model(TipoPagoModel::class);
+        $db = \Config\Database::connect();
 
         $clientes = $personaModel->builder()
             ->whereNotIn('idpersona', static function ($builder) {
@@ -43,10 +44,13 @@ class VentaController extends BaseController
             ->get()
             ->getResultArray();
 
-        $kardexData = $kardexModel->findAll();
+        $kardexData = $db->query("SELECT k.idlocal, k.idproducto, k.stockactual,
+                COALESCE(SUM(CASE WHEN r.estado = 'RESERVADO' THEN r.cantidad ELSE 0 END), 0) AS reservado
+            FROM kardex k LEFT JOIN reservas_stock r ON r.idkardex = k.idkardex
+            GROUP BY k.idkardex, k.idlocal, k.idproducto, k.stockactual")->getResultArray();
         $stockPorLocal = [];
         foreach ($kardexData as $k) {
-            $stockPorLocal[$k['idlocal']][$k['idproducto']] = (int)$k['stockactual'];
+            $stockPorLocal[$k['idlocal']][$k['idproducto']] = max(0, round((float)$k['stockactual'] - (float)$k['reservado'], 2));
         }
 
         $data = [
@@ -55,7 +59,11 @@ class VentaController extends BaseController
             'locales'       => $localModel->findAll(),
             'productos'     => $productoModel->findAll(),
             'tipospago'     => $tipoPagoModel->findAll(),
-            'stockPorLocal' => json_encode($stockPorLocal)
+            'lineas'        => $db->table('lineas')->get()->getResultArray(),
+            'canales'       => $db->table('canalesventa')->get()->getResultArray(),
+            'estadosVenta'  => $db->table('estadoventa')->get()->getResultArray(),
+            'stockPorLocal' => json_encode($stockPorLocal),
+            'tecnicosEntrega' => $db->table('usuarios')->select('idusuario, nombreusuario')->orderBy('nombreusuario')->get()->getResultArray()
         ];
 
         return view('ventas/crear', $data);
@@ -75,7 +83,12 @@ class VentaController extends BaseController
             'idcliente'     => $idCliente,
             'idlocal'       => $this->request->getPost('idlocal'),
             'idpedido'      => $this->request->getPost('idpedido') ?: null,
-            'idcajero'      => session()->get('idusuario') ?? 1,
+            'idlinea'       => $this->request->getPost('idlinea'),
+            'idcanal'       => $this->request->getPost('idcanal'),
+            'idvendedor'    => session()->get('idusuario'),
+            'idestado'      => $this->request->getPost('idestado'),
+            'formapago'     => 'CONTADO',
+            'idcajero'      => session()->get('idusuario'),
             'tipodocumento' => $this->request->getPost('tipodocumento'),
             'serie'         => $this->request->getPost('serie'),
             'cdr'           => null,
@@ -96,7 +109,18 @@ class VentaController extends BaseController
             return redirect()->back()->with('error', 'Debes registrar al menos una forma de pago.')->withInput();
         }
 
-        $resultado = $ventaModel->registrarVenta($dataVenta, $detalles, $pagos);
+        if (empty($dataVenta['idcajero']) || empty($dataVenta['idlinea']) || empty($dataVenta['idcanal']) || empty($dataVenta['idestado'])) {
+            return redirect()->back()->with('error', 'Faltan datos obligatorios: usuario, línea, canal o estado de venta.')->withInput();
+        }
+
+        $entrega = [
+            'tipoentrega' => $this->request->getPost('tipoentrega') ?: 'RECOJO_TIENDA',
+            'direccion' => trim((string) $this->request->getPost('direccion_entrega')),
+            'referencia' => trim((string) $this->request->getPost('referencia_entrega')),
+            'telefono' => trim((string) $this->request->getPost('telefono_entrega')),
+            'idtecnico' => $this->request->getPost('idtecnico_entrega') ?: null,
+        ];
+        $resultado = $ventaModel->registrarVenta($dataVenta, $detalles, $pagos, $entrega);
 
         if ($resultado) {
             return redirect()->to('/ventas')->with('success', 'Venta registrada exitosamente.');
@@ -145,58 +169,124 @@ class VentaController extends BaseController
         return view('ventas/detalles', $data);
     }
 
+    
     public function guardarClienteExpress()
     {
         if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(403);
-        }
-
-        $clienteModel = model(PersonaModel::class);
-
-        $documento = $this->request->getPost('documento');
-        $nombre    = $this->request->getPost('nombre');
-        $telefono  = $this->request->getPost('telefono') ?? '';
-
-        if (empty($documento) || empty($nombre)) {
-            return $this->response->setJSON([
-                'status'  => 'error',
-                'message' => 'El documento y el nombre son obligatorios.'
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => 'error',
+                'message' => 'Solicitud no permitida.'
             ]);
         }
 
-        $data = [
-            'apellidos' => '-',
-            'nombres'   => $nombre,
-            'tipodoc'   => strlen($documento) == 11 ? 'RUC' : 'DNI',
-            'numerodoc' => $documento,
-            'direccion' => '-',
-            'telefono'  => $telefono,
-            'email'     => ''
-        ];
+        $clienteModel = model(\App\Models\PersonaModel::class);
+
+        $documento = trim((string) $this->request->getPost('documento'));
+        $nombre = trim((string) $this->request->getPost('nombre'));
+        $telefono = trim((string) $this->request->getPost('telefono'));
+
+        if (!in_array(strlen($documento), [8, 11], true) || !ctype_digit($documento)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Ingrese un DNI de 8 dígitos o RUC de 11 dígitos.'
+            ]);
+        }
+
+        if (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 100) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'El nombre debe tener entre 2 y 100 caracteres.'
+            ]);
+        }
+
+        if ($telefono !== '' && (!ctype_digit($telefono) || strlen($telefono) > 20)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Ingrese un teléfono válido.'
+            ]);
+        }
+
+        $tipoDoc = strlen($documento) === 11 ? 'RUC' : 'DNI';
+
+        $buscarCliente = static function () use ($clienteModel, $tipoDoc, $documento) {
+         return $clienteModel
+                ->where('tipodoc', $tipoDoc)
+                ->where('numerodoc', $documento)
+                ->first();
+         };
 
         try {
-            if ($clienteModel->skipValidation(true)->insert($data)) {
-                $idNewCliente = $clienteModel->getInsertID();
+            $existente = $buscarCliente();
 
+            if ($existente) {
                 return $this->response->setJSON([
-                    'status'    => 'success',
-                    'message'   => 'Cliente registrado con éxito.',
-                    'idcliente' => $idNewCliente,
-                    'nombre'    => $nombre,
+                    'status' => 'exists',
+                    'message' => 'Este documento ya está registrado.',
+                    'idcliente' => $existente['idpersona'],
+                    'nombre' => trim(
+                        ($existente['nombres'] ?? '') . ' ' .
+                        ($existente['apellidos'] ?? '')
+                    ),
                     'documento' => $documento
                 ]);
-            } else {
-                $errores = implode(" - ", $clienteModel->errors());
+            }
+
+            $data = [
+                'apellidos' => '-',
+                'nombres' => $nombre,
+                'tipodoc' => $tipoDoc,
+                'numerodoc' => $documento,
+                'direccion' => null,
+                'telefono' => $telefono ?: null,
+                'email' => null,
+                'estado' => 1
+            ];
+
+            $idCliente = $clienteModel->insert($data, true);
+
+            if ($idCliente === false) {
                 return $this->response->setJSON([
-                    'status'  => 'error',
-                    'message' => 'Error de validación del modelo: ' . $errores
+                    'status' => 'error',
+                    'message' => 'No se pudo registrar el cliente. Verifique los datos ingresados.'
                 ]);
             }
-        } catch (\Exception $e) {
+
             return $this->response->setJSON([
-                'status'  => 'error',
-                'message' => 'Error BD: ' . $e->getMessage()
+                'status' => 'success',
+                'message' => 'Cliente registrado correctamente.',
+                'idcliente' => $idCliente,
+                'nombre' => $nombre,
+                'documento' => $documento
+            ]);
+
+        } catch (\Throwable $e) {
+            log_message('error', 'Registro rápido de cliente: {error}', [
+                'error' => $e->getMessage()
+            ]);
+
+            try {
+                $existente = $buscarCliente();
+
+                if ($existente) {
+                    return $this->response->setJSON([
+                        'status' => 'exists',
+                        'message' => 'Este documento ya está registrado.',
+                        'idcliente' => $existente['idpersona'],
+                        'nombre' => trim(
+                            ($existente['nombres'] ?? '') . ' ' .
+                            ($existente['apellidos'] ?? '')
+                        ),
+                        'documento' => $documento
+                    ]);
+                }
+            } catch (\Throwable $ignored) {
+            }
+
+            return $this->response->setStatusCode(500)->setJSON([
+                'status' => 'error',
+                'message' => 'No se pudo completar el registro. Inténtelo nuevamente.'
             ]);
         }
     }
+
 }

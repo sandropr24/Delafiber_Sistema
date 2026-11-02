@@ -15,6 +15,11 @@ class PagoVentaModel extends Model
     [
         'idventa',
         'idtipopago',
+        'idcuota',
+        'idapertura',
+        'idusuariocobro',
+        'idcuenta',
+        'voucher',
         'monto',
         'referencia',
         'montorecibido',

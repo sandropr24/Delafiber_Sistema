@@ -13,6 +13,11 @@ class VentaModel extends Model
     protected $allowedFields    = [
         'idcliente',
         'idlocal',
+        'idlinea',
+        'idcanal',
+        'idvendedor',
+        'idestado',
+        'formapago',
         'idpedido',
         'idcajero',
         'tipodocumento',
@@ -24,14 +29,12 @@ class VentaModel extends Model
         'total'
     ];
 
-    public function registrarVenta($dataVenta, $detalles, $pagos)
+    public function registrarVenta($dataVenta, $detalles, $pagos, $entrega = null)
     {
         $db = \Config\Database::connect();
-        $db->transStart();
+        $db->transBegin();
         try {
             $detVentaModel   = model(DetVentaModel::class);
-            $kardexModel     = model(KardexModel::class);
-            $movimientoModel = model(MovimientoModel::class);
             $productoModel   = model(ProductoModel::class);
             $pagoVentaModel  = model(PagoVentaModel::class);
 
@@ -43,19 +46,51 @@ class VentaModel extends Model
                 throw new \RuntimeException('Debe registrar al menos una forma de pago.');
             }
 
+            if (empty($detalles) || empty($dataVenta['idlocal'])) {
+                throw new \RuntimeException('Debe indicar productos y almacén.');
+            }
+            if ($entrega === null) {
+                throw new \RuntimeException('La venta requiere una entrega para gestionar sus reservas.');
+            }
+
+            $cantidades = [];
             foreach ($detalles as $item) {
-                $idproducto = $item['idproducto'];
-                $cantidad   = (int)$item['cantidad'];
-
-                $kardexCheck = $kardexModel->where('idproducto', $idproducto)
-                    ->where('idlocal', $dataVenta['idlocal'])
-                    ->first();
-
-                $stockActual = $kardexCheck ? (int)$kardexCheck['stockactual'] : 0;
-
-                if ($stockActual < $cantidad) {
-                    throw new \RuntimeException("Stock insuficiente para el producto ID {$idproducto}. Disponible: {$stockActual}, Solicitado: {$cantidad}.");
+                $idproducto = (int) ($item['idproducto'] ?? 0);
+                $cantidad = (float) ($item['cantidad'] ?? 0);
+                if ($idproducto <= 0 || $cantidad <= 0 || round($cantidad, 2) != $cantidad) {
+                    throw new \RuntimeException('Detalle de venta con cantidad inválida.');
                 }
+                $producto = $productoModel->find($idproducto);
+                if (!$producto) {
+                    throw new \RuntimeException('Producto inexistente: ' . $idproducto);
+                }
+                if ($producto['tipo'] === 'COMBO') {
+                    throw new \RuntimeException('Los combos todavía requieren configurar sus componentes.');
+                }
+                if (!empty($producto['controlastock'])) {
+                    $cantidades[$idproducto] = ($cantidades[$idproducto] ?? 0) + $cantidad;
+                }
+            }
+            ksort($cantidades, SORT_NUMERIC);
+            $reservasPendientes = [];
+            foreach ($cantidades as $idproducto => $cantidad) {
+                $fila = $db->query(
+                    'SELECT idkardex, stockactual FROM kardex WHERE idproducto = ? AND idlocal = ? FOR UPDATE',
+                    [$idproducto, $dataVenta['idlocal']]
+                )->getRowArray();
+                if (!$fila) {
+                    throw new \RuntimeException('No existe Kardex para el producto ' . $idproducto);
+                }
+                $totalReservado = $db->table('reservas_stock')
+                    ->selectSum('cantidad', 'total')
+                    ->where('idkardex', $fila['idkardex'])
+                    ->where('estado', 'RESERVADO')
+                    ->get()->getRow('total');
+                $disponible = round((float)$fila['stockactual'] - (float)$totalReservado, 2);
+                if ($disponible + 0.00001 < $cantidad) {
+                    throw new \RuntimeException("Stock disponible insuficiente para producto {$idproducto}. Disponible: {$disponible}; solicitado: {$cantidad}.");
+                }
+                $reservasPendientes[] = ['idkardex' => $fila['idkardex'], 'cantidad' => $cantidad];
             }
 
             $insertado = $db->table('ventas')->insert($dataVenta);
@@ -72,70 +107,94 @@ class VentaModel extends Model
                 $montoPagado = (float)$pago['monto'];
                 $totalPagado += $montoPagado;
 
-                $pagoVentaModel->insert([
+                if ($montoPagado <= 0) {
+                    throw new \RuntimeException('Los pagos deben ser mayores que cero.');
+                }
+                $idPago = $pagoVentaModel->insert([
                     'idventa'       => $idventa,
                     'idtipopago'    => $pago['idtipopago'],
+                    'idusuariocobro' => $dataVenta['idcajero'],
                     'monto'         => $montoPagado,
                     'referencia'    => $pago['referencia'] ?? null,
                     'montorecibido' => $pago['montorecibido'] ?? $montoPagado,
                     'vuelto'        => $pago['vuelto'] ?? 0.00,
                     'fecha'         => date('Y-m-d H:i:s'),
                 ]);
+                if (!$idPago) {
+                    throw new \RuntimeException('No se pudo registrar el pago.');
+                }
             }
 
-            if (round($totalPagado, 2) < round($dataVenta['total'], 2)) {
-                throw new \RuntimeException('El monto total pagado es menor al total de la venta.');
+            if (round($totalPagado, 2) !== round((float)$dataVenta['total'], 2)) {
+                throw new \RuntimeException('En una venta de contado, los pagos deben coincidir con el total de la venta.');
             }
 
             foreach ($detalles as $item) {
                 $idproducto  = $item['idproducto'];
-                $cantidad    = (int)$item['cantidad'];
+                $cantidad    = (float)$item['cantidad'];
                 $precioventa = (float)$item['precioventa'];
 
                 $producto = $productoModel->find($idproducto);
-                $costoUnitario = $producto['costounitario'] ?? ($precioventa * 0.7);
+                $costoUnitario = $producto['preciocosto'] ?? 0;
 
-                $detVentaModel->insert([
+                $idDetalle = $detVentaModel->insert([
                     'idventa'       => $idventa,
                     'idproducto'    => $idproducto,
                     'cantidad'      => $cantidad,
                     'precioventa'   => $precioventa,
-                    'costounitario' => $costoUnitario
+                    'costounitario' => $costoUnitario,
+                    'garantiameses' => $producto['garantiameses'] ?? 0
                 ]);
-
-                $kardexActual = $kardexModel->where('idproducto', $idproducto)
-                    ->where('idlocal', $dataVenta['idlocal'])
-                    ->first();
-
-                $stockAnterior = (int)$kardexActual['stockactual'];
-                $nuevoStock    = $stockAnterior - $cantidad;
-                $idkardex      = $kardexActual['idkardex'];
-
-                $kardexModel->update($idkardex, [
-                    'stockactual' => $nuevoStock
-                ]);
-
-                $movimientoModel->insert([
-                    'idkardex'    => $idkardex,
-                    'idventa'     => $idventa,
-                    'idusuario'   => $dataVenta['idcajero'] ?? 1,
-                    'tipo'        => 'SALIDA',
-                    'fecha'       => date('Y-m-d H:i:s'),
-                    'cantidad'    => $cantidad,
-                    'saldo'       => $nuevoStock,
-                    'descripcion' => 'Salida por Venta N° ' . $idventa,
-                    'motivo'      => 'Venta de mercadería'
-                ]);
+                if (!$idDetalle) {
+                    throw new \RuntimeException('No se pudo registrar el detalle de venta.');
+                }
             }
 
-            $db->transComplete();
+            foreach ($reservasPendientes as $reserva) {
+                $reserva['idventa'] = $idventa;
+                $reserva['estado'] = 'RESERVADO';
+                $reserva['created_at'] = date('Y-m-d H:i:s');
+                if (!$db->table('reservas_stock')->insert($reserva)) {
+                    throw new \RuntimeException('No se pudo guardar la reserva de inventario.');
+                }
+            }
 
-            if ($db->transStatus() === false) {
-                throw new \RuntimeException('La transacción falló en el commit.');
+            if ($entrega !== null) {
+                $tipo = $entrega['tipoentrega'] ?? 'RECOJO_TIENDA';
+                if (!in_array($tipo, ['RECOJO_TIENDA', 'DOMICILIO'], true)) {
+                    throw new \RuntimeException('Tipo de entrega inválido.');
+                }
+                if ($tipo === 'DOMICILIO') {
+                    if (
+                        empty(trim((string) ($entrega['direccion'] ?? ''))) ||
+                        empty(trim((string) ($entrega['telefono'] ?? '')))
+                    ) {
+                      throw new \RuntimeException(
+                        'La entrega a domicilio requiere dirección y teléfono.'
+                    );
+                }
+            }
+                $datosEntrega = [
+                    'idventa' => $idventa,
+                    'tipoentrega' => $tipo,
+                    'direccion' => $tipo === 'DOMICILIO' ? $entrega['direccion'] : null,
+                    'referencia' => $tipo === 'DOMICILIO' ? ($entrega['referencia'] ?? null) : null,
+                    'telefono' => $tipo === 'DOMICILIO' ? $entrega['telefono'] : null,
+                    'idtecnico' => $tipo === 'DOMICILIO' ? $entrega['idtecnico'] : null,
+                    'estado' => 'PENDIENTE',
+                    'cobrocontraentrega' => 0,
+                ];
+                if (!model(EntregaModel::class)->insert($datosEntrega)) {
+                    throw new \RuntimeException('No se pudo registrar la entrega.');
+                }
+            }
+
+            if ($db->transStatus() === false || !$db->transCommit()) {
+                throw new \RuntimeException('La transacción no pudo confirmarse.');
             }
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $db->transRollback();
 
 
