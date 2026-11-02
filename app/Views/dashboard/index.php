@@ -1,136 +1,215 @@
 <?= $this->extend('layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="<?= base_url('css/dashboard.css') ?>">
+<?= $this->endSection() ?>
+
 <?= $this->section('contenido') ?>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+<?php
+    $indicadores = [
+        ['Ventas de hoy', 'S/ ' . number_format((float) ($totalVentasHoy ?? 0), 2), 'bi-cash-stack'],
+        ['Alertas de stock', (string) ($stockCritico ?? 0), 'bi-exclamation-triangle'],
+        ['Productos activos', (string) ($totalProductos ?? 0), 'bi-box-seam'],
+        ['Cotizaciones pendientes', (string) ($cotizacionesPendientes ?? 0), 'bi-file-earmark-text'],
+        ['Entregas pendientes', (string) ($entregasPendientes ?? 0), 'bi-truck']
+    ];
+?>
+
+<div class="container-fluid px-3 px-lg-4 py-3 df-dashboard">
+    <div class="df-card p-3 p-lg-4 mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
         <div>
-            <h4 class="fw-bold text-dark mb-1">
-                ¡Hola, <?= esc($nombreUsuario ?? session()->get('nombreusuario') ?? 'Usuario') ?>!
-            </h4>
-            <p class="text-muted small mb-0">
-                Resumen de movimientos para el rol de <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 fw-semibold"><?= esc($rol ?? session()->get('rol')) ?></span>
-            </p>
+            <h4 class="fw-bold mb-1">Panel de control</h4>
+            <div class="df-sub">¡Hola, <?= esc($nombreUsuario ?? 'Usuario') ?>! · Resumen comercial de DELAFIBER</div>
         </div>
-        <div class="text-muted small fw-medium bg-light px-3 py-2 rounded-3 border border-light-subtle">
-            <i class="bi bi-calendar3 me-1.5 text-primary"></i> Fecha: <strong class="text-dark"><?= date('d/m/Y') ?></strong>
+        <div class="small text-muted">
+            <i class="bi bi-calendar3 me-1"></i> <?= date('d/m/Y') ?>
+            <span class="badge ms-2 df-role"><?= esc($rol ?? '') ?></span>
         </div>
     </div>
-</div>
 
-<div class="row g-3 mb-4">
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 style-card-hover" style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
-            <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-secondary text-uppercase fw-bold" style="font-size: 0.72rem; letter-spacing: 0.6px; opacity: 0.85;">Ventas de Hoy</span>
-                    <h3 class="fw-bold text-dark mt-2 mb-0">S/ <?= number_format($totalVentasHoy ?? 0, 2) ?></h3>
+    <div class="row g-3 mb-3">
+        <?php foreach ($indicadores as $indicador): ?>
+            <div class="col-12 col-sm-6 col-xl">
+                <div class="df-card df-kpi d-flex align-items-center justify-content-between gap-2">
+                    <div>
+                        <small><?= esc($indicador[0]) ?></small>
+                        <strong><?= esc($indicador[1]) ?></strong>
+                    </div>
+                    <div class="df-icon">
+                        <i class="bi <?= esc($indicador[2]) ?>"></i>
+                    </div>
                 </div>
-                <div class="bg-success-subtle text-success rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; min-width: 48px;">
-                    <i class="bi bi-currency-dollar fs-4"></i>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-lg-7">
+            <div class="df-card p-3 p-lg-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="df-heading">Evolución de ventas</h5>
+                        <div class="df-sub">Importes registrados · últimos 7 días</div>
+                    </div>
+                    <i class="bi bi-graph-up-arrow df-accent"></i>
+                </div>
+                <div class="df-chart">
+                    <canvas id="dfVentasChart"></canvas>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 style-card-hover" style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
-            <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-secondary text-uppercase fw-bold" style="font-size: 0.72rem; letter-spacing: 0.6px; opacity: 0.85;">Alertas de Stock</span>
-                    <h3 class="fw-bold mt-2 mb-0 <?= ($stockCritico ?? 0) > 0 ? 'text-danger fw-extrabold' : 'text-dark' ?>">
-                        <?= $stockCritico ?? 0 ?>
-                    </h3>
+        <div class="col-12 col-lg-5">
+            <div class="df-card p-3 p-lg-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="df-heading">Productos más vendidos</h5>
+                        <div class="df-sub">Top 5 por unidades vendidas · histórico</div>
+                    </div>
+                    <i class="bi bi-trophy df-accent"></i>
                 </div>
-                <div class="bg-danger-subtle text-danger rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; min-width: 48px;">
-                    <i class="bi bi-exclamation-triangle fs-4"></i>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 style-card-hover" style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
-            <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-secondary text-uppercase fw-bold" style="font-size: 0.72rem; letter-spacing: 0.6px; opacity: 0.85;">Total Productos</span>
-                    <h3 class="fw-bold text-dark mt-2 mb-0"><?= $totalProductos ?? 0 ?></h3>
-                </div>
-                <div class="bg-primary-subtle text-primary rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; min-width: 48px;">
-                    <i class="bi bi-box-seam fs-4"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 style-card-hover" style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
-            <div class="card-body p-4 d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="text-secondary text-uppercase fw-bold" style="font-size: 0.72rem; letter-spacing: 0.6px; opacity: 0.85;">Cotizaciones Pend.</span>
-                    <h3 class="fw-bold text-dark mt-2 mb-0"><?= $cotizacionesPendientes ?? 0 ?></h3>
-                </div>
-                <div class="bg-warning-subtle text-warning rounded-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; min-width: 48px;">
-                    <i class="bi bi-clipboard-data fs-4"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white py-3.5 d-flex justify-content-between align-items-center border-0 rounded-top-3">
-        <h6 class="fw-bold mb-0 text-dark">Últimas Ventas Emitidas</h6>
-        <a href="<?= base_url('ventas') ?>" class="text-primary small text-decoration-none fw-semibold build-hover-link">
-            Ver todas <i class="bi bi-arrow-right ms-1"></i>
-        </a>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr class="small text-uppercase text-secondary fw-bold" style="font-size: 0.72rem; letter-spacing: 0.5px;">
-                    <th class="ps-4 py-3">Comprobante</th>
-                    <th class="py-3">Cliente</th>
-                    <th class="py-3">Fecha y Hora</th>
-                    <th class="text-end py-3">Total</th>
-                    <th class="text-center pe-4 py-3">Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($ultimasVentas)): ?>
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-5">
-                            <div class="d-flex flex-column align-items-center justify-content-center my-3">
-                                <div class="bg-light rounded-circle p-3 mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                    <i class="bi bi-receipt text-secondary fs-3 opacity-50"></i>
-                                </div>
-                                <h6 class="fw-semibold text-secondary mb-1">No hay ventas registradas aún</h6>
-                                <p class="text-muted small mb-0">Las transacciones que realices hoy se mostrarán en esta sección.</p>
-                            </div>
-                        </td>
-                    </tr>
+                <?php if (empty($masVendidos)): ?>
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-box-seam fs-2 d-block mb-2"></i>
+                        Aún no hay productos vendidos.
+                    </div>
                 <?php else: ?>
-                    <?php foreach ($ultimasVentas as $venta): ?>
-                        <tr>
-                            <td class="ps-4 fw-medium text-dark">
-                                <?= esc($venta['tipodocumento']) ?> <?= esc($venta['serie']) ?>-<?= esc($venta['numero']) ?>
-                            </td>
-                            <td><?= esc($venta['nombres']) ?> <?= esc($venta['apellidos']) ?></td>
-                            <td class="text-muted small"><?= date('d/m/Y H:i', strtotime($venta['fecha'])) ?></td>
-                            <td class="text-end fw-bold text-dark">S/ <?= number_format($venta['total'], 2) ?></td>
-                            <td class="text-center pe-4">
-                                <?php if ($venta['estafacturado']): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 fw-semibold">Facturado</span>
-                                <?php else: ?>
-                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2.5 py-1 fw-semibold">Emitido</span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
+                    <?php foreach ($masVendidos as $i => $producto): ?>
+                        <div class="d-flex align-items-center gap-3 py-2 <?= $i ? 'border-top' : '' ?>">
+                            <div class="df-rank"><?= $i + 1 ?></div>
+                            <div class="flex-grow-1 df-min-width-0">
+                                <div class="fw-semibold text-truncate small" title="<?= esc($producto['nombre']) ?>"><?= esc($producto['nombre']) ?></div>
+                                <div class="df-sub">S/ <?= number_format((float) $producto['importe'], 2) ?> en ventas</div>
+                            </div>
+                            <div class="text-end">
+                                <strong><?= number_format((float) $producto['unidades'], 0) ?></strong>
+                                <div class="df-sub">unidades</div>
+                            </div>
+                        </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
-            </tbody>
-        </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="df-card p-3 mb-3">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="fw-bold small me-2">Accesos rápidos</span>
+            <a href="<?= base_url('ventas') ?>" class="df-action"><i class="bi bi-cart-plus me-1"></i> Ventas</a>
+            <a href="<?= base_url('cotizaciones') ?>" class="df-action"><i class="bi bi-file-earmark-plus me-1"></i> Cotizaciones</a>
+            <a href="<?= base_url('productos') ?>" class="df-action"><i class="bi bi-box-seam me-1"></i> Productos</a>
+            <a href="<?= base_url('entregas') ?>" class="df-action"><i class="bi bi-truck me-1"></i> Entregas</a>
+        </div>
+    </div>
+
+    <div class="df-card overflow-hidden mb-3">
+        <div class="p-3 d-flex justify-content-between align-items-center">
+            <h5 class="df-heading">Últimas ventas registradas</h5>
+            <a href="<?= base_url('ventas') ?>" class="df-link">Ver todas <i class="bi bi-arrow-right"></i></a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Comprobante</th>
+                        <th>Cliente</th>
+                        <th>Fecha</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-center pe-3">Documento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($ultimasVentas)): ?>
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No hay ventas registradas.</td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($ultimasVentas as $venta): ?>
+                            <?php
+                                $comprobante = ($venta['tipodocumento'] ?? '') . ' ' . ($venta['serie'] ?? '') . '-' . ($venta['numero'] ?? '');
+                                $cliente = trim(($venta['nombres'] ?? '') . ' ' . ($venta['apellidos'] ?? ''));
+                                if ($cliente === '') {
+                                    $cliente = $venta['razonsocial'] ?? 'Sin nombre';
+                                }
+                            ?>
+                            <tr>
+                                <td class="ps-3 fw-semibold"><?= esc($comprobante) ?></td>
+                                <td><?= esc($cliente) ?></td>
+                                <td class="text-muted"><?= esc(date('d/m/Y H:i', strtotime($venta['fecha']))) ?></td>
+                                <td class="text-end fw-bold">S/ <?= number_format((float) $venta['total'], 2) ?></td>
+                                <td class="text-center pe-3">
+                                    <span class="badge bg-light text-secondary border">
+                                        <?= !empty($venta['estafacturado']) ? 'Facturado' : 'Emitido' ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const canvas = document.getElementById('dfVentasChart');
+
+        if (!canvas || typeof Chart === 'undefined') {
+            return;
+        }
+
+        const dias = <?= json_encode($graficoDias ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+        const montos = <?= json_encode($graficoMontos ?? [], JSON_NUMERIC_CHECK) ?>;
+
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: dias,
+                datasets: [
+                    {
+                        label: 'Ventas (S/)',
+                        data: montos,
+                        borderColor: '#ff254b',
+                        backgroundColor: 'rgba(255, 37, 75, 0.09)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ff254b'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (contexto) {
+                                return 'S/ ' + Number(contexto.parsed.y).toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0edf2' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    });
+</script>
 <?= $this->endSection() ?>
