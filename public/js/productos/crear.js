@@ -11,6 +11,8 @@ function mostrarVistaPrevia(src) {
   const img = $("previewImg");
   const icon = $("previewIcon");
 
+  if (!img || !icon) return;
+
   if (src) {
     img.src = src;
     img.style.display = "block";
@@ -27,7 +29,11 @@ function previsualizarImagen(event) {
 
   if (input.files && input.files[0]) {
     const reader = new FileReader();
-    reader.onload = (e) => mostrarVistaPrevia(e.target.result);
+
+    reader.onload = (e) => {
+      mostrarVistaPrevia(e.target.result);
+    };
+
     reader.readAsDataURL(input.files[0]);
   } else {
     mostrarVistaPrevia(null);
@@ -35,8 +41,10 @@ function previsualizarImagen(event) {
 }
 
 function asegurarOpcion(select, valor, texto) {
-  if (!valor) return;
-  const existe = [...select.options].some((o) => o.value == valor);
+  if (!select || !valor) return;
+
+  const existe = [...select.options].some((opcion) => opcion.value == valor);
+
   if (!existe) {
     select.add(
       new Option((texto || "Registro #" + valor) + " (inactiva)", valor),
@@ -44,154 +52,287 @@ function asegurarOpcion(select, valor, texto) {
   }
 }
 
+function asignarValor(id, valor) {
+  const campo = $(id);
+
+  if (campo) {
+    campo.value = valor ?? "";
+  }
+}
+
+function asignarCheckbox(id, valor) {
+  const campo = $(id);
+
+  if (campo) {
+    campo.checked = String(valor) === "1";
+  }
+}
+
 function aplicarTipo(reiniciar = true) {
-  const tipo = $("tipo").value;
+  const tipo = $("tipo")?.value || "PRODUCTO";
 
   document.querySelectorAll("[data-oculto-en]").forEach((el) => {
     const ocultar = el.dataset.ocultoEn.split(",").includes(tipo);
+
     el.classList.toggle("d-none", ocultar);
 
     el.querySelectorAll("input, select").forEach((campo) => {
       campo.disabled = ocultar;
-      if (!ocultar) return;
-      if (campo.type === "checkbox") campo.checked = false;
-      else campo.value = "";
+
+      if (!ocultar || !reiniciar) return;
+
+      if (campo.type === "checkbox") {
+        campo.checked = false;
+      } else if (campo.type !== "file") {
+        campo.value = "";
+      }
     });
   });
 
-  if (tipo === "SERVICIO" || tipo === "COMBO") mostrarVistaPrevia(null);
+  if (tipo === "SERVICIO" || tipo === "COMBO") {
+    mostrarVistaPrevia(null);
+  }
 
-  if (tipo === "PRODUCTO" && reiniciar) {
+  if (tipo === "PRODUCTO" && reiniciar && $("controlastock")) {
     $("controlastock").checked = true;
   }
 
-  if (tipo === "SERVICIO" && reiniciar && !$("idunidad").value) {
+  if (tipo === "SERVICIO" && reiniciar && !$("idunidad")?.value) {
     const opcion = [...$("idunidad").options].find((o) =>
       /servicio/i.test(o.text),
     );
-    if (opcion) $("idunidad").value = opcion.value;
+
+    if (opcion) {
+      $("idunidad").value = opcion.value;
+    }
   }
 
-  $("tipoAyuda").textContent = AYUDA_TIPO[tipo] || "";
+  if ($("tipoAyuda")) {
+    $("tipoAyuda").textContent = AYUDA_TIPO[tipo] || "";
+  }
+}
+
+function actualizarCampoSerie() {
+  const contenedor = $("contenedorSerieInicial");
+  const campo = $("serieinicial");
+  const visible =
+    $("tipo")?.value === "PRODUCTO" && $("controlaserie")?.checked;
+  if (contenedor) contenedor.classList.toggle("d-none", !visible);
+  if (campo) {
+    campo.disabled = !visible;
+    if (!visible) campo.value = "";
+  }
 }
 
 function limpiarFormulario() {
-  $("modalTitulo").textContent = "Nuevo Producto";
-  $("idproducto").value = "";
-  $("tipo").value = "PRODUCTO";
-  $("idcategoria").value = "";
-  $("idmarca").value = "";
-  $("nombre").value = "";
-  $("descripcion").value = "";
-  $("modelo").value = "";
-  $("codigobarras").value = "";
-  $("idunidad").value = "";
-  $("preciocosto").value = "0";
-  $("monedacosto").value = "USD";
-  $("precioventa").value = "";
-  $("garantiameses").value = "0";
-  $("controlaserie").checked = false;
-  $("imagen").value = "";
-  $("divEstado").style.display = "none";
-  $("estado").value = "1";
+  const modal = $("modalProducto");
+  const formulario = modal?.querySelector("form");
+
+  if (formulario) {
+    formulario.reset();
+  }
+
+  if ($("modalTitulo")) {
+    $("modalTitulo").textContent = "Nuevo Producto";
+  }
+
+  asignarValor("idproducto", "");
+  asignarValor("tipo", "PRODUCTO");
+  asignarValor("idcategoria", "");
+  asignarValor("idmarca", "");
+  asignarValor("nombre", "");
+  asignarValor("descripcion", "");
+  asignarValor("modelo", "");
+  asignarValor("codigobarras", "");
+  asignarValor("idunidad", "");
+  asignarValor("preciocosto", "0");
+  asignarValor("monedacosto", "USD");
+  asignarValor("precioventa", "");
+  asignarValor("garantiameses", "0");
+  asignarValor("estado", "1");
+
+  asignarCheckbox("controlastock", 1);
+  asignarCheckbox("controlaserie", 0);
+
+  if ($("imagen")) {
+    $("imagen").value = "";
+  }
+
+  if ($("divEstado")) {
+    $("divEstado").style.display = "none";
+  }
 
   mostrarVistaPrevia(null);
   aplicarTipo(true);
+  actualizarCampoSerie();
 }
 
 function cargarFormulario(d) {
-  const esEdicion = !!d.idproducto;
+  if (!d || typeof d !== "object") {
+    console.error("Datos del producto no válidos.");
+    return;
+  }
 
-  $("modalTitulo").textContent = esEdicion
-    ? "Editar Producto"
-    : "Nuevo Producto";
-  $("idproducto").value = d.idproducto || "";
-  $("tipo").value = d.tipo || "PRODUCTO";
+  const esEdicion = Boolean(d.idproducto);
+
+  if ($("modalTitulo")) {
+    $("modalTitulo").textContent = esEdicion
+      ? "Editar Producto"
+      : "Nuevo Producto";
+  }
+
+  asignarValor("idproducto", d.idproducto || "");
+  asignarValor("tipo", d.tipo || "PRODUCTO");
 
   asegurarOpcion($("idcategoria"), d.idcategoria, d.categoria);
   asegurarOpcion($("idmarca"), d.idmarca, d.marca);
-  $("idcategoria").value = d.idcategoria || "";
-  $("idmarca").value = d.idmarca || "";
 
-  $("nombre").value = d.nombre || "";
-  $("descripcion").value = d.descripcion || "";
-  $("modelo").value = d.modelo || "";
-  $("codigobarras").value = d.codigobarras || "";
-  $("idunidad").value = d.idunidad || "";
-  $("preciocosto").value = d.preciocosto ?? "0";
-  $("monedacosto").value = d.monedacosto || "USD";
-  $("precioventa").value = d.precioventa ?? "";
-  $("garantiameses").value = d.garantiameses ?? "0";
-  $("imagen").value = "";
+  asignarValor("idcategoria", d.idcategoria || "");
+  asignarValor("idmarca", d.idmarca || "");
+
+  asignarValor("nombre", d.nombre || "");
+  asignarValor("descripcion", d.descripcion || "");
+  asignarValor("modelo", d.modelo || "");
+  asignarValor("codigobarras", d.codigobarras || "");
+  asignarValor("idunidad", d.idunidad || "");
+
+  asignarValor("preciocosto", d.preciocosto ?? "0");
+  asignarValor("monedacosto", d.monedacosto || "USD");
+  asignarValor("precioventa", d.precioventa ?? "");
+  asignarValor("garantiameses", d.garantiameses ?? "0");
+
+  if ($("imagen")) {
+    $("imagen").value = "";
+  }
 
   aplicarTipo(false);
-  $("controlastock").checked = String(d.controlastock) === "1";
-  $("controlaserie").checked = String(d.controlaserie) === "1";
-  if (d.tipo === "SERVICIO") $("idmarca").value = "";
 
-  $("divEstado").style.display = esEdicion ? "block" : "none";
-  $("estado").value = d.estado ?? "1";
+  asignarCheckbox("controlastock", d.controlastock);
+  asignarCheckbox("controlaserie", d.controlaserie);
+  asignarValor("serieinicial", d.serieinicial || "");
+  actualizarCampoSerie();
 
-  mostrarVistaPrevia(
-    d.imagen ? BASE_URL + "uploads/productos/" + d.imagen : null,
-  );
+  if (d.tipo === "SERVICIO") {
+    asignarValor("idmarca", "");
+  }
+
+  if ($("divEstado")) {
+    $("divEstado").style.display = esEdicion ? "block" : "none";
+  }
+
+  asignarValor("estado", d.estado ?? "1");
+
+  const rutaImagen = d.imagen
+    ? BASE_URL.replace(/\/?$/, "/") +
+      "uploads/productos/" +
+      encodeURIComponent(d.imagen)
+    : null;
+
+  mostrarVistaPrevia(rutaImagen);
 }
 
 function abrirModalProducto() {
-  bootstrap.Modal.getOrCreateInstance($("modalProducto")).show();
+  const modal = $("modalProducto");
+
+  if (!modal) {
+    console.error("No se encontró el modal de productos.");
+    return;
+  }
+
+  bootstrap.Modal.getOrCreateInstance(modal).show();
 }
 
-function editarProducto(p) {
-  cargarFormulario(p);
-  abrirModalProducto();
+function editarProducto(producto) {
+  try {
+    cargarFormulario(producto);
+    abrirModalProducto();
+  } catch (error) {
+    console.error("Error al abrir la edición:", error);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
   const viewContainer = $("viewProductos");
+
   if (!viewContainer) return;
 
-  $("tipo").addEventListener("change", () => aplicarTipo(true));
+  const tbody = $("tbodyProductos");
+
+  $("tipo")?.addEventListener("change", () => {
+    aplicarTipo(true);
+  });
+
   aplicarTipo(true);
+  actualizarCampoSerie();
+  $("controlaserie")?.addEventListener("change", actualizarCampoSerie);
+  $("tipo")?.addEventListener("change", actualizarCampoSerie);
 
   if (typeof FORM_PREVIO !== "undefined" && FORM_PREVIO) {
     cargarFormulario(FORM_PREVIO);
     abrirModalProducto();
   }
 
+  if (tbody) {
+    tbody.addEventListener("click", function (event) {
+      const boton = event.target.closest(".btn-editar-producto");
+
+      if (!boton || !tbody.contains(boton)) return;
+
+      try {
+        const producto = JSON.parse(boton.dataset.producto);
+
+        editarProducto(producto);
+      } catch (error) {
+        console.error("No se pudieron cargar los datos del producto:", error);
+      }
+    });
+  }
+
   const urlBuscar = viewContainer.getAttribute("data-url-buscar");
-  const tbody = $("tbodyProductos");
+
   let temporizador = null;
   let ultimaPeticion = 0;
 
   function buscar() {
+    if (!tbody || !urlBuscar) return;
+
     const params = new URLSearchParams({
-      q: $("inputBuscarTablaProductos").value.trim(),
-      categoria: $("filtroCategoria").value,
-      tipo: $("filtroTipo").value,
-      estado: $("filtroEstado").value,
+      q: $("inputBuscarTablaProductos")?.value.trim() || "",
+      categoria: $("filtroCategoria")?.value || "",
+      tipo: $("filtroTipo")?.value || "",
+      estado: $("filtroEstado")?.value || "",
     });
 
     const numero = ++ultimaPeticion;
 
     fetch(urlBuscar + "?" + params.toString(), {
-      headers: { "X-Requested-With": "XMLHttpRequest" },
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
     })
       .then((res) => {
-        if (!res.ok) throw new Error("HTTP " + res.status);
+        if (!res.ok) {
+          throw new Error("HTTP " + res.status);
+        }
+
         return res.text();
       })
       .then((html) => {
-        if (numero === ultimaPeticion) tbody.innerHTML = html;
+        if (numero === ultimaPeticion) {
+          tbody.innerHTML = html;
+        }
       })
-      .catch((err) => console.error("Error al buscar productos:", err));
+      .catch((error) => {
+        console.error("Error al buscar productos:", error);
+      });
   }
 
-  $("inputBuscarTablaProductos").addEventListener("input", () => {
+  $("inputBuscarTablaProductos")?.addEventListener("input", () => {
     clearTimeout(temporizador);
     temporizador = setTimeout(buscar, 300);
   });
 
   ["filtroCategoria", "filtroTipo", "filtroEstado"].forEach((id) => {
-    $(id).addEventListener("change", buscar);
+    $(id)?.addEventListener("change", buscar);
   });
 });

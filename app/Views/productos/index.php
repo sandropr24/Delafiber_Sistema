@@ -101,7 +101,7 @@
                         <div class="col-12 col-md-4">
                             <label for="tipo" class="form-label small fw-semibold">Tipo <span class="text-danger">*</span></label>
                             <select class="form-select" id="tipo" name="tipo" required>
-                                <option value="PRODUCTO">Producto (equipo físico)</option>
+                                <option value="PRODUCTO">Producto</option>
                                 <option value="SERVICIO">Servicio</option>
                                 <option value="COMBO">Combo / Kit</option>
                             </select>
@@ -165,7 +165,7 @@
 
                         <div class="col-6 col-md-3">
                             <label for="precioventa" class="form-label small fw-semibold">Precio sugerido (S/)</label>
-                            <input type="number" step="0.01" min="0" class="form-control" id="precioventa" name="precioventa" placeholder="Opcional">
+                            <input type="number" step="0.01" min="0" class="form-control" id="precioventa" name="precioventa" value="0">
                         </div>
 
                         <div class="col-6 col-md-3">
@@ -185,6 +185,12 @@
                                 <input class="form-check-input" type="checkbox" role="switch" id="controlaserie" name="controlaserie" value="1">
                                 <label class="form-check-label small fw-semibold" for="controlaserie">Lleva número de serie (garantías)</label>
                             </div>
+                        </div>
+
+                        <div class="col-12 d-none" id="contenedorSerieInicial" data-oculto-en="SERVICIO,COMBO">
+                            <label for="serieinicial" class="form-label small fw-semibold">Número de serie inicial (opcional)</label>
+                            <input type="text" class="form-control" id="serieinicial" name="serieinicial" maxlength="60" placeholder="Ej. SN-TP20260001">
+                            <div class="form-text">La serie se registra sin stock. Estará disponible cuando se registre su ingreso en Compras.</div>
                         </div>
 
                         <div class="col-12 col-md-8" data-oculto-en="SERVICIO,COMBO">

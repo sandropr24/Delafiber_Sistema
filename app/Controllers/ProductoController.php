@@ -12,9 +12,21 @@ class ProductoController extends BaseController
     private const TIPOS = ['PRODUCTO', 'SERVICIO', 'COMBO'];
 
     private const CAMPOS_FORM = [
-        'idproducto', 'tipo', 'idcategoria', 'idmarca', 'nombre', 'descripcion', 'modelo',
-        'codigobarras', 'idunidad', 'precioventa',
-        'garantiameses', 'controlastock', 'controlaserie', 'estado',
+        'serieinicial',
+        'idproducto',
+        'tipo',
+        'idcategoria',
+        'idmarca',
+        'nombre',
+        'descripcion',
+        'modelo',
+        'codigobarras',
+        'idunidad',
+        'precioventa',
+        'garantiameses',
+        'controlastock',
+        'controlaserie',
+        'estado',
     ];
 
     protected $productoModel;
@@ -34,12 +46,12 @@ class ProductoController extends BaseController
 
         $data = [
             'titulo'           => 'Productos',
-            'productos'        => $this->productoModel->buscarConRelaciones(),
+            'productos'        => $this->agregarSeriesIniciales($this->productoModel->buscarConRelaciones()),
             'categoriasFiltro' => $todasCategorias,
-            'categorias'       => array_values(array_filter($todasCategorias, static fn ($c) => (int) $c['estado'] === 1)),
+            'categorias'       => array_values(array_filter($todasCategorias, static fn($c) => (int) $c['estado'] === 1)),
             'marcas'           => array_values(array_filter(
                 $this->marcaModel->orderBy('marca', 'ASC')->findAll(),
-                static fn ($m) => (int) ($m['estado'] ?? 1) === 1
+                static fn($m) => (int) ($m['estado'] ?? 1) === 1
             )),
             'unidades'         => $this->obtenerUnidades(),
         ];
@@ -68,7 +80,7 @@ class ProductoController extends BaseController
         }
 
         return view('productos/_filas', [
-            'productos' => $this->productoModel->buscarConRelaciones($q, $ids, $tipo, $estado),
+            'productos' => $this->agregarSeriesIniciales($this->productoModel->buscarConRelaciones($q, $ids, $tipo, $estado)),
         ]);
     }
 
@@ -129,13 +141,21 @@ class ProductoController extends BaseController
             'controlastock' => ($esProducto && $this->request->getPost('controlastock')) ? 1 : 0,
             'controlaserie' => ($esProducto && $this->request->getPost('controlaserie')) ? 1 : 0,
             'garantiameses' => (int) $this->request->getPost('garantiameses'),
-            // Precio sugerido opcional: la BD actual exige un DECIMAL no nulo.
-            // Un valor de 0 indica que aún no se ha definido precio sugerido.
             'precioventa'   => trim((string) $this->request->getPost('precioventa')) === ''
                 ? '0.00' : $this->request->getPost('precioventa'),
             'estado'        => in_array($estadoPost, ['0', '1'], true) ? (int) $estadoPost : 1,
         ];
 
+        $serieInicial = trim((string) $this->request->getPost('serieinicial'));
+        if ($serieInicial !== '' && strlen($serieInicial) > 60) {
+            $errores[] = 'El número de serie no puede superar 60 caracteres.';
+        }
+        if ($serieInicial !== '' && !$datos['controlaserie']) {
+            $errores[] = 'Active «Lleva número de serie» para registrar una serie.';
+        }
+        if ($datos['controlaserie'] && !$datos['controlastock']) {
+            $errores[] = 'Un producto con número de serie debe controlar stock.';
+        }
         if ($id) {
             $datos['idproducto'] = $id;
         }
@@ -175,9 +195,35 @@ class ProductoController extends BaseController
             $datos['imagen']  = $nuevaImagen;
         }
 
+        $db = db_connect();
+        $db->transBegin();
         try {
             $guardado = $this->productoModel->save($datos);
+            if (!$guardado) {
+                throw new \RuntimeException('No se pudo guardar el producto.');
+            }
+            $idGuardado = $id ?: (int) $this->productoModel->getInsertID();
+            if ($serieInicial !== '') {
+                $serieExistente = $db->table('series')->where('idproducto', $idGuardado)
+                    ->where('numeroserie', $serieInicial)->get()->getRowArray();
+                if (!$serieExistente) {
+                    if (!$db->table('series')->insert([
+                        'idproducto' => $idGuardado,
+                        'numeroserie' => $serieInicial,
+                        'idlocal' => null,
+                        'iddetcompra' => null,
+                        'estado' => 'EN_STOCK',
+                    ])) {
+                        throw new \RuntimeException('No se pudo registrar la serie inicial.');
+                    }
+                }
+            }
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('Error de base de datos.');
+            }
+            $db->transCommit();
         } catch (\Throwable $e) {
+            $db->transRollback();
             log_message('error', 'Error al guardar producto: ' . $e->getMessage());
             $guardado = false;
         }
@@ -223,6 +269,21 @@ class ProductoController extends BaseController
         return redirect()->to(base_url('productos'))
             ->with('errors', $errores)
             ->with('form', $form);
+    }
+
+    private function agregarSeriesIniciales(array $productos): array
+    {
+        if (!$productos) return $productos;
+        $db = db_connect();
+        foreach ($productos as &$producto) {
+            $fila = $db->table('series')->select('numeroserie')
+                ->where('idproducto', $producto['idproducto'])
+                ->where('iddetcompra', null)->where('idlocal', null)
+                ->orderBy('idserie', 'ASC')->get(1)->getRowArray();
+            $producto['serieinicial'] = $fila['numeroserie'] ?? '';
+        }
+        unset($producto);
+        return $productos;
     }
 
     private function obtenerUnidades(): array

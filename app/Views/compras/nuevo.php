@@ -63,7 +63,7 @@
                             <label for="serie" class="form-label fw-semibold small text-uppercase text-muted">Serie <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="fas fa-hashtag"></i></span>
-                                <input type="text" class="form-control" name="serie" id="serie" placeholder="Ej. F001" maxlength="20" required>
+                                <input type="text" class="form-control" name="serie" id="serie" placeholder="Ej. N001" maxlength="20" required>
                             </div>
                         </div>
 
@@ -73,7 +73,10 @@
                         </div>
                         <div class="mb-3">
                             <label for="moneda" class="form-label fw-semibold small text-uppercase text-muted">Moneda</label>
-                            <select name="moneda" id="moneda" class="form-select"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select>
+                            <select name="moneda" id="moneda" class="form-select">
+                                <option value="PEN">Soles (PEN)</option>
+                                <option value="USD">Dólares (USD)</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="tipocambio" class="form-label fw-semibold small text-uppercase text-muted">Tipo de cambio a PEN</label>
@@ -132,6 +135,7 @@
                                             <option value="<?= $prod['idproducto'] ?>"
                                                 data-nombre="<?= esc($prod['nombre'] ?? $prod['descripcion'], 'attr') ?>"
                                                 data-unidad="<?= esc($prod['abreviaturaunidad'] ?? 'UND', 'attr') ?>"
+                                                data-serie="<?= (int) ($prod['controlaserie'] ?? 0) ?>"
                                                 data-precio="<?= $prod['precioventa'] ?? 0 ?>">
                                                 <?= esc($prod['nombre'] ?? $prod['descripcion']) ?>
                                             </option>
@@ -154,6 +158,11 @@
                             </div>
                         </div>
 
+                        <div class="border rounded-3 p-3 mb-3 d-none" id="panelSeriesCompra">
+                            <div class="fw-semibold mb-1"><i class="bi bi-upc-scan me-1"></i>Números de serie del producto</div>
+                            <div class="text-muted small mb-2">Ingrese una serie diferente por cada unidad que está comprando.</div>
+                            <div class="row g-2" id="camposSeriesCompra"></div>
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0" id="tablaDetalle">
                                 <thead class="table-light text-uppercase fs-7 text-secondary">
