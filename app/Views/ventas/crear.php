@@ -94,10 +94,6 @@
 
                         <div class="row g-2">
                             <div class="col-6 mb-0">
-                                <label class="form-label small fw-bold text-secondary text-uppercase">Serie <span class="text-danger">*</span></label>
-                                <input type="text" name="serie" class="form-control" placeholder="B001" maxlength="4" required>
-                            </div>
-                            <div class="col-6 mb-0">
                                 <label class="form-label small fw-bold text-secondary text-uppercase">Número <span class="text-danger">*</span></label>
                                 <input type="text" name="numero" class="form-control" placeholder="00000123" maxlength="8" required>
                             </div>
@@ -126,7 +122,7 @@
                             </div>
                             <div class="mb-2">
                                 <label class="form-label">Teléfono</label>
-                                <input class="form-control" name="telefono_entrega" id="telefono_entrega" maxlength="20">
+                                <input class="form-control" name="telefono_entrega" id="telefono_entrega" maxlength="9">
                             </div>
                             <div>
                                 <label class="form-label">Técnico asignado (opcional)</label>
@@ -160,7 +156,8 @@
                                         <?php foreach ($productos ?? [] as $prod): ?>
                                             <option value="<?= $prod['idproducto'] ?>"
                                                 data-nombre="<?= esc($prod['nombre'] ?? $prod['descripcion']) ?>"
-                                                data-precio="<?= $prod['precioventa'] ?? 0 ?>">
+                                                data-precio="<?= $prod['precioventa'] ?? 0 ?>"
+                                                data-controlaserie="<?= (int) ($prod['controlaserie'] ?? 0) ?>">
                                                 <?= esc($prod['nombre'] ?? $prod['descripcion']) ?>
                                             </option>
                                         <?php endforeach; ?>
@@ -315,7 +312,7 @@
     </div>
 </div>
 
-<div id="ventaConfig" data-stock='<?= $stockPorLocal ?? "{}" ?>'></div>
+<div id="ventaConfig" data-stock='<?= esc($stockPorLocal ?? "{}", 'attr') ?>' data-series='<?= esc($seriesDisponibles ?? "{}", 'attr') ?>'></div>
 
 <?= $this->endSection() ?>
 

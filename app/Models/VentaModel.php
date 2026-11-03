@@ -54,6 +54,7 @@ class VentaModel extends Model
             }
 
             $cantidades = [];
+            $seriesSolicitadas = [];
             foreach ($detalles as $item) {
                 $idproducto = (int) ($item['idproducto'] ?? 0);
                 $cantidad = (float) ($item['cantidad'] ?? 0);
@@ -67,8 +68,33 @@ class VentaModel extends Model
                 if ($producto['tipo'] === 'COMBO') {
                     throw new \RuntimeException('Los combos todavía requieren configurar sus componentes.');
                 }
+                if (!empty($producto['controlaserie'])) {
+                    if (empty($producto['controlastock']) || (int) $cantidad != $cantidad) {
+                        throw new \RuntimeException('Los productos con serie deben controlar stock y venderse por unidades enteras.');
+                    }
+                    $ids = array_map('intval', (array) ($item['series'] ?? []));
+                    if (count($ids) !== (int) $cantidad || in_array(0, $ids, true)) {
+                        throw new \RuntimeException('Seleccione un número de serie por cada unidad del producto ' . $idproducto);
+                    }
+                    $seriesSolicitadas[$idproducto] = array_merge($seriesSolicitadas[$idproducto] ?? [], $ids);
+                }
                 if (!empty($producto['controlastock'])) {
                     $cantidades[$idproducto] = ($cantidades[$idproducto] ?? 0) + $cantidad;
+                }
+            }
+            $idsTodas = [];
+            foreach ($seriesSolicitadas as $idproducto => $ids) {
+                if (count($ids) !== count(array_unique($ids))) {
+                    throw new \RuntimeException('Hay números de serie repetidos en el producto ' . $idproducto);
+                }
+                foreach ($ids as $id) {
+                    if (isset($idsTodas[$id])) throw new \RuntimeException('Una serie se seleccionó más de una vez.');
+                    $idsTodas[$id] = true;
+                    $serie = $db->query(
+                        'SELECT idserie FROM series WHERE idserie = ? AND idproducto = ? AND idlocal = ? AND estado = ? AND iddetcompra IS NOT NULL FOR UPDATE',
+                        [$id, $idproducto, $dataVenta['idlocal'], 'EN_STOCK']
+                    )->getRowArray();
+                    if (!$serie) throw new \RuntimeException('La serie ' . $id . ' ya no está disponible en este local.');
                 }
             }
             ksort($cantidades, SORT_NUMERIC);
@@ -94,7 +120,7 @@ class VentaModel extends Model
             }
 
             $insertado = $db->table('ventas')->insert($dataVenta);
-            
+
             if (!$insertado) {
                 $errorDB = $db->error();
                 throw new \RuntimeException('Error SQL MySQL: ' . ($errorDB['message'] ?? 'Desconocido'));
@@ -148,6 +174,15 @@ class VentaModel extends Model
                 if (!$idDetalle) {
                     throw new \RuntimeException('No se pudo registrar el detalle de venta.');
                 }
+                foreach ($seriesSolicitadas[$idproducto] ?? [] as $idSerie) {
+                    $actualizado = $db->table('series')
+                        ->where('idserie', $idSerie)
+                        ->where('estado', 'EN_STOCK')
+                        ->update(['estado' => 'RESERVADO', 'iddetventa' => $idDetalle]);
+                    if (!$actualizado || $db->affectedRows() !== 1) {
+                        throw new \RuntimeException('No se pudo reservar la serie ' . $idSerie);
+                    }
+                }
             }
 
             foreach ($reservasPendientes as $reserva) {
@@ -169,11 +204,11 @@ class VentaModel extends Model
                         empty(trim((string) ($entrega['direccion'] ?? ''))) ||
                         empty(trim((string) ($entrega['telefono'] ?? '')))
                     ) {
-                      throw new \RuntimeException(
-                        'La entrega a domicilio requiere dirección y teléfono.'
-                    );
+                        throw new \RuntimeException(
+                            'La entrega a domicilio requiere dirección y teléfono.'
+                        );
+                    }
                 }
-            }
                 $datosEntrega = [
                     'idventa' => $idventa,
                     'tipoentrega' => $tipo,

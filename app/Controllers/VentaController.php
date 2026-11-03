@@ -53,6 +53,20 @@ class VentaController extends BaseController
             $stockPorLocal[$k['idlocal']][$k['idproducto']] = max(0, round((float)$k['stockactual'] - (float)$k['reservado'], 2));
         }
 
+        $seriesDisponibles = [];
+        $series = $db->table('series')
+            ->select('idserie, idproducto, idlocal, numeroserie')
+            ->where('estado', 'EN_STOCK')
+            ->where('iddetcompra IS NOT NULL', null, false)
+            ->where('idlocal IS NOT NULL', null, false)
+            ->get()->getResultArray();
+        foreach ($series as $serie) {
+            $seriesDisponibles[$serie['idlocal']][$serie['idproducto']][] = [
+                'id' => (int) $serie['idserie'],
+                'numero' => $serie['numeroserie'],
+            ];
+        }
+
         $data = [
             'titulo'        => 'Registrar Nueva Venta',
             'clientes'      => $clientes,
@@ -63,6 +77,7 @@ class VentaController extends BaseController
             'canales'       => $db->table('canalesventa')->get()->getResultArray(),
             'estadosVenta'  => $db->table('estadoventa')->get()->getResultArray(),
             'stockPorLocal' => json_encode($stockPorLocal),
+            'seriesDisponibles' => json_encode($seriesDisponibles),
             'tecnicosEntrega' => $db->table('usuarios')->select('idusuario, nombreusuario')->orderBy('nombreusuario')->get()->getResultArray()
         ];
 
@@ -90,7 +105,6 @@ class VentaController extends BaseController
             'formapago'     => 'CONTADO',
             'idcajero'      => session()->get('idusuario'),
             'tipodocumento' => $this->request->getPost('tipodocumento'),
-            'serie'         => $this->request->getPost('serie'),
             'cdr'           => null,
             'numero'        => $this->request->getPost('numero'),
             'estafacturado' => 0,
@@ -169,7 +183,7 @@ class VentaController extends BaseController
         return view('ventas/detalles', $data);
     }
 
-    
+
     public function guardarClienteExpress()
     {
         if (!$this->request->isAJAX()) {
@@ -209,11 +223,11 @@ class VentaController extends BaseController
         $tipoDoc = strlen($documento) === 11 ? 'RUC' : 'DNI';
 
         $buscarCliente = static function () use ($clienteModel, $tipoDoc, $documento) {
-         return $clienteModel
+            return $clienteModel
                 ->where('tipodoc', $tipoDoc)
                 ->where('numerodoc', $documento)
                 ->first();
-         };
+        };
 
         try {
             $existente = $buscarCliente();
@@ -225,14 +239,14 @@ class VentaController extends BaseController
                     'idcliente' => $existente['idpersona'],
                     'nombre' => trim(
                         ($existente['nombres'] ?? '') . ' ' .
-                        ($existente['apellidos'] ?? '')
+                            ($existente['apellidos'] ?? '')
                     ),
                     'documento' => $documento
                 ]);
             }
 
             $data = [
-                'apellidos' => '-',
+                'apellidos' => null,
                 'nombres' => $nombre,
                 'tipodoc' => $tipoDoc,
                 'numerodoc' => $documento,
@@ -258,7 +272,6 @@ class VentaController extends BaseController
                 'nombre' => $nombre,
                 'documento' => $documento
             ]);
-
         } catch (\Throwable $e) {
             log_message('error', 'Registro rápido de cliente: {error}', [
                 'error' => $e->getMessage()
@@ -274,7 +287,7 @@ class VentaController extends BaseController
                         'idcliente' => $existente['idpersona'],
                         'nombre' => trim(
                             ($existente['nombres'] ?? '') . ' ' .
-                            ($existente['apellidos'] ?? '')
+                                ($existente['apellidos'] ?? '')
                         ),
                         'documento' => $documento
                     ]);
@@ -288,5 +301,4 @@ class VentaController extends BaseController
             ]);
         }
     }
-
 }

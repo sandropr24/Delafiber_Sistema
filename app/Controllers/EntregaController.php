@@ -187,8 +187,10 @@ class EntregaController extends BaseController
             $idProducto = (int) $kardex['idproducto'];
             $cantidad = round((float) $reserva['cantidad'], 2);
 
-            if (!isset($cantidadesPorProducto[$idProducto]) ||
-                abs($cantidadesPorProducto[$idProducto] - $cantidad) > 0.001) {
+            if (
+                !isset($cantidadesPorProducto[$idProducto]) ||
+                abs($cantidadesPorProducto[$idProducto] - $cantidad) > 0.001
+            ) {
                 throw new \RuntimeException('La cantidad reservada no coincide con la venta.');
             }
 
@@ -212,10 +214,34 @@ class EntregaController extends BaseController
                 'fecha'      => date('Y-m-d H:i:s'),
                 'cantidad'   => $cantidad,
                 'saldo'      => $nuevoStock,
-                'descripcion'=> 'Entrega de venta N° ' . $idVenta,
+                'descripcion' => 'Entrega de venta N° ' . $idVenta,
                 'motivo'     => 'Entrega confirmada',
             ])) {
                 throw new \RuntimeException('No se pudo registrar el movimiento de salida.');
+            }
+
+            $seriesRequeridas = $db->table('detventa d')
+                ->select('COALESCE(SUM(d.cantidad), 0) AS cantidad', false)
+                ->join('productos p', 'p.idproducto = d.idproducto')
+                ->where('d.idventa', $idVenta)
+                ->where('d.idproducto', $idProducto)
+                ->where('p.controlaserie', 1)
+                ->get()->getRow('cantidad');
+            if ((float) $seriesRequeridas > 0) {
+                $seriesReservadas = $db->query(
+                    'SELECT s.idserie FROM series s INNER JOIN detventa d ON d.iddetventa = s.iddetventa
+                     WHERE d.idventa = ? AND d.idproducto = ? AND s.estado = ? AND s.idlocal = ? FOR UPDATE',
+                    [$idVenta, $idProducto, 'RESERVADO', $venta['idlocal']]
+                )->getResultArray();
+                if (count($seriesReservadas) !== (int) $seriesRequeridas) {
+                    throw new \RuntimeException('Las series reservadas no coinciden con la cantidad entregada.');
+                }
+                foreach ($seriesReservadas as $serie) {
+                    if (!$db->table('series')->where('idserie', $serie['idserie'])
+                        ->where('estado', 'RESERVADO')->update(['estado' => 'VENDIDO'])) {
+                        throw new \RuntimeException('No se pudo confirmar la serie entregada.');
+                    }
+                }
             }
 
             if (!$db->table('reservas_stock')
