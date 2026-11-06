@@ -74,10 +74,12 @@ $routes->group('ventas', static function ($routes) {
     $routes->get('nota-pdf/(:num)', 'NotaVentaPdfController::generar/$1');
 });
 
-$routes->group('entregas', function ($routes) {
+$routes->group('entregas', ['filter' => 'auth'], function ($routes) {
     $routes->get('/', 'EntregaController::index');
     $routes->get('buscar_tabla', 'EntregaController::buscar_tabla');
     $routes->post('cambiar_estado', 'EntregaController::cambiar_estado');
+    $routes->post('registrar-incidencia', 'EntregaController::registrar_incidencia');
+    $routes->get('historial-incidencias/(:num)', 'EntregaController::historial_incidencias/$1');
 });
 
 $routes->group('tecnicos', ['filter' => 'auth'], static function ($routes) {
