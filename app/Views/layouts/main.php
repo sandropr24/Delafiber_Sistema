@@ -96,6 +96,10 @@
 
                 <?php if ($userRol === 'Administrador'): ?>
                     <div class="nav-section-title">Seguridad</div>
+                    <a href="<?= base_url('tecnicos') ?>" class="sidebar-link <?= url_is('tecnicos*') ? 'active' : '' ?>">
+                        <i class="bi bi-person-workspace"></i>
+                        <span>Técnicos</span>
+                    </a>
                     <a href="<?= base_url('usuarios') ?>" class="sidebar-link <?= url_is('usuarios*') ? 'active' : '' ?>">
                         <i class="bi bi-person-fill"></i>
                         <span>Usuarios</span>
