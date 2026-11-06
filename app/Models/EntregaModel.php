@@ -26,16 +26,16 @@ class EntregaModel extends Model
     public function obtenerEntregasFiltradas($estado = null, $idtecnico = null, $q = null)
     {
         $builder = $this->select('
-                entregas.*, 
+                entregas.*,
                 CONCAT(ventas.serie, "-", ventas.numero) as correlativo,
-                ventas.total, 
+                ventas.total,
                 IF(personas.tipopersona = "NATURAL", CONCAT(personas.nombres, " ", personas.apellidos), personas.razonsocial) as cliente_nombre,
                 personas.telefono as cliente_telefono,
-                tecnicos.nombreusuario as tecnico_nombre
+                CONCAT(tecnicos.nombres, " ", tecnicos.apellidos) as tecnico_nombre
             ')
             ->join('ventas', 'ventas.idventa = entregas.idventa')
             ->join('personas', 'personas.idpersona = ventas.idcliente', 'left')
-            ->join('usuarios as tecnicos', 'tecnicos.idusuario = entregas.idtecnico', 'left');
+            ->join('tecnicos', 'tecnicos.idtecnico = entregas.idtecnico', 'left');
 
         if (!empty($estado)) {
             $builder->where('entregas.estado', $estado);

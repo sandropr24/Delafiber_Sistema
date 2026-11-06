@@ -3,19 +3,19 @@
 namespace App\Controllers;
 
 use App\Models\EntregaModel;
-use App\Models\UsuarioModel;
+use App\Models\TecnicoModel;
 
 class EntregaController extends BaseController
 {
     protected $entregaModel;
-    protected $usuarioModel;
+    protected $tecnicoModel;
 
     public function __construct()
     {
         helper(['url', 'form']);
 
         $this->entregaModel = model(EntregaModel::class);
-        $this->usuarioModel = model(UsuarioModel::class);
+        $this->tecnicoModel = model(TecnicoModel::class);
     }
 
     public function index()
@@ -23,7 +23,7 @@ class EntregaController extends BaseController
         return view('entregas/index', [
             'titulo'   => 'Gestión de Entregas y Logística de Campo',
             'entregas' => $this->entregaModel->obtenerEntregasFiltradas(),
-            'tecnicos' => $this->usuarioModel->where('estado', 1)->findAll(),
+            'tecnicos' => $this->tecnicoModel->activos(),
         ]);
     }
 
@@ -85,8 +85,12 @@ class EntregaController extends BaseController
 
             $actualizar = ['estado' => $nuevoEstado];
 
-            if (!empty($idTecnico)) {
-                $actualizar['idtecnico'] = $idTecnico;
+            if ($idTecnico !== null && $idTecnico !== '') {
+                $tecnico = $this->tecnicoModel->find((int) $idTecnico);
+                if (!$tecnico || $tecnico['estado'] !== 'ACTIVO') {
+                    throw new \RuntimeException('Selecciona un técnico activo válido.');
+                }
+                $actualizar['idtecnico'] = (int) $idTecnico;
             }
 
             if ($nuevoEstado === 'EN_CAMINO' && empty($entrega['fechaencamino'])) {

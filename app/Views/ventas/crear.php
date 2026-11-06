@@ -217,7 +217,7 @@
                                 <select class="form-select" name="idtecnico_entrega" id="idtecnico_entrega">
                                     <option value="">Seleccione</option>
                                     <?php foreach ($tecnicosEntrega as $tecnico): ?>
-                                        <option value="<?= esc($tecnico['idusuario']) ?>"><?= esc($tecnico['nombreusuario']) ?></option>
+                                        <option value="<?= esc($tecnico['idtecnico']) ?>"><?= esc(trim($tecnico['nombres'] . ' ' . $tecnico['apellidos'])) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>

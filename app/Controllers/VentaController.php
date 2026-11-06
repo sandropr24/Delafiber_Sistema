@@ -81,7 +81,7 @@ class VentaController extends BaseController
             'estadosVenta'  => $db->table('estadoventa')->get()->getResultArray(),
             'stockPorLocal' => json_encode($stockPorLocal),
             'seriesDisponibles' => json_encode($seriesDisponibles),
-            'tecnicosEntrega' => $db->table('usuarios')->select('idusuario, nombreusuario')->orderBy('nombreusuario')->get()->getResultArray()
+            'tecnicosEntrega' => model(\App\Models\TecnicoModel::class)->activos()
         ];
 
         return view('ventas/crear', $data);
@@ -130,12 +130,20 @@ class VentaController extends BaseController
             return redirect()->back()->with('error', 'Faltan datos obligatorios: usuario, línea, canal o estado de venta.')->withInput();
         }
 
+        $idTecnicoEntrega = $this->request->getPost('idtecnico_entrega');
+        if ($idTecnicoEntrega !== null && $idTecnicoEntrega !== '') {
+            $tecnico = model(\App\Models\TecnicoModel::class)->find((int) $idTecnicoEntrega);
+            if (!$tecnico || $tecnico['estado'] !== 'ACTIVO') {
+                return redirect()->back()->with('error', 'Selecciona un técnico activo válido.')->withInput();
+            }
+        }
+
         $entrega = [
             'tipoentrega' => $this->request->getPost('tipoentrega') ?: 'RECOJO_TIENDA',
             'direccion' => trim((string) $this->request->getPost('direccion_entrega')),
             'referencia' => trim((string) $this->request->getPost('referencia_entrega')),
             'telefono' => trim((string) $this->request->getPost('telefono_entrega')),
-            'idtecnico' => $this->request->getPost('idtecnico_entrega') ?: null,
+            'idtecnico' => $idTecnicoEntrega ?: null,
         ];
         $resultado = $ventaModel->registrarVenta($dataVenta, $detalles, $pagos, $entrega);
 
@@ -153,9 +161,9 @@ class VentaController extends BaseController
         $detVentaModel  = model(DetVentaModel::class);
         $pagoVentaModel = model(PagoVentaModel::class);
 
-        $venta = $ventaModel->select('ventas.*, 
-                                      CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, "")) as cliente, 
-                                      personas.numerodoc, 
+        $venta = $ventaModel->select('ventas.*,
+                                      CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, "")) as cliente,
+                                      personas.numerodoc,
                                       locales.nombrelocal as local')
             ->join('personas', 'personas.idpersona = ventas.idcliente', 'left')
             ->join('locales', 'locales.idlocal = ventas.idlocal', 'left')

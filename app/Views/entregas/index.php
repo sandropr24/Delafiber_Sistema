@@ -81,8 +81,8 @@ foreach ($entregas as $entrega) {
                 <select class="form-select" id="selectTecnicoEntrega">
                     <option value="">Todos los Técnicos</option>
                     <?php foreach ($tecnicos as $tecnico): ?>
-                        <option value="<?= (int) $tecnico['idusuario'] ?>">
-                            <?= esc($tecnico['nombreusuario']) ?>
+                        <option value="<?= (int) $tecnico['idtecnico'] ?>">
+                            <?= esc(trim($tecnico['nombres'] . ' ' . $tecnico['apellidos'])) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -247,8 +247,8 @@ foreach ($entregas as $entrega) {
                         <select class="form-select" id="tecnicoEntrega" name="idtecnico">
                             <option value="">Sin asignar</option>
                             <?php foreach ($tecnicos as $tecnico): ?>
-                                <option value="<?= (int) $tecnico['idusuario'] ?>">
-                                    <?= esc($tecnico['nombreusuario']) ?>
+                                <option value="<?= (int) $tecnico['idtecnico'] ?>">
+                                    <?= esc(trim($tecnico['nombres'] . ' ' . $tecnico['apellidos'])) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
