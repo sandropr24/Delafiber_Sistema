@@ -1,0 +1,125 @@
+.df-venta {
+    --venta-acento: var(--brand-fuchsia, #ff2b50);
+    --venta-morado: var(--brand-purple, #32005a);
+    --venta-borde: #e8eaf0;
+    --venta-texto: #293042;
+}
+
+.df-venta .df-venta-grid > div { min-width: 0; }
+
+.df-venta .card {
+    border: 1px solid var(--venta-borde) !important;
+    border-radius: 12px !important;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(25, 20, 45, .035);
+    overflow: hidden;
+}
+
+.df-venta .card-header {
+    background: #fff !important;
+    border-bottom: 1px solid var(--venta-borde) !important;
+    padding: 14px 18px !important;
+}
+
+.df-venta .card-header h6 {
+    color: var(--venta-texto);
+    font-size: .92rem;
+    font-weight: 700;
+}
+
+.df-venta .card-body { padding: 18px !important; }
+
+.df-venta .form-label {
+    font-size: .76rem;
+    font-weight: 600;
+    color: #596274;
+    margin-bottom: 6px;
+}
+
+.df-venta .form-control,
+.df-venta .form-select {
+    border: 1px solid #dce1e9;
+    border-radius: 8px;
+    min-height: 38px;
+    font-size: .85rem;
+}
+
+.df-venta .form-control:focus,
+.df-venta .form-select:focus {
+    border-color: var(--venta-acento);
+    box-shadow: 0 0 0 .18rem rgba(255, 43, 80, .12);
+}
+
+.df-venta .articulo-grupo { min-width: 0; }
+.df-venta .articulo-grupo .form-select { min-width: 0; }
+
+.df-venta #filtrosArticulos .btn {
+    border-radius: 8px;
+    padding: 5px 11px;
+    font-size: .76rem;
+}
+
+.df-venta .table-responsive {
+    border-color: var(--venta-borde) !important;
+    border-radius: 9px !important;
+}
+
+.df-venta .table { font-size: .78rem; }
+.df-venta .table th {
+    background: #f8fafc;
+    color: #6d7482;
+    font-size: .67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.df-venta .table td { vertical-align: middle; }
+
+.df-venta #tablaDetalle { min-width: 480px; }
+.df-venta #tablaDetalle .input-cantidad { min-width: 58px; }
+.df-venta #tablaDetalle .series-seleccionadas { max-width: 100%; }
+.df-venta #tablaDetalle .series-seleccionadas select { max-width: 100%; }
+
+.df-venta #tablaPagos .input-monto-pago { min-width: 85px; }
+
+.df-venta .resumen-venta {
+    position: static;
+    z-index: auto;
+    background: #fff !important;
+    border-top: 3px solid var(--venta-acento) !important;
+}
+
+.df-venta .resumen-venta #lblTotal {
+    color: var(--venta-morado) !important;
+    font-size: 1.65rem;
+}
+
+.df-venta #btnAgregarItem { white-space: normal; }
+.df-venta .btn { transition: background-color .2s, border-color .2s; }
+
+@media (max-width: 1199.98px) {
+    .df-venta .card-body { padding: 16px !important; }
+}
+
+@media (max-width: 575.98px) {
+    .df-venta .card-header { padding: 12px 14px !important; }
+    .df-venta .card-body { padding: 14px !important; }
+    .df-venta #tablaDetalle { min-width: 520px; }
+}
+
+/* Vista de ventas compacta: estilos aislados */
+.df-venta .card-header { padding: 10px 15px !important; }
+.df-venta .card-body { padding: 13px 15px !important; }
+.df-venta .card { margin-bottom: 12px !important; }
+.df-venta .form-label { margin-bottom: 3px; font-size: .72rem; }
+.df-venta .form-control, .df-venta .form-select { min-height: 34px; padding-top: 5px; padding-bottom: 5px; }
+.df-venta .form-control-sm, .df-venta .form-select-sm { min-height: 32px; }
+.df-venta .card-body > .mb-3, .df-venta .card-body > .row.mb-3 { margin-bottom: 10px !important; }
+.df-venta #filtrosArticulos { margin-top: 6px !important; gap: 5px !important; }
+.df-venta #filtrosArticulos .btn { padding: 3px 9px; }
+.df-venta #resultadoBusqueda { margin-top: 4px; font-size: .71rem; }
+.df-venta .df-carrito-card #filaVacia td { padding: 13px 8px !important; }
+.df-venta .df-carrito-card #filaVacia i { margin-bottom: 3px !important; }
+.df-venta #tablaDetalle th, .df-venta #tablaPagos th { padding-top: 8px !important; padding-bottom: 8px !important; }
+.df-venta .resumen-venta .card-body { padding: 14px 15px !important; }
+@media (max-width: 575.98px) { .df-venta .card-body { padding: 12px !important; } }
