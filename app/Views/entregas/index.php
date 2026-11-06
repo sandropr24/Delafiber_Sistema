@@ -7,21 +7,33 @@ $tecnicos = $tecnicos ?? [];
 $pendientes = 0;
 $enCamino = 0;
 $entregados = 0;
+$reprogramados = 0;
+$rechazados = 0;
+$incidencias = 0;
 foreach ($entregas as $entrega) {
     switch ($entrega['estado']) {
         case 'PENDIENTE':
             $pendientes++;
             break;
-        case 'EN CAMINO':
+        case 'EN_CAMINO':
             $enCamino++;
             break;
         case 'ENTREGADO':
             $entregados++;
             break;
+        case 'REPROGRAMADO':
+            $reprogramados++;
+            break;
+        case 'RECHAZADO':
+            $rechazados++;
+            break;
+        case 'INCIDENCIA':
+            $incidencias++;
+            break;
     }
 }
 ?>
-<div class="container-fluid px-4 py-4" id="viewEntregas" data-url-buscar="<?= base_url('entregas/buscar_tabla') ?>" data-url-estado="<?= base_url('entregas/cambiar_estado') ?>">
+<div class="container-fluid px-4 py-4" id="viewEntregas" data-url-buscar="<?= base_url('entregas/buscar_tabla') ?>" data-url-estado="<?= base_url('entregas/cambiar_estado') ?>" data-url-incidencia="<?= base_url('entregas/registrar-incidencia') ?>" data-url-historial="<?= base_url('entregas/historial-incidencias') ?>">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
@@ -33,7 +45,7 @@ foreach ($entregas as $entrega) {
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-warning border-4">
                 <div class="text-muted small text-uppercase fw-semibold">Pendientes de Despacho</div>
                 <div class="h4 fw-bold text-warning mb-0 mt-1">
@@ -41,7 +53,7 @@ foreach ($entregas as $entrega) {
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-info border-4">
                 <div class="text-muted small text-uppercase fw-semibold">En Camino / En Ruta</div>
                 <div class="h4 fw-bold text-info mb-0 mt-1">
@@ -49,7 +61,7 @@ foreach ($entregas as $entrega) {
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 col-xl-2">
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-success border-4">
                 <div class="text-muted small text-uppercase fw-semibold">Entregados con Éxito</div>
                 <div class="h4 fw-bold text-success mb-0 mt-1">
@@ -57,6 +69,14 @@ foreach ($entregas as $entrega) {
                 </div>
             </div>
         </div>
+        <?php foreach ([['Reprogramados', $reprogramados, 'primary'], ['Rechazados', $rechazados, 'danger'], ['Con incidencia', $incidencias, 'secondary']] as $indicador): ?>
+            <div class="col-md-4 col-xl-2">
+                <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-<?= $indicador[2] ?> border-4">
+                    <div class="text-muted small text-uppercase fw-semibold"><?= esc($indicador[0]) ?></div>
+                    <div class="h4 fw-bold mb-0 mt-1"><?= (int) $indicador[1] ?></div>
+                </div>
+            </div>
+        <?php endforeach; ?>
     </div>
 
     <div class="card border rounded-3 shadow-sm p-3 mb-4" style="border-color: #e0e0e0 !important;">
@@ -73,6 +93,10 @@ foreach ($entregas as $entrega) {
                 <select class="form-select" id="selectEstadoEntrega">
                     <option value="">Todos los Estados</option>
                     <option value="PENDIENTE">PENDIENTE</option>
+                    <option value="REPROGRAMADO">REPROGRAMADO</option>
+                    <option value="INCIDENCIA">INCIDENCIA</option>
+                    <option value="RECHAZADO">RECHAZADO</option>
+                    <option value="CANCELADO">CANCELADO</option>
                     <option value="EN_CAMINO">EN CAMINO</option>
                     <option value="ENTREGADO">ENTREGADO</option>
                 </select>
@@ -119,6 +143,9 @@ foreach ($entregas as $entrega) {
                                 $badgeClass = match ($estado) {
                                     'EN_CAMINO' => 'info',
                                     'ENTREGADO' => 'success',
+                                    'REPROGRAMADO' => 'primary',
+                                    'RECHAZADO', 'CANCELADO' => 'danger',
+                                    'INCIDENCIA' => 'secondary',
                                     default => 'warning',
                                 };
                                 ?>
@@ -184,6 +211,8 @@ foreach ($entregas as $entrega) {
                                             data-telefono="<?= esc($item['telefono'] ?? '', 'attr') ?>">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
+                                        <button type="button" class="btn btn-sm btn-outline-warning btn-incidencia-entrega" title="Registrar incidencia" data-id="<?= (int) $item['identrega'] ?>" data-estado="<?= esc($estado, 'attr') ?>" <?= in_array($estado, ['ENTREGADO', 'CANCELADO'], true) ? 'disabled' : '' ?>><i class="bi bi-exclamation-triangle"></i></button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-historial-entrega" title="Historial de incidencias" data-id="<?= (int) $item['identrega'] ?>"><i class="bi bi-clock-history"></i></button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -237,10 +266,14 @@ foreach ($entregas as $entrega) {
                         <label for="nuevoEstadoEntrega" class="form-label fw-semibold">Estado de entrega</label>
                         <select class="form-select" id="nuevoEstadoEntrega" name="estado" required>
                             <option value="PENDIENTE">Pendiente</option>
+                            <option value="REPROGRAMADO">Reprogramado</option>
+                            <option value="RECHAZADO">Rechazado</option>
+                            <option value="INCIDENCIA">Incidencia</option>
+                            <option value="CANCELADO">Cancelado</option>
                             <option value="EN_CAMINO">En camino</option>
                             <option value="ENTREGADO">Entregado</option>
                         </select>
-                        <div class="form-text">Al confirmar como entregado, se descontará el stock reservado.</div>
+                        <div class="form-text">Una entrega reprogramada debe pasar primero a En camino. El stock se descuenta solo al confirmar Entregado.</div>
                     </div>
                     <div class="mb-3">
                         <label for="tecnicoEntrega" class="form-label fw-semibold">Técnico asignado</label>
@@ -305,6 +338,43 @@ foreach ($entregas as $entrega) {
             </div>
         </div>
     </div>
+</div>
+
+
+<div class="modal fade" id="modalIncidenciaEntrega" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Registrar incidencia de entrega</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <form id="formIncidenciaEntrega">
+                <?= csrf_field() ?>
+                <input type="hidden" name="identrega" id="incidenciaIdEntrega">
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label" for="incidenciaTipo">Tipo de incidencia</label>
+                        <select id="incidenciaTipo" name="tipo" class="form-select" required>
+                            <option value="">Selecciona un motivo</option>
+                            <option value="RECHAZO">Cliente rechaza la entrega</option>
+                            <option value="CLIENTE_AUSENTE">Cliente ausente</option>
+                            <option value="DIRECCION_INCORRECTA">Dirección incorrecta</option>
+                            <option value="SOLICITUD_CLIENTE">Cambio solicitado por cliente</option>
+                            <option value="PRODUCTO_DANADO">Producto dañado</option>
+                            <option value="PRODUCTO_EQUIVOCADO">Producto equivocado</option>
+                            <option value="OTRO">Otro problema</option>
+                        </select>
+                    </div>
+                    <div class="mb-3"><label class="form-label" for="incidenciaMotivo">Descripción del incidente</label><textarea id="incidenciaMotivo" name="motivo" class="form-control" minlength="5" maxlength="2000" rows="3" required></textarea></div>
+                    <div class="mb-2"><label class="form-label" for="incidenciaFecha">Reprogramar para (opcional)</label><input id="incidenciaFecha" name="fechareprogramada" type="datetime-local" class="form-control"><div class="form-text">Si indicas una fecha futura, la entrega pasará a REPROGRAMADO. Si no, quedará en RECHAZADO o INCIDENCIA.</div></div>
+                    <div id="incidenciaError" class="alert alert-danger d-none" role="alert"></div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cerrar</button><button id="btnGuardarIncidencia" type="submit" class="btn btn-primary">Guardar incidencia</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalHistorialIncidencias" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Historial de incidencias</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body" id="historialIncidenciasContenido">Cargando...</div>
+    </div></div>
 </div>
 
 <?= $this->endSection() ?>

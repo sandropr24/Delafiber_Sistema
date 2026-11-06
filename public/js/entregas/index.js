@@ -44,15 +44,35 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('detalleTelefonoEntrega').textContent = boton.dataset.telefono || 'Sin teléfono registrado';
     }
 
+    const transicionesPermitidas = {
+        PENDIENTE: ['PENDIENTE', 'EN_CAMINO'],
+        EN_CAMINO: ['EN_CAMINO', 'ENTREGADO'],
+        REPROGRAMADO: ['REPROGRAMADO', 'EN_CAMINO'],
+        RECHAZADO: [],
+        INCIDENCIA: [],
+        ENTREGADO: [],
+        CANCELADO: []
+    };
+
+    function configurarEstados(actual) {
+        const permitidos = transicionesPermitidas[actual] || [];
+        [...estado.options].forEach(opcion => {
+            opcion.hidden = !permitidos.includes(opcion.value);
+            opcion.disabled = !permitidos.includes(opcion.value);
+        });
+        estado.value = actual;
+        return permitidos.length > 0;
+    }
+
     function abrirGestion(boton) {
         if (procesando) return;
         idEntrega.value = boton.dataset.id || '';
         estadoInicial = boton.dataset.estado || 'PENDIENTE';
-        estado.value = estadoInicial;
+        const editable = configurarEstados(estadoInicial);
         tecnico.value = boton.dataset.tecnico || '';
-        estado.disabled = estadoInicial === 'ENTREGADO';
-        tecnico.disabled = estadoInicial === 'ENTREGADO';
-        guardarBtn.disabled = estadoInicial === 'ENTREGADO';
+        estado.disabled = !editable;
+        tecnico.disabled = !editable;
+        guardarBtn.disabled = !editable;
         regresarAGestion = false;
         confirmado = false;
         limpiarError();
@@ -70,12 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
             error('No se identificó la entrega.');
             return false;
         }
-        if (estadoInicial === 'ENTREGADO') {
-            error('Esta entrega ya fue confirmada.');
-            return false;
-        }
-        if (estadoInicial === 'EN_CAMINO' && estado.value === 'PENDIENTE') {
-            error('No se puede regresar al estado Pendiente.');
+        if (!(transicionesPermitidas[estadoInicial] || []).includes(estado.value)) {
+            error('Transición de estado no permitida. Resuelve primero la incidencia.');
             return false;
         }
         return true;
@@ -160,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             procesando = false;
             confirmarBtn.disabled = false;
-            guardarBtn.disabled = estadoInicial === 'ENTREGADO';
+            guardarBtn.disabled = !(transicionesPermitidas[estadoInicial] || []).length;
         }
     }
 
@@ -187,6 +203,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 (!tecnicoSeleccionado || boton.dataset.tecnico === tecnicoSeleccionado);
 
             fila.classList.toggle('d-none', !coincide);
+        });
+    }
+
+    // Incidencias: flujo independiente para no alterar la confirmación de inventario.
+    const incidenciaEl = document.getElementById('modalIncidenciaEntrega');
+    const historialEl = document.getElementById('modalHistorialIncidencias');
+    const incidenciaForm = document.getElementById('formIncidenciaEntrega');
+    if (incidenciaEl && historialEl && incidenciaForm) {
+        const incidenciaModal = bootstrap.Modal.getOrCreateInstance(incidenciaEl);
+        const historialModal = bootstrap.Modal.getOrCreateInstance(historialEl);
+        const incidenciaError = document.getElementById('incidenciaError');
+        const incidenciaGuardar = document.getElementById('btnGuardarIncidencia');
+        const historialContenido = document.getElementById('historialIncidenciasContenido');
+        document.addEventListener('click', async (event) => {
+            const btnIncidencia = event.target.closest('.btn-incidencia-entrega');
+            if (btnIncidencia && !btnIncidencia.disabled) {
+                incidenciaForm.reset();
+                document.getElementById('incidenciaIdEntrega').value = btnIncidencia.dataset.id;
+                incidenciaError.classList.add('d-none');
+                incidenciaModal.show();
+            }
+            const btnHistorial = event.target.closest('.btn-historial-entrega');
+            if (!btnHistorial) return;
+            historialContenido.textContent = 'Cargando historial...';
+            historialModal.show();
+            try {
+                const url = `${vista.dataset.urlHistorial}/${encodeURIComponent(btnHistorial.dataset.id)}`;
+                const response = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'});
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo cargar el historial.');
+                historialContenido.replaceChildren();
+                if (!data.registros.length) {
+                    historialContenido.textContent = 'Esta entrega todavía no tiene incidencias registradas.';
+                    return;
+                }
+                data.registros.forEach((item) => {
+                    const bloque = document.createElement('div');
+                    bloque.className = 'border rounded p-3 mb-2';
+                    const titulo = document.createElement('div');
+                    titulo.className = 'fw-semibold';
+                    titulo.textContent = `${item.tipo} · ${item.fechaintento}`;
+                    const cambio = document.createElement('div');
+                    cambio.className = 'small text-muted';
+                    cambio.textContent = `${item.estado_anterior} → ${item.estado_nuevo}${item.fechareprogramada ? ' · Nueva fecha: ' + item.fechareprogramada : ''}`;
+                    const motivo = document.createElement('div');
+                    motivo.textContent = item.motivo;
+                    bloque.append(titulo, cambio, motivo);
+                    historialContenido.append(bloque);
+                });
+            } catch (err) {
+                historialContenido.textContent = err.message || 'Error al consultar el historial.';
+            }
+        });
+        incidenciaForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!incidenciaForm.reportValidity()) return;
+            incidenciaGuardar.disabled = true;
+            incidenciaError.classList.add('d-none');
+            try {
+                const response = await fetch(vista.dataset.urlIncidencia, {
+                    method: 'POST', body: new FormData(incidenciaForm), credentials: 'same-origin',
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo registrar la incidencia.');
+                window.location.reload();
+            } catch (err) {
+                incidenciaError.textContent = err.message || 'Error al registrar incidencia.';
+                incidenciaError.classList.remove('d-none');
+            } finally {
+                incidenciaGuardar.disabled = false;
+            }
         });
     }
 

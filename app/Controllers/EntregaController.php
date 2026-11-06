@@ -75,12 +75,18 @@ class EntregaController extends BaseController
                 throw new \RuntimeException('Entrega no encontrada.');
             }
 
-            if ($entrega['estado'] === 'ENTREGADO') {
-                throw new \RuntimeException('Esta entrega ya fue confirmada.');
-            }
-
-            if ($nuevoEstado === 'PENDIENTE' && $entrega['estado'] !== 'PENDIENTE') {
-                throw new \RuntimeException('No se permite retroceder el estado de la entrega.');
+            $transiciones = [
+                'PENDIENTE' => ['PENDIENTE', 'EN_CAMINO'],
+                'EN_CAMINO' => ['EN_CAMINO', 'ENTREGADO'],
+                'REPROGRAMADO' => ['REPROGRAMADO', 'EN_CAMINO'],
+                'INCIDENCIA' => [],
+                'RECHAZADO' => [],
+                'ENTREGADO' => [],
+                'CANCELADO' => [],
+            ];
+            $estadoAnterior = (string) $entrega['estado'];
+            if (!in_array($nuevoEstado, $transiciones[$estadoAnterior] ?? [], true)) {
+                throw new \RuntimeException('Transición no permitida: ' . $estadoAnterior . ' a ' . $nuevoEstado . '. Resuelve las incidencias antes de continuar.');
             }
 
             $actualizar = ['estado' => $nuevoEstado];
@@ -91,6 +97,10 @@ class EntregaController extends BaseController
                     throw new \RuntimeException('Selecciona un técnico activo válido.');
                 }
                 $actualizar['idtecnico'] = (int) $idTecnico;
+            }
+
+            if ($nuevoEstado === 'ENTREGADO' && in_array($entrega['estado'], ['RECHAZADO', 'INCIDENCIA'], true)) {
+                throw new \RuntimeException('Primero resuelve o reprograma la incidencia antes de confirmar la entrega.');
             }
 
             if ($nuevoEstado === 'EN_CAMINO' && empty($entrega['fechaencamino'])) {
@@ -106,6 +116,27 @@ class EntregaController extends BaseController
                 throw new \RuntimeException('No se pudo actualizar la entrega.');
             }
 
+            if ($estadoAnterior !== $nuevoEstado) {
+                $idUsuario = (int) session()->get('idusuario');
+                if ($idUsuario <= 0) {
+                    throw new \RuntimeException('No se identificó al usuario responsable del cambio.');
+                }
+                $ahora = date('Y-m-d H:i:s');
+                if (!$db->table('registro_incidencias')->insert([
+                    'identrega' => $idEntrega,
+                    'idusuario' => $idUsuario,
+                    'idtecnico' => $actualizar['idtecnico'] ?? ($entrega['idtecnico'] ?: null),
+                    'tipo' => 'CAMBIO_ESTADO',
+                    'motivo' => 'Cambio de estado registrado desde Gestión de Entregas.',
+                    'estado_anterior' => $estadoAnterior,
+                    'estado_nuevo' => $nuevoEstado,
+                    'fechaintento' => $ahora,
+                    'fechareprogramada' => null,
+                    'created_at' => $ahora,
+                ])) {
+                    throw new \RuntimeException('No se pudo registrar el historial del cambio.');
+                }
+            }
             if ($db->transStatus() === false) {
                 throw new \RuntimeException('Falló una operación de base de datos.');
             }
@@ -127,6 +158,85 @@ class EntregaController extends BaseController
         }
     }
 
+
+    public function registrar_incidencia()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Solicitud inválida.']);
+        }
+
+        $id = (int) $this->request->getPost('identrega');
+        $tipo = trim((string) $this->request->getPost('tipo'));
+        $motivo = trim((string) $this->request->getPost('motivo'));
+        $fechaNueva = trim((string) $this->request->getPost('fechareprogramada'));
+        $tipos = ['RECHAZO', 'CLIENTE_AUSENTE', 'DIRECCION_INCORRECTA', 'SOLICITUD_CLIENTE', 'PRODUCTO_DANADO', 'PRODUCTO_EQUIVOCADO', 'OTRO'];
+        $idUsuario = (int) session()->get('idusuario');
+
+        if ($id <= 0 || !in_array($tipo, $tipos, true) || mb_strlen($motivo) < 5 || mb_strlen($motivo) > 2000 || $idUsuario <= 0) {
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'Verifica la entrega, el tipo y el motivo (mínimo 5 caracteres).']);
+        }
+
+        $estadoNuevo = $tipo === 'RECHAZO' ? 'RECHAZADO' : 'INCIDENCIA';
+        if ($fechaNueva !== '') {
+            $fecha = \DateTimeImmutable::createFromFormat('!Y-m-d\TH:i', $fechaNueva);
+            if (!$fecha || $fecha->format('Y-m-d\TH:i') !== $fechaNueva || $fecha <= new \DateTimeImmutable()) {
+                return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'La fecha de reprogramación debe ser futura.']);
+            }
+            $estadoNuevo = 'REPROGRAMADO';
+        }
+
+        $db = \Config\Database::connect();
+        $db->transBegin();
+        try {
+            $entrega = $db->query('SELECT * FROM entregas WHERE identrega = ? FOR UPDATE', [$id])->getRowArray();
+            if (!$entrega || in_array($entrega['estado'], ['ENTREGADO', 'CANCELADO'], true)) {
+                throw new \RuntimeException('La entrega no existe o ya está cerrada.');
+            }
+            if (!$db->table('entregas')->where('identrega', $id)->update(['estado' => $estadoNuevo])) {
+                throw new \RuntimeException('No se pudo actualizar el estado.');
+            }
+            $ahora = date('Y-m-d H:i:s');
+            if (!$db->table('registro_incidencias')->insert([
+                'identrega' => $id,
+                'idusuario' => $idUsuario,
+                'idtecnico' => $entrega['idtecnico'] ?: null,
+                'tipo' => $tipo,
+                'motivo' => $motivo,
+                'estado_anterior' => $entrega['estado'],
+                'estado_nuevo' => $estadoNuevo,
+                'fechaintento' => $ahora,
+                'fechareprogramada' => $fechaNueva !== '' ? $fecha->format('Y-m-d H:i:s') : null,
+                'created_at' => $ahora,
+            ])) {
+                throw new \RuntimeException('No se pudo registrar la incidencia.');
+            }
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('La transacción no se completó.');
+            }
+            $db->transCommit();
+            return $this->response->setJSON(['success' => true, 'message' => 'Incidencia registrada correctamente.']);
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Registrar incidencia: ' . $e->getMessage());
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function historial_incidencias($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false]);
+        }
+        $db = \Config\Database::connect();
+        if (!$db->table('entregas')->where('identrega', (int) $id)->countAllResults()) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Entrega no encontrada.']);
+        }
+        $registros = $db->table('registro_incidencias ri')
+            ->select('ri.tipo, ri.motivo, ri.estado_anterior, ri.estado_nuevo, ri.fechaintento, ri.fechareprogramada, ri.created_at')
+            ->where('ri.identrega', (int) $id)
+            ->orderBy('ri.idincidencia', 'DESC')->get()->getResultArray();
+        return $this->response->setJSON(['success' => true, 'registros' => $registros]);
+    }
 
     private function confirmarSalidaInventario($db, array $entrega): void
     {
