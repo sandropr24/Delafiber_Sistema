@@ -1,0 +1,10 @@
+.df-tecnicos h1 { color: var(--brand-purple, #32005a); }
+.df-tecnicos .df-btn-primary, .df-modal-tecnico .df-btn-primary { background: var(--brand-fuchsia, #ff2b50); border: 1px solid var(--brand-fuchsia, #ff2b50); color: #fff; font-weight: 600; }
+.df-tecnicos .df-btn-primary:hover, .df-modal-tecnico .df-btn-primary:hover { background: #e31d42; border-color: #e31d42; color: #fff; }
+.df-tecnicos .card { border: 1px solid #edf0f5 !important; }
+.df-tecnicos .df-tabla thead th { background: #f8f7fb; color: #655875; font-size: .77rem; text-transform: uppercase; letter-spacing: .035em; white-space: nowrap; padding: .9rem .7rem; }
+.df-tecnicos .df-tabla tbody td { padding: .85rem .7rem; }
+.df-tecnicos .form-control:focus, .df-tecnicos .form-select:focus, .df-modal-tecnico .form-control:focus { border-color: #b38ecb; box-shadow: 0 0 0 .2rem rgba(50,0,90,.1); }
+.df-modal-tecnico { border: 0; border-radius: 1rem; overflow: hidden; }
+.df-modal-tecnico .modal-header { background: #fbf8ff; }
+.df-modal-tecnico .form-label { font-size: .86rem; font-weight: 600; }

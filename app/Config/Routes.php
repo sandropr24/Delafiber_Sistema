@@ -79,3 +79,9 @@ $routes->group('entregas', function ($routes) {
     $routes->get('buscar_tabla', 'EntregaController::buscar_tabla');
     $routes->post('cambiar_estado', 'EntregaController::cambiar_estado');
 });
+
+$routes->group('tecnicos', ['filter' => 'auth'], static function ($routes) {
+    $routes->get('', 'TecnicoController::index');
+    $routes->post('guardar', 'TecnicoController::guardar');
+    $routes->post('cambiar-estado/(:num)', 'TecnicoController::cambiarEstado/$1');
+});
