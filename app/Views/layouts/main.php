@@ -34,7 +34,7 @@
                     <span>Dashboard</span>
                 </a>
 
-                <?php if (in_array($userRol, ['Administrador', 'Almacenero'], true)): ?>
+                <?php if (in_array($userRol, ['Administrador', 'Operador', 'Vendedor'], true)): ?>
                     <div class="nav-section-title">Operaciones & Stock</div>
                     <?php if ($userRol === 'Administrador'): ?>
                         <a href="<?= base_url('locales') ?>" class="sidebar-link <?= url_is('locales*') ? 'active' : '' ?>">
@@ -62,7 +62,7 @@
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRol, ['Administrador', 'Cajero'], true)): ?>
+                <?php if (in_array($userRol, ['Administrador', 'Vendedor'], true)): ?>
                     <div class="nav-section-title">Comercial</div>
                     <a href="<?= base_url('clientes') ?>" class="sidebar-link <?= url_is('personas*') ? 'active' : '' ?>">
                         <i class="bi bi-people"></i>
@@ -78,7 +78,7 @@
                     </a>
                 <?php endif; ?>
 
-                <?php if (in_array($userRol, ['Administrador', 'Almacenero'], true)): ?>
+                <?php if (in_array($userRol, ['Administrador', 'Operador'], true)): ?>
                     <div class="nav-section-title">Compras</div>
                     <a href="<?= base_url('proveedores') ?>" class="sidebar-link <?= url_is('proveedores*') ? 'active' : '' ?>">
                         <i class="bi bi-truck"></i>

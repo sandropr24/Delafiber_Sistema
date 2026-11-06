@@ -47,7 +47,7 @@
                                     <td class="ps-4 text-muted fw-semibold"><?= $key + 1 ?></td>
                                     <td>
                                         <span class="badge bg-light text-dark border px-2 py-1 font-monospace fw-bold">
-                                            <?= esc($venta['tipodocumento']) ?>: <?= esc($venta['serie']) ?>-<?= esc($venta['numero']) ?>
+                                            <?= esc($venta['tipodocumento']) ?>: <?= esc($venta['numero']) ?>
                                         </span>
                                     </td>
                                     <td>

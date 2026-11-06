@@ -22,7 +22,7 @@
             </td>
             <td class="documento">
                 <strong>NOTA DE VENTA</strong>
-                <div class="numero"><?= esc($venta['serie'] ?? '') ?>-<?= esc($venta['numero'] ?? '') ?></div>
+                <div class="numero"><?= esc($venta['numero'] ?? '') ?></div>
                 <div class="subtitulo">Documento interno</div>
             </td>
         </tr>
@@ -76,7 +76,7 @@
         <?php endforeach; ?>
     <?php endif; ?>
 
-    <div class="pie">Gracias por su compra. Esta nota de venta es un documento interno y no reemplaza un comprobante de pago autorizado por SUNAT.</div>
+    <div class="pie">Gracias por su compra.</div>
 </body>
 
 </html>

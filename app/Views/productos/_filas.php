@@ -45,7 +45,7 @@ $clasesTipo = [
                     <div
                         class="bg-light rounded border d-flex align-items-center justify-content-center text-secondary"
                         style="width: 44px; height: 44px;">
-                        <i class="bi bi-image fs-5"></i>
+                        <i class="bi <?= ($p['tipo'] ?? '') === 'SERVICIO' ? 'bi-tools' : (($p['tipo'] ?? '') === 'COMBO' ? 'bi-box-seam' : 'bi-box') ?> fs-5"></i>
                     </div>
                 <?php endif; ?>
             </td>

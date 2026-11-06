@@ -84,7 +84,7 @@
 </div>
 
 <div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0 shadow">
             <form action="<?= base_url('productos/guardar') ?>" method="POST" enctype="multipart/form-data">
                 <?= csrf_field() ?>
@@ -193,17 +193,59 @@
                             <div class="form-text">La serie se registra sin stock. Estará disponible cuando se registre su ingreso en Compras.</div>
                         </div>
 
-                        <div class="col-12 col-md-8" data-oculto-en="SERVICIO,COMBO">
+                        <div class="col-12 col-md-8">
                             <label for="imagen" class="form-label small fw-semibold">Imagen (opcional)</label>
                             <input type="file" class="form-control" id="imagen" name="imagen" accept="image/png, image/jpeg, image/webp" onchange="previsualizarImagen(event)">
                             <small class="text-muted" style="font-size: 0.75rem;">JPG, PNG o WEBP. Máximo 2MB.</small>
                         </div>
 
-                        <div class="col-12 col-md-4 text-center" data-oculto-en="SERVICIO,COMBO">
+                        <div class="col-12 col-md-4 text-center">
                             <label class="form-label small fw-semibold d-block">Vista previa</label>
                             <div class="d-flex align-items-center justify-content-center bg-light border rounded mx-auto" style="width: 70px; height: 70px; overflow: hidden;">
                                 <img id="previewImg" src="" alt="Previsualización" class="w-100 h-100 object-fit-cover" style="display: none;">
                                 <i id="previewIcon" class="bi bi-image fs-3 text-secondary"></i>
+                            </div>
+                        </div>
+
+                        <div class="col-12 d-none" id="panelComponentesCombo">
+                            <div class="border rounded-3 p-3 bg-light">
+                                <h6 class="fw-semibold mb-2">Componentes del combo</h6>
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-12 col-md-7">
+                                        <label class="form-label small" for="comboProducto">Producto o servicio</label>
+                                        <select id="comboProducto" class="form-select">
+                                            <option value="">Seleccione un componente</option>
+                                            <?php foreach ($componentesDisponibles as $componente): ?>
+                                                <option value="<?= (int) $componente['idproducto'] ?>"><?= esc($componente['nombre']) ?> (<?= esc($componente['tipo']) ?>)</option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label small" for="comboCantidad">Cantidad</label>
+                                        <input id="comboCantidad" type="number" min="0.01" max="99999999" step="0.01" class="form-control" value="1">
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <button type="button" id="btnAgregarComponente" class="btn btn-outline-primary w-100">Agregar</button>
+                                    </div>
+                                </div>
+                                <div class="table-responsive mt-3">
+                                    <table class="table table-sm table-bordered align-middle mb-1">
+                                        <thead>
+                                            <tr>
+                                                <th>Componente</th>
+                                                <th style="width: 120px">Cantidad</th>
+                                                <th style="width: 70px">Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tablaComponentesCombo">
+                                            <tr>
+                                                <td colspan="3" class="text-muted text-center">Sin componentes</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <input type="hidden" id="componentes_combo" name="componentes_combo" value="[]">
+                                <div class="form-text">El combo no tiene stock propio. Sus componentes físicos descontarán stock al venderse cuando integremos la lógica de ventas.</div>
                             </div>
                         </div>
 
@@ -230,6 +272,7 @@
 <?= $this->section('scripts') ?>
 <script>
     const BASE_URL = "<?= base_url() ?>";
+    const COMPONENTES_POR_COMBO = <?= json_encode($componentesPorCombo, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     const FORM_PREVIO = <?= json_encode(session()->getFlashdata('form') ?: null, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 </script>
 <script src="<?= base_url('js/productos/crear.js') ?>"></script>

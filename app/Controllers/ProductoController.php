@@ -54,6 +54,8 @@ class ProductoController extends BaseController
                 static fn($m) => (int) ($m['estado'] ?? 1) === 1
             )),
             'unidades'         => $this->obtenerUnidades(),
+            'componentesDisponibles' => $this->productoModel->whereIn('tipo', ['PRODUCTO', 'SERVICIO'])->where('estado', 1)->orderBy('nombre', 'ASC')->findAll(),
+            'componentesPorCombo' => $this->obtenerComponentesCombos(),
         ];
 
         return view('productos/index', $data);
@@ -146,6 +148,46 @@ class ProductoController extends BaseController
             'estado'        => in_array($estadoPost, ['0', '1'], true) ? (int) $estadoPost : 1,
         ];
 
+        $componentes = [];
+        if ($tipo === 'COMBO') {
+            $json = (string) $this->request->getPost('componentes_combo');
+            $entrada = json_decode($json, true);
+            if (!is_array($entrada) || !$entrada) {
+                $errores[] = 'Agregue al menos un producto o servicio al combo.';
+            } else {
+                foreach ($entrada as $item) {
+                    if (!is_array($item)) {
+                        $errores[] = 'Los componentes del combo son inválidos.';
+                        continue;
+                    }
+                    $componenteId = filter_var($item['idproducto'] ?? null, FILTER_VALIDATE_INT);
+                    $cantidad = $item['cantidad'] ?? null;
+                    if (!$componenteId || !is_scalar($cantidad) || !preg_match('/^\d{1,8}(?:\.\d{1,2})?$/', (string) $cantidad) || (float) $cantidad <= 0) {
+                        $errores[] = 'Revise el producto y la cantidad de cada componente.';
+                        continue;
+                    }
+                    if (isset($componentes[$componenteId])) {
+                        $errores[] = 'No repita un mismo componente en el combo.';
+                        continue;
+                    }
+                    $registro = $this->productoModel->find($componenteId);
+                    if (!$registro || !in_array($registro['tipo'], ['PRODUCTO', 'SERVICIO'], true) || (int) $registro['estado'] !== 1 || $componenteId === $id) {
+                        $errores[] = 'Un componente no existe, está inactivo o no es un producto/servicio.';
+                        continue;
+                    }
+                    $componentes[$componenteId] = number_format((float) $cantidad, 2, '.', '');
+                }
+            }
+            if (count($componentes) > 100) {
+                $errores[] = 'El combo admite un máximo de 100 componentes.';
+            }
+            if (!is_numeric($datos['precioventa']) || (float) $datos['precioventa'] <= 0) {
+                $errores[] = 'Ingrese un precio de venta del combo mayor que cero.';
+            }
+        } elseif ($id && ($actual['tipo'] ?? '') === 'COMBO') {
+            $errores[] = 'No cambie el tipo de un combo existente; edite sus componentes o desactívelo.';
+        }
+
         $serieInicial = trim((string) $this->request->getPost('serieinicial'));
         if ($serieInicial !== '' && strlen($serieInicial) > 60) {
             $errores[] = 'El número de serie no puede superar 60 caracteres.';
@@ -165,7 +207,11 @@ class ProductoController extends BaseController
         }
 
         $archivo = $this->request->getFile('imagen');
-        $hayImagen = $tipo !== 'SERVICIO' && $archivo && $archivo->isValid() && !$archivo->hasMoved();
+        $hayArchivo = $archivo && $archivo->getError() !== UPLOAD_ERR_NO_FILE;
+        $hayImagen = $hayArchivo && $archivo->isValid() && !$archivo->hasMoved();
+        if ($hayArchivo && !$hayImagen) {
+            $errores[] = 'No se pudo recibir la imagen. Compruebe su tamaño y vuelva a intentarlo.';
+        }
 
         if ($hayImagen) {
             $reglasImagen = [
@@ -190,9 +236,18 @@ class ProductoController extends BaseController
 
         $nuevaImagen = null;
         if ($hayImagen) {
-            $nuevaImagen      = $archivo->getRandomName();
-            $archivo->move(FCPATH . 'uploads/productos', $nuevaImagen);
-            $datos['imagen']  = $nuevaImagen;
+            $directorio = FCPATH . 'uploads/productos';
+            if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+                return $this->volverConErrores(['No se pudo preparar la carpeta de imágenes.']);
+            }
+            $nuevaImagen = $archivo->getRandomName();
+            try {
+                $archivo->move($directorio, $nuevaImagen);
+                $datos['imagen'] = $nuevaImagen;
+            } catch (\Throwable $e) {
+                log_message('error', 'Error al subir imagen: ' . $e->getMessage());
+                return $this->volverConErrores(['No se pudo guardar la imagen. Revise los permisos de uploads/productos.']);
+            }
         }
 
         $db = db_connect();
@@ -215,6 +270,18 @@ class ProductoController extends BaseController
                         'estado' => 'EN_STOCK',
                     ])) {
                         throw new \RuntimeException('No se pudo registrar la serie inicial.');
+                    }
+                }
+            }
+            if ($tipo === 'COMBO') {
+                $db->table('combo_detalle')->where('idcombo', $idGuardado)->delete();
+                foreach ($componentes as $componenteId => $cantidad) {
+                    if (!$db->table('combo_detalle')->insert([
+                        'idcombo' => $idGuardado,
+                        'idproducto' => $componenteId,
+                        'cantidad' => $cantidad,
+                    ])) {
+                        throw new \RuntimeException('No se pudo guardar un componente del combo.');
                     }
                 }
             }
@@ -284,6 +351,19 @@ class ProductoController extends BaseController
         }
         unset($producto);
         return $productos;
+    }
+
+    private function obtenerComponentesCombos(): array
+    {
+        $resultado = [];
+        $filas = db_connect()->table('combo_detalle')->select('idcombo, idproducto, cantidad')->get()->getResultArray();
+        foreach ($filas as $fila) {
+            $resultado[(int) $fila['idcombo']][] = [
+                'idproducto' => (int) $fila['idproducto'],
+                'cantidad' => $fila['cantidad'],
+            ];
+        }
+        return $resultado;
     }
 
     private function obtenerUnidades(): array

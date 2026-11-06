@@ -18,12 +18,12 @@ class PersonaModel extends Model
         'direccion',
         'telefono',
         'email',
-        'estado', 
+        'estado',
     ];
 
     protected $validationRules = [
         'idpersona' => 'permit_empty|is_natural_no_zero',
-        'apellidos' => 'required|min_length[2]|max_length[100]',
+        'apellidos' => 'permit_empty|min_length[2]|max_length[100]',
         'nombres'   => 'required|min_length[2]|max_length[100]',
         'tipodoc'   => 'required|max_length[20]',
         'numerodoc' => 'required|max_length[20]',

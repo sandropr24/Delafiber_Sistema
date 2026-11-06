@@ -140,11 +140,11 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="numerodoc" class="form-label small fw-bold text-secondary text-uppercase">N° Documento <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" maxlength="8" required>
+                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" maxlength="8" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="telefono" class="form-label small fw-bold text-secondary text-uppercase">Teléfono</label>
-                            <input type="text" class="form-control" id="telefono" name="telefono" maxlength="9">
+                            <input type="text" class="form-control" id="telefono" name="telefono" maxlength="9" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="email" class="form-label small fw-bold text-secondary text-uppercase">Correo Electrónico</label>
@@ -166,10 +166,9 @@
                             <label for="idrol" class="form-label small fw-bold text-secondary text-uppercase">Rol <span class="text-danger">*</span></label>
                             <select class="form-select" id="idrol" name="idrol" required>
                                 <option value="">Seleccione un rol</option>
-                                <!-- Ajusta los ID según corresponda a tu tabla roles -->
                                 <option value="1">Administrador</option>
-                                <option value="2">Almacenero</option>
-                                <option value="3">Cajero</option>
+                                <option value="2">Operador</option>
+                                <option value="3">Vendedor</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-4">

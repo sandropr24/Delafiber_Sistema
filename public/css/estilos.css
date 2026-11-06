@@ -1,11 +1,11 @@
 :root {
-  --brand-fuchsia: #ff254b;
-  --brand-purple: #3b0066;
+  --brand-fuchsia: #ff2b50;
+  --brand-purple: #32005a;
 
   --sidebar-bg-start: #160a2b;
   --sidebar-bg-end: #0b0516;
   --sidebar-hover: rgba(255, 37, 75, 0.08);
-  --sidebar-active: #ff254b;
+  --sidebar-active: #ff2b50;
   --topbar-bg: #ffffff;
   --body-bg: #f8fafc;
 }

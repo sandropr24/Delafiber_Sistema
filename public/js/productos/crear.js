@@ -1,10 +1,52 @@
+let componentesCombo = [];
+
+function actualizarComponentesCombo() {
+  const tabla = document.getElementById("tablaComponentesCombo");
+  const campo = document.getElementById("componentes_combo");
+  if (campo) campo.value = JSON.stringify(componentesCombo);
+  if (!tabla) return;
+  tabla.replaceChildren();
+  if (!componentesCombo.length) {
+    const tr = tabla.insertRow();
+    const td = tr.insertCell();
+    td.colSpan = 3;
+    td.className = "text-center text-muted";
+    td.textContent = "Sin componentes";
+    return;
+  }
+  componentesCombo.forEach((item, indice) => {
+    const tr = tabla.insertRow();
+    const nombre = document.getElementById("comboProducto")?.querySelector(`option[value="${item.idproducto}"]`)?.textContent || `#${item.idproducto}`;
+    tr.insertCell().textContent = nombre;
+    tr.insertCell().textContent = item.cantidad;
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "btn btn-sm btn-outline-danger";
+    boton.textContent = "Quitar";
+    boton.addEventListener("click", () => {
+      componentesCombo.splice(indice, 1);
+      actualizarComponentesCombo();
+    });
+    tr.insertCell().appendChild(boton);
+  });
+}
+
+function cargarComponentesCombo(id, previo = null) {
+  const fuente = previo ?? (typeof COMPONENTES_POR_COMBO !== "undefined" ? COMPONENTES_POR_COMBO[id] : []);
+  componentesCombo = Array.isArray(fuente) ? fuente.map((item) => ({
+    idproducto: Number(item.idproducto),
+    cantidad: String(item.cantidad),
+  })) : [];
+  actualizarComponentesCombo();
+}
+
 const $ = (id) => document.getElementById(id);
 
 const AYUDA_TIPO = {
   PRODUCTO: "Equipo físico: puede controlar stock y número de serie.",
   SERVICIO:
     "Servicio técnico: solo necesita nombre, categoría, unidad; precio sugerido opcional.",
-  COMBO: "Kit o combo: no maneja stock ni serie propios y requiere una marca.",
+  COMBO: "Kit o combo: elige componentes, cantidades y un precio propio; sin stock ni serie propios.",
 };
 
 function mostrarVistaPrevia(src) {
@@ -21,6 +63,9 @@ function mostrarVistaPrevia(src) {
     img.src = "";
     img.style.display = "none";
     icon.style.display = "block";
+    const tipo = $("tipo")?.value || "PRODUCTO";
+    icon.className = "bi fs-3 text-secondary " +
+      (tipo === "SERVICIO" ? "bi-tools" : tipo === "COMBO" ? "bi-box-seam" : "bi-box");
   }
 }
 
@@ -107,6 +152,7 @@ function aplicarTipo(reiniciar = true) {
     }
   }
 
+  $("panelComponentesCombo")?.classList.toggle("d-none", tipo !== "COMBO");
   if ($("tipoAyuda")) {
     $("tipoAyuda").textContent = AYUDA_TIPO[tipo] || "";
   }
@@ -206,6 +252,7 @@ function cargarFormulario(d) {
   }
 
   aplicarTipo(false);
+  cargarComponentesCombo(d.idproducto);
 
   asignarCheckbox("controlastock", d.controlastock);
   asignarCheckbox("controlaserie", d.controlaserie);
@@ -258,6 +305,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const tbody = $("tbodyProductos");
 
+  $("btnAgregarComponente")?.addEventListener("click", () => {
+    const idproducto = Number($("comboProducto")?.value || 0);
+    const cantidad = Number($("comboCantidad")?.value || 0);
+
+    if (!Number.isInteger(idproducto) || idproducto <= 0) {
+      alert("Selecciona un producto o servicio.");
+      return;
+    }
+    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+      alert("Ingresa una cantidad mayor que cero.");
+      return;
+    }
+    const existente = componentesCombo.find(item => item.idproducto === idproducto);
+    if (existente) {
+      existente.cantidad = String(Number(existente.cantidad) + cantidad);
+    } else {
+      componentesCombo.push({ idproducto, cantidad: String(cantidad) });
+    }
+    actualizarComponentesCombo();
+    $("comboProducto").value = "";
+    $("comboCantidad").value = "1";
+  });
+
+
   $("tipo")?.addEventListener("change", () => {
     aplicarTipo(true);
   });
@@ -269,6 +340,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (typeof FORM_PREVIO !== "undefined" && FORM_PREVIO) {
     cargarFormulario(FORM_PREVIO);
+    if (FORM_PREVIO.tipo === "COMBO" && FORM_PREVIO.componentes_combo) {
+      try { cargarComponentesCombo(null, JSON.parse(FORM_PREVIO.componentes_combo)); } catch (e) { console.error(e); }
+    }
     abrirModalProducto();
   }
 
