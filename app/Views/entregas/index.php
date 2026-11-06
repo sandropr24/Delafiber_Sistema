@@ -12,7 +12,7 @@ foreach ($entregas as $entrega) {
         case 'PENDIENTE':
             $pendientes++;
             break;
-        case 'EN_CAMINO':
+        case 'EN CAMINO':
             $enCamino++;
             break;
         case 'ENTREGADO':
@@ -157,8 +157,7 @@ foreach ($entregas as $entrega) {
                                     <td class="text-center">
                                         <span class="badge bg-<?= $badgeClass ?>-subtle text-<?= $badgeClass ?>
                                                    border border-<?= $badgeClass ?>
-                                                   px-3 py-2 rounded-pill"
-                                        >
+                                                   px-3 py-2 rounded-pill">
                                             <?= esc($estado) ?>
                                         </span>
                                     </td>
@@ -182,8 +181,7 @@ foreach ($entregas as $entrega) {
                                             data-tipo="<?= esc($item['tipoentrega'] ?? '', 'attr') ?>"
                                             data-direccion="<?= esc($item['direccion'] ?? '', 'attr') ?>"
                                             data-referencia="<?= esc($item['referencia'] ?? '', 'attr') ?>"
-                                            data-telefono="<?= esc($item['telefono'] ?? '', 'attr') ?>"
-                                        >
+                                            data-telefono="<?= esc($item['telefono'] ?? '', 'attr') ?>">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                     </td>

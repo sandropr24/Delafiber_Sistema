@@ -157,6 +157,25 @@ class EntregaController extends BaseController
             [$idVenta]
         )->getResultArray();
 
+        $detallesCombo = $db->query(
+            'SELECT c.idproducto, SUM(c.cantidad) AS cantidad
+             FROM venta_combo_componentes c
+             INNER JOIN detventa d ON d.iddetventa = c.iddetventa
+             INNER JOIN productos p ON p.idproducto = c.idproducto
+             WHERE d.idventa = ? AND p.controlastock = 1
+             GROUP BY c.idproducto',
+            [$idVenta]
+        )->getResultArray();
+        $sumas = [];
+        foreach (array_merge($detalles, $detallesCombo) as $detalle) {
+            $id = (int) $detalle['idproducto'];
+            $sumas[$id] = round(($sumas[$id] ?? 0) + (float) $detalle['cantidad'], 2);
+        }
+        $detalles = [];
+        foreach ($sumas as $id => $cantidad) {
+            $detalles[] = ['idproducto' => $id, 'cantidad' => $cantidad];
+        }
+
         if (count($detalles) !== count($reservas)) {
             throw new \RuntimeException('Las reservas no coinciden con los productos físicos vendidos.');
         }
@@ -220,17 +239,22 @@ class EntregaController extends BaseController
                 throw new \RuntimeException('No se pudo registrar el movimiento de salida.');
             }
 
-            $seriesRequeridas = $db->table('detventa d')
-                ->select('COALESCE(SUM(d.cantidad), 0) AS cantidad', false)
-                ->join('productos p', 'p.idproducto = d.idproducto')
-                ->where('d.idventa', $idVenta)
-                ->where('d.idproducto', $idProducto)
-                ->where('p.controlaserie', 1)
-                ->get()->getRow('cantidad');
+            $seriesRequeridas = $db->query(
+                'SELECT COALESCE(SUM(cantidad), 0) AS cantidad FROM (
+                    SELECT d.cantidad FROM detventa d JOIN productos p ON p.idproducto = d.idproducto
+                    WHERE d.idventa = ? AND d.idproducto = ? AND p.controlaserie = 1
+                    UNION ALL
+                    SELECT c.cantidad FROM venta_combo_componentes c
+                    JOIN detventa d ON d.iddetventa = c.iddetventa
+                    JOIN productos p ON p.idproducto = c.idproducto
+                    WHERE d.idventa = ? AND c.idproducto = ? AND p.controlaserie = 1
+                ) x',
+                [$idVenta, $idProducto, $idVenta, $idProducto]
+            )->getRow('cantidad');
             if ((float) $seriesRequeridas > 0) {
                 $seriesReservadas = $db->query(
                     'SELECT s.idserie FROM series s INNER JOIN detventa d ON d.iddetventa = s.iddetventa
-                     WHERE d.idventa = ? AND d.idproducto = ? AND s.estado = ? AND s.idlocal = ? FOR UPDATE',
+                     WHERE d.idventa = ? AND s.idproducto = ? AND s.estado = ? AND s.idlocal = ? FOR UPDATE',
                     [$idVenta, $idProducto, 'RESERVADO', $venta['idlocal']]
                 )->getResultArray();
                 if (count($seriesReservadas) !== (int) $seriesRequeridas) {
