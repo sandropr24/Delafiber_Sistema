@@ -143,7 +143,7 @@
                     <div class="card-header bg-light py-3 px-4 border-bottom" style="border-color: #e5e7eb !important;">
                         <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
                             <i class="bi bi-box-seam text-primary"></i>
-                            2. Productos de la venta
+                            2. Productos y servicios de la venta
                         </h6>
                     </div>
                     <div class="card-body p-4">
@@ -157,8 +157,37 @@
                                             <option value="<?= $prod['idproducto'] ?>"
                                                 data-nombre="<?= esc($prod['nombre'] ?? $prod['descripcion']) ?>"
                                                 data-precio="<?= $prod['precioventa'] ?? 0 ?>"
-                                                data-controlaserie="<?= (int) ($prod['controlaserie'] ?? 0) ?>">
+                                                data-controlaserie="<?= (int) ($prod['controlaserie'] ?? 0) ?>"
+                                                data-controlastock="<?= (int) ($prod['controlastock'] ?? 0) ?>">
                                                 <?= esc($prod['nombre'] ?? $prod['descripcion']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-bold text-secondary text-uppercase">Servicio</label>
+                                    <select class="form-select" id="selectServicio">
+                                        <option value="" selected>Seleccionar servicio...</option>
+                                        <?php foreach ($servicios ?? [] as $serv): ?>
+                                            <option value="<?= (int) $serv['idproducto'] ?>"
+                                                data-nombre="<?= esc($serv['nombre'] ?? $serv['descripcion'], 'attr') ?>"
+                                                data-precio="<?= esc($serv['precioventa'] ?? 0, 'attr') ?>"
+                                                data-controlaserie="0" data-controlastock="0">
+                                                <?= esc($serv['nombre'] ?? $serv['descripcion']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-bold text-secondary text-uppercase">Combo</label>
+                                    <select class="form-select" id="selectCombo">
+                                        <option value="">Seleccionar combo...</option>
+                                        <?php foreach ($combos ?? [] as $combo): ?>
+                                            <option value="<?= (int) $combo['idproducto'] ?>"
+                                                data-nombre="<?= esc($combo['nombre'], 'attr') ?>"
+                                                data-precio="<?= esc($combo['precioventa'] ?? 0, 'attr') ?>"
+                                                data-controlaserie="0" data-controlastock="0" data-combo="1">
+                                                <?= esc($combo['nombre']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -312,7 +341,7 @@
     </div>
 </div>
 
-<div id="ventaConfig" data-stock='<?= esc($stockPorLocal ?? "{}", 'attr') ?>' data-series='<?= esc($seriesDisponibles ?? "{}", 'attr') ?>'></div>
+<div id="ventaConfig" data-stock='<?= esc($stockPorLocal ?? "{}", 'attr') ?>' data-series='<?= esc($seriesDisponibles ?? "{}", 'attr') ?>' data-combos='<?= esc(json_encode($comboComponentes ?? []), 'attr') ?>'></div>
 
 <?= $this->endSection() ?>
 

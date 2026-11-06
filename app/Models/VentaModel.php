@@ -53,9 +53,12 @@ class VentaModel extends Model
                 throw new \RuntimeException('La venta requiere una entrega para gestionar sus reservas.');
             }
 
+            // Expandir combos en el servidor: nunca confiar en componentes enviados por el navegador.
             $cantidades = [];
             $seriesSolicitadas = [];
-            foreach ($detalles as $item) {
+            $seriesPorDetalle = [];
+            $componentesPorDetalle = [];
+            foreach ($detalles as $indice => $item) {
                 $idproducto = (int) ($item['idproducto'] ?? 0);
                 $cantidad = (float) ($item['cantidad'] ?? 0);
                 if ($idproducto <= 0 || $cantidad <= 0 || round($cantidad, 2) != $cantidad) {
@@ -65,21 +68,56 @@ class VentaModel extends Model
                 if (!$producto) {
                     throw new \RuntimeException('Producto inexistente: ' . $idproducto);
                 }
+                $componentes = [];
                 if ($producto['tipo'] === 'COMBO') {
-                    throw new \RuntimeException('Los combos todavía requieren configurar sus componentes.');
-                }
-                if (!empty($producto['controlaserie'])) {
-                    if (empty($producto['controlastock']) || (int) $cantidad != $cantidad) {
-                        throw new \RuntimeException('Los productos con serie deben controlar stock y venderse por unidades enteras.');
+                    $filas = $db->table('combo_detalle')->where('idcombo', $idproducto)->get()->getResultArray();
+                    if (!$filas) {
+                        throw new \RuntimeException('El combo no tiene componentes configurados.');
                     }
-                    $ids = array_map('intval', (array) ($item['series'] ?? []));
-                    if (count($ids) !== (int) $cantidad || in_array(0, $ids, true)) {
-                        throw new \RuntimeException('Seleccione un número de serie por cada unidad del producto ' . $idproducto);
+                    foreach ($filas as $fila) {
+                        $idComponente = (int) $fila['idproducto'];
+                        $componente = $productoModel->find($idComponente);
+                        if (!$componente || $componente['tipo'] === 'COMBO') {
+                            throw new \RuntimeException('El combo contiene un componente inexistente o un combo anidado.');
+                        }
+                        $componentes[] = ['producto' => $componente, 'cantidad' => round($cantidad * (float) $fila['cantidad'], 2)];
                     }
-                    $seriesSolicitadas[$idproducto] = array_merge($seriesSolicitadas[$idproducto] ?? [], $ids);
+                } else {
+                    $componentes[] = ['producto' => $producto, 'cantidad' => $cantidad];
                 }
-                if (!empty($producto['controlastock'])) {
-                    $cantidades[$idproducto] = ($cantidades[$idproducto] ?? 0) + $cantidad;
+                foreach ($componentes as $componenteFila) {
+                    $p = $componenteFila['producto'];
+                    $idFisico = (int) $p['idproducto'];
+                    $cantidadFisica = $componenteFila['cantidad'];
+                    if ($cantidadFisica <= 0) {
+                        throw new \RuntimeException('Cantidad de componente inválida.');
+                    }
+                    if ($p['tipo'] === 'SERVICIO' && (!empty($p['controlastock']) || !empty($p['controlaserie']))) {
+                        throw new \RuntimeException('Un servicio no puede controlar stock ni serie.');
+                    }
+                    if (!empty($p['controlastock'])) {
+                        $cantidades[$idFisico] = ($cantidades[$idFisico] ?? 0) + $cantidadFisica;
+                    }
+                    if (!empty($p['controlaserie'])) {
+                        if (empty($p['controlastock']) || (int) $cantidadFisica != $cantidadFisica) {
+                            throw new \RuntimeException('Los componentes con serie requieren unidades enteras y stock.');
+                        }
+                        $ids = $producto['tipo'] === 'COMBO'
+                            ? (array) ($item['series_componentes'][$idFisico] ?? [])
+                            : (array) ($item['series'] ?? []);
+                        $ids = array_map('intval', $ids);
+                        if (count($ids) !== (int) $cantidadFisica || in_array(0, $ids, true)) {
+                            throw new \RuntimeException('Seleccione una serie por unidad del producto ' . $idFisico);
+                        }
+                        $seriesSolicitadas[$idFisico] = array_merge($seriesSolicitadas[$idFisico] ?? [], $ids);
+                        $seriesPorDetalle[$indice][$idFisico] = $ids;
+                    }
+                    if ($producto['tipo'] === 'COMBO') {
+                        $componentesPorDetalle[$indice][] = [
+                            'idproducto' => $idFisico,
+                            'cantidad' => $cantidadFisica,
+                        ];
+                    }
                 }
             }
             $idsTodas = [];
@@ -155,7 +193,7 @@ class VentaModel extends Model
                 throw new \RuntimeException('En una venta de contado, los pagos deben coincidir con el total de la venta.');
             }
 
-            foreach ($detalles as $item) {
+            foreach ($detalles as $indice => $item) {
                 $idproducto  = $item['idproducto'];
                 $cantidad    = (float)$item['cantidad'];
                 $precioventa = (float)$item['precioventa'];
@@ -174,13 +212,25 @@ class VentaModel extends Model
                 if (!$idDetalle) {
                     throw new \RuntimeException('No se pudo registrar el detalle de venta.');
                 }
-                foreach ($seriesSolicitadas[$idproducto] ?? [] as $idSerie) {
-                    $actualizado = $db->table('series')
-                        ->where('idserie', $idSerie)
-                        ->where('estado', 'EN_STOCK')
-                        ->update(['estado' => 'RESERVADO', 'iddetventa' => $idDetalle]);
-                    if (!$actualizado || $db->affectedRows() !== 1) {
-                        throw new \RuntimeException('No se pudo reservar la serie ' . $idSerie);
+                foreach ($componentesPorDetalle[$indice] ?? [] as $componente) {
+                    if (!$db->table('venta_combo_componentes')->insert([
+                        'iddetventa' => $idDetalle,
+                        'idproducto' => $componente['idproducto'],
+                        'cantidad' => $componente['cantidad'],
+                    ])) {
+                        throw new \RuntimeException('No se pudo registrar el componente del combo.');
+                    }
+                }
+                foreach ($seriesPorDetalle[$indice] ?? [] as $idFisico => $ids) {
+                    foreach ($ids as $idSerie) {
+                        $actualizado = $db->table('series')
+                            ->where('idproducto', $idFisico)
+                            ->where('idserie', $idSerie)
+                            ->where('estado', 'EN_STOCK')
+                            ->update(['estado' => 'RESERVADO', 'iddetventa' => $idDetalle]);
+                        if (!$actualizado || $db->affectedRows() !== 1) {
+                            throw new \RuntimeException('No se pudo reservar la serie ' . $idSerie);
+                        }
                     }
                 }
             }
