@@ -153,11 +153,72 @@ class EntregaController extends BaseController
 
             return $this->response->setJSON([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'No se pudo actualizar el estado de la entrega. Inténtelo nuevamente.',
             ]);
         }
     }
 
+
+    public function cancelar_definitivamente()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Solicitud inválida.']);
+        }
+
+        $id = (int) $this->request->getPost('identrega');
+        $motivo = trim((string) $this->request->getPost('motivo'));
+        $idUsuario = (int) session()->get('idusuario');
+        if ($id <= 0 || $idUsuario <= 0 || mb_strlen($motivo) < 10 || mb_strlen($motivo) > 2000) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'Indica una entrega válida y un motivo de 10 a 2000 caracteres.',
+            ]);
+        }
+
+        $db = \Config\Database::connect();
+        $db->transBegin();
+        try {
+            $entrega = $db->query('SELECT * FROM entregas WHERE identrega = ? FOR UPDATE', [$id])->getRowArray();
+            if (!$entrega) {
+                throw new \RuntimeException('Entrega no encontrada.');
+            }
+            $anterior = (string) $entrega['estado'];
+            if (!in_array($anterior, ['PENDIENTE', 'RECHAZADO', 'REPROGRAMADO', 'INCIDENCIA'], true)) {
+                throw new \RuntimeException('No es posible cancelar esta entrega. Si está en camino, verifica primero el retorno físico; si ya fue entregada, utiliza un proceso de devolución.');
+            }
+
+            if (!$db->table('entregas')->where('identrega', $id)->where('estado', $anterior)->update(['estado' => 'CANCELADO'])) {
+                throw new \RuntimeException('No se pudo cerrar la entrega.');
+            }
+            $ahora = date('Y-m-d H:i:s');
+            if (!$db->table('registro_incidencias')->insert([
+                'identrega' => $id,
+                'idusuario' => $idUsuario,
+                'idtecnico' => $entrega['idtecnico'] ?: null,
+                'tipo' => 'CANCELACION_ENTREGA',
+                'motivo' => $motivo,
+                'estado_anterior' => $anterior,
+                'estado_nuevo' => 'CANCELADO',
+                'fechaintento' => $ahora,
+                'fechareprogramada' => null,
+                'created_at' => $ahora,
+            ])) {
+                throw new \RuntimeException('No se pudo guardar el historial de cancelación.');
+            }
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('La operación no se pudo completar.');
+            }
+            $db->transCommit();
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Entrega cancelada. La venta y las reservas permanecen vigentes hasta su resolución comercial.',
+            ]);
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Cancelar entrega: ' . $e->getMessage());
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'No se pudo cancelar la entrega. Inténtelo nuevamente.']);
+        }
+    }
 
     public function registrar_incidencia()
     {
@@ -218,7 +279,7 @@ class EntregaController extends BaseController
         } catch (\Throwable $e) {
             $db->transRollback();
             log_message('error', 'Registrar incidencia: ' . $e->getMessage());
-            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => $e->getMessage()]);
+            return $this->response->setStatusCode(422)->setJSON(['success' => false, 'message' => 'No se pudo registrar la incidencia. Inténtelo nuevamente.']);
         }
     }
 

@@ -283,8 +283,8 @@ class VentaModel extends Model
             $db->transRollback();
 
 
-            session()->setFlashdata('error', $e->getMessage());
             log_message('error', 'Error en VentaModel::registrarVenta: ' . $e->getMessage());
+            session()->setFlashdata('error', 'No se pudo registrar la venta. Inténtelo nuevamente.');
             return false;
         }
     }

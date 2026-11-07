@@ -17,12 +17,25 @@ class VentaController extends BaseController
     public function index()
     {
         $ventaModel = model(VentaModel::class);
+        $db = \Config\Database::connect();
+        $puedeAutorizar = session()->get('rol') === 'Administrador';
+        $solicitudesPendientes = $puedeAutorizar
+            ? $db->table('solicitudes_anulacion s')
+                ->select('s.idsolicitud, s.idventa, s.motivo, s.fecha_solicitud, v.numero, v.serie')
+                ->join('ventas v', 'v.idventa = s.idventa')
+                ->where('s.estado', 'PENDIENTE')
+                ->orderBy('s.fecha_solicitud', 'ASC')
+                ->get()->getResultArray()
+            : [];
         $data = [
             'titulo' => 'Historial de Ventas',
-            'ventas' => $ventaModel->select('ventas.*, CONCAT(personas.nombres, " ", personas.apellidos) as cliente, locales.nombrelocal as local')
+            'ventas' => $ventaModel->select('ventas.*, IF(personas.tipopersona = "NATURAL", TRIM(CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, ""))), COALESCE(personas.razonsocial, "")) as cliente, locales.nombrelocal as local')
                 ->join('personas', 'personas.idpersona = ventas.idcliente', 'left')
                 ->join('locales', 'locales.idlocal = ventas.idlocal', 'left')
-                ->findAll()
+                ->orderBy('ventas.fecha', 'DESC')
+                ->findAll(),
+            'solicitudesPendientes' => $solicitudesPendientes,
+            'puedeAutorizar' => $puedeAutorizar,
         ];
         return view('ventas/index', $data);
     }
@@ -150,7 +163,7 @@ class VentaController extends BaseController
         if ($resultado) {
             return redirect()->to('/ventas')->with('success', 'Venta registrada exitosamente.');
         } else {
-            $errorMsg = session()->getFlashdata('error') ?? 'El modelo no pudo registrar la venta.';
+            $errorMsg = session()->getFlashdata('error') ?? 'No se pudo registrar la venta. Inténtelo nuevamente.';
             return redirect()->back()->with('error', $errorMsg)->withInput();
         }
     }
@@ -162,7 +175,7 @@ class VentaController extends BaseController
         $pagoVentaModel = model(PagoVentaModel::class);
 
         $venta = $ventaModel->select('ventas.*,
-                                      CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, "")) as cliente,
+                                      IF(personas.tipopersona = "NATURAL", TRIM(CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, ""))), COALESCE(personas.razonsocial, "")) as cliente,
                                       personas.numerodoc,
                                       locales.nombrelocal as local')
             ->join('personas', 'personas.idpersona = ventas.idcliente', 'left')
@@ -184,11 +197,33 @@ class VentaController extends BaseController
             ->where('pagoventa.idventa', $idventa)
             ->findAll();
 
+        $db = \Config\Database::connect();
+        $entregaComercial = $db->table('entregas')->select('identrega, estado, tipoentrega, fechaencamino')->where('idventa', $idventa)->get()->getRowArray();
+        $solicitudes = $db->table('solicitudes_anulacion s')
+            ->select('s.*, CONCAT(COALESCE(p.nombres, ""), " ", COALESCE(p.apellidos, "")) AS solicitante')
+            ->join('usuarios u', 'u.idusuario = s.idsolicitante')
+            ->join('personas p', 'p.idpersona = u.idpersona')
+            ->where('s.idventa', $idventa)
+            ->orderBy('s.idsolicitud', 'DESC')
+            ->get()->getResultArray();
+        $solicitudActiva = null;
+        foreach ($solicitudes as $solicitud) {
+            if (in_array($solicitud['estado'], ['PENDIENTE', 'AUTORIZADA'], true)) {
+                $solicitudActiva = $solicitud;
+                break;
+            }
+        }
+
         $data = [
-            'titulo'   => 'Detalle de Venta N° ' . $idventa,
-            'venta'    => $venta,
+            'titulo' => 'Detalle de Venta N° ' . $idventa,
+            'venta' => $venta,
             'detalles' => $detalles,
-            'pagos'    => $pagos
+            'pagos' => $pagos,
+            'entregaComercial' => $entregaComercial,
+            'solicitudesAnulacion' => $solicitudes,
+            'solicitudActiva' => $solicitudActiva,
+            'puedeSolicitar' => in_array(session()->get('rol'), ['Administrador', 'Vendedor'], true),
+            'puedeAutorizar' => session()->get('rol') === 'Administrador',
         ];
 
         return view('ventas/detalles', $data);
@@ -304,6 +339,7 @@ class VentaController extends BaseController
                     ]);
                 }
             } catch (\Throwable $ignored) {
+                log_message('error', 'Error al consultar cliente tras fallo de registro: ' . $ignored->getMessage());
             }
 
             return $this->response->setStatusCode(500)->setJSON([

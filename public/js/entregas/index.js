@@ -206,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Incidencias: flujo independiente para no alterar la confirmación de inventario.
     const incidenciaEl = document.getElementById('modalIncidenciaEntrega');
     const historialEl = document.getElementById('modalHistorialIncidencias');
     const incidenciaForm = document.getElementById('formIncidenciaEntrega');
@@ -274,6 +273,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 incidenciaError.classList.remove('d-none');
             } finally {
                 incidenciaGuardar.disabled = false;
+            }
+        });
+    }
+
+    const cancelarEl = document.getElementById('modalCancelarEntrega');
+    const cancelarForm = document.getElementById('formCancelarEntrega');
+    if (cancelarEl && cancelarForm) {
+        const cancelarModal = bootstrap.Modal.getOrCreateInstance(cancelarEl);
+        const cancelarError = document.getElementById('cancelarEntregaError');
+        const cancelarGuardar = document.getElementById('btnConfirmarCancelacion');
+        document.addEventListener('click', (event) => {
+            const boton = event.target.closest('.btn-cancelar-entrega');
+            if (!boton) return;
+            cancelarForm.reset();
+            document.getElementById('cancelarIdEntrega').value = boton.dataset.id;
+            cancelarError.classList.add('d-none');
+            cancelarModal.show();
+        });
+        cancelarForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!cancelarForm.reportValidity()) return;
+            cancelarGuardar.disabled = true;
+            cancelarError.classList.add('d-none');
+            try {
+                const response = await fetch(vista.dataset.urlCancelar, {
+                    method: 'POST', body: new FormData(cancelarForm), credentials: 'same-origin',
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo cancelar la entrega.');
+                window.location.reload();
+            } catch (err) {
+                cancelarError.textContent = err.message || 'Error al cancelar la entrega.';
+                cancelarError.classList.remove('d-none');
+            } finally {
+                cancelarGuardar.disabled = false;
             }
         });
     }

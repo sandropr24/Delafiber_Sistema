@@ -104,6 +104,32 @@
 </div>
 
 
+<?php if (!empty($puedeAutorizar) && !empty($solicitudesPendientes)): ?>
+<div class="container-fluid px-4 pb-3">
+    <div class="card shadow-sm border">
+        <div class="card-header bg-light py-3 px-4">
+            <h6 class="m-0 fw-bold"><i class="bi bi-clipboard-check me-2" style="color: #32005A;"></i>Solicitudes de anulación pendientes (<?= count($solicitudesPendientes) ?>)</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th class="ps-4">Venta</th><th>Fecha</th><th>Motivo</th><th class="pe-4 text-end">Revisar</th></tr></thead>
+                <tbody>
+                <?php foreach ($solicitudesPendientes as $sol): ?>
+                    <tr>
+                        <td class="ps-4"><?= esc(trim(($sol['serie'] ?? '') . '-' . ($sol['numero'] ?? ''))) ?></td>
+                        <td><?= esc($sol['fecha_solicitud']) ?></td>
+                        <td><?= esc($sol['motivo']) ?></td>
+                        <td class="pe-4 text-end"><a class="btn btn-sm btn-outline-primary" href="<?= site_url('ventas/detalles/' . $sol['idventa']) ?>">Evaluar</a></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+
 <div class="modal fade" id="modalNotaVentaPdf" tabindex="-1" aria-labelledby="tituloModalNotaVentaPdf" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">

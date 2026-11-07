@@ -187,5 +187,72 @@
         </div>
     </div>
 
+
+    <div class="card border rounded-3 shadow-sm mt-4">
+        <div class="card-header bg-light px-4 py-3 d-flex align-items-center justify-content-between">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-clipboard-check me-2" style="color: #32005A;"></i>Resolución comercial</h6>
+            <span class="badge bg-secondary">Etapa 4E1</span>
+        </div>
+        <div class="card-body px-4 py-3">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge text-bg-light border">Entrega: <?= esc($entregaComercial['estado'] ?? 'SIN ENTREGA') ?></span>
+                <span class="badge <?= empty($venta['fechaanulacion']) ? 'text-bg-success' : 'text-bg-danger' ?>">
+                    Venta: <?= empty($venta['fechaanulacion']) ? 'VIGENTE' : 'ANULADA' ?>
+                </span>
+                <?php if ($solicitudActiva): ?>
+                    <span class="badge <?= $solicitudActiva['estado'] === 'PENDIENTE' ? 'text-bg-warning' : 'text-bg-info' ?>">
+                        Solicitud: <?= esc($solicitudActiva['estado']) ?>
+                    </span>
+                <?php endif; ?>
+            </div>
+
+            <?php if (empty($venta['fechaanulacion']) && ($entregaComercial['estado'] ?? '') === 'CANCELADO' && !$solicitudActiva && $puedeSolicitar): ?>
+                <form action="<?= site_url('ventas/solicitar-anulacion/' . $venta['idventa']) ?>" method="post" class="mb-3">
+                    <?= csrf_field() ?>
+                    <label for="motivoAnulacion" class="form-label fw-semibold">Solicitar evaluación de anulación de venta</label>
+                    <textarea name="motivo" id="motivoAnulacion" class="form-control" minlength="15" maxlength="2000" rows="3" required placeholder="Explica por qué el cliente quiere cancelar su compra, no solo su entrega."></textarea>
+                    <button type="submit" class="btn mt-2 text-white" style="background: #32005A;">Enviar solicitud</button>
+                </form>
+            <?php elseif ($solicitudActiva && $solicitudActiva['estado'] === 'AUTORIZADA'): ?>
+                <div class="alert alert-info small">La solicitud fue autorizada para continuar el trámite. <strong>La venta sigue vigente</strong> hasta verificar el inventario, los cobros y la devolución correspondiente.</div>
+            <?php elseif ($solicitudActiva && $solicitudActiva['estado'] === 'PENDIENTE'): ?>
+                <div class="alert alert-warning small">Solicitud pendiente de revisión del administrador.</div>
+            <?php endif; ?>
+
+            <?php if ($solicitudActiva && $solicitudActiva['estado'] === 'PENDIENTE' && $puedeAutorizar): ?>
+                <form action="<?= site_url('ventas/revisar-anulacion/' . $solicitudActiva['idsolicitud']) ?>" method="post" class="p-3 border rounded-3 bg-light mb-3">
+                    <?= csrf_field() ?>
+                    <p class="mb-2 small"><strong>Motivo solicitado:</strong> <?= esc($solicitudActiva['motivo']) ?></p>
+                    <label for="observacionRevision" class="form-label fw-semibold">Observación del administrador</label>
+                    <textarea id="observacionRevision" name="observacion" class="form-control mb-2" minlength="10" maxlength="2000" rows="2" required placeholder="Indica tu evaluación (mínimo 10 caracteres)."></textarea>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" name="decision" value="AUTORIZADA" class="btn btn-primary">Autorizar trámite (sin anular)</button>
+                        <button type="submit" name="decision" value="RECHAZADA" class="btn btn-outline-danger">Rechazar solicitud</button>
+                    </div>
+                </form>
+            <?php endif; ?>
+
+            <?php if (!empty($solicitudesAnulacion)): ?>
+                <h6 class="fw-bold mb-2">Historial de solicitudes</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>Fecha</th><th>Solicitante</th><th>Motivo</th><th>Estado</th><th>Observación</th></tr></thead>
+                        <tbody>
+                            <?php foreach ($solicitudesAnulacion as $s): ?>
+                                <tr>
+                                    <td><?= esc($s['fecha_solicitud']) ?></td>
+                                    <td><?= esc($s['solicitante']) ?></td>
+                                    <td style="min-width: 180px;"><?= esc($s['motivo']) ?></td>
+                                    <td><span class="badge bg-secondary"><?= esc($s['estado']) ?></span></td>
+                                    <td><?= esc($s['observacion_revision'] ?? 'Pendiente') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
 </div>
 <?= $this->endSection() ?>

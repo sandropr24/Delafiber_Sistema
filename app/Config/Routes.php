@@ -13,8 +13,6 @@ $routes->group('catalogos', function ($routes) {
     $routes->get('', 'CatalogoController::index');
     $routes->post('guardar-categoria', 'CatalogoController::guardarCategoria');
     $routes->post('guardar-marca', 'CatalogoController::guardarMarca');
-    $routes->post('actualizar-categoria', 'CatalogoController::actualizarCategoria');
-    $routes->post('actualizar-marca', 'CatalogoController::actualizarMarca');
     $routes->get('cambiar-estado-categoria/(:num)', 'CatalogoController::cambiarEstadoCategoria/$1');
     $routes->get('cambiar-estado-marca/(:num)', 'CatalogoController::cambiarEstadoMarca/$1');
     $routes->get('buscarCategorias', 'CatalogoController::buscarCategorias');
@@ -66,12 +64,14 @@ $routes->group('compras', ['filter' => 'auth'], function ($routes) {
 });
 
 $routes->post('clientes/guardar-express', 'VentaController::guardarClienteExpress', ['filter' => 'auth']);
-$routes->group('ventas', static function ($routes) {
+$routes->group('ventas', ['filter' => 'auth'], static function ($routes) {
     $routes->get('', 'VentaController::index');
     $routes->get('crear', 'VentaController::crear');
     $routes->post('guardar', 'VentaController::guardar');
     $routes->get('detalles/(:num)', 'VentaController::detalles/$1');
     $routes->get('nota-pdf/(:num)', 'NotaVentaPdfController::generar/$1');
+    $routes->post('solicitar-anulacion/(:num)', 'VentaAnulacionController::solicitar/$1');
+    $routes->post('revisar-anulacion/(:num)', 'VentaAnulacionController::revisar/$1');
 });
 
 $routes->group('entregas', ['filter' => 'auth'], function ($routes) {
@@ -79,6 +79,7 @@ $routes->group('entregas', ['filter' => 'auth'], function ($routes) {
     $routes->get('buscar_tabla', 'EntregaController::buscar_tabla');
     $routes->post('cambiar_estado', 'EntregaController::cambiar_estado');
     $routes->post('registrar-incidencia', 'EntregaController::registrar_incidencia');
+    $routes->post('cancelar-definitivamente', 'EntregaController::cancelar_definitivamente');
     $routes->get('historial-incidencias/(:num)', 'EntregaController::historial_incidencias/$1');
 });
 

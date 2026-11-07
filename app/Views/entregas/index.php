@@ -33,7 +33,7 @@ foreach ($entregas as $entrega) {
     }
 }
 ?>
-<div class="container-fluid px-4 py-4" id="viewEntregas" data-url-buscar="<?= base_url('entregas/buscar_tabla') ?>" data-url-estado="<?= base_url('entregas/cambiar_estado') ?>" data-url-incidencia="<?= base_url('entregas/registrar-incidencia') ?>" data-url-historial="<?= base_url('entregas/historial-incidencias') ?>">
+<div class="container-fluid px-4 py-4" id="viewEntregas" data-url-buscar="<?= base_url('entregas/buscar_tabla') ?>" data-url-estado="<?= base_url('entregas/cambiar_estado') ?>" data-url-incidencia="<?= base_url('entregas/registrar-incidencia') ?>" data-url-historial="<?= base_url('entregas/historial-incidencias') ?>" data-url-cancelar="<?= base_url('entregas/cancelar-definitivamente') ?>">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
@@ -212,6 +212,9 @@ foreach ($entregas as $entrega) {
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-warning btn-incidencia-entrega" title="Registrar incidencia" data-id="<?= (int) $item['identrega'] ?>" data-estado="<?= esc($estado, 'attr') ?>" <?= in_array($estado, ['ENTREGADO', 'CANCELADO'], true) ? 'disabled' : '' ?>><i class="bi bi-exclamation-triangle"></i></button>
+                                        <?php if (in_array($estado, ['PENDIENTE', 'RECHAZADO', 'REPROGRAMADO', 'INCIDENCIA'], true)): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-entrega" title="Cancelar solo la entrega" data-id="<?= (int) $item['identrega'] ?>"><i class="bi bi-x-circle"></i></button>
+                                        <?php endif; ?>
                                         <button type="button" class="btn btn-sm btn-outline-secondary btn-historial-entrega" title="Historial de incidencias" data-id="<?= (int) $item['identrega'] ?>"><i class="bi bi-clock-history"></i></button>
                                     </td>
                                 </tr>
@@ -375,6 +378,32 @@ foreach ($entregas as $entrega) {
         <div class="modal-header"><h5 class="modal-title">Historial de incidencias</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
         <div class="modal-body" id="historialIncidenciasContenido">Cargando...</div>
     </div></div>
+</div>
+
+
+<div class="modal fade" id="modalCancelarEntrega" tabindex="-1" aria-labelledby="tituloCancelarEntrega" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-3">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="tituloCancelarEntrega"><i class="bi bi-x-circle text-danger me-2"></i>Cancelar entrega</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="formCancelarEntrega">
+                <?= csrf_field() ?>
+                <input type="hidden" name="identrega" id="cancelarIdEntrega">
+                <div class="modal-body">
+                    <p class="text-muted">Se cerrará esta entrega, pero la venta y sus reservas seguirán vigentes hasta resolver la operación comercial.</p>
+                    <label for="cancelarMotivo" class="form-label fw-semibold">Motivo de cancelación</label>
+                    <textarea id="cancelarMotivo" name="motivo" class="form-control" rows="4" minlength="10" maxlength="2000" required placeholder="Describe por qué se cancela la entrega"></textarea>
+                    <div id="cancelarEntregaError" class="alert alert-danger d-none mt-3" role="alert"></div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Volver</button>
+                    <button type="submit" id="btnConfirmarCancelacion" class="btn btn-danger">Confirmar cancelación</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <?= $this->endSection() ?>
