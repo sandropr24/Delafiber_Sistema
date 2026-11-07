@@ -75,6 +75,7 @@ class LocalController extends BaseController
             $this->localModel->delete($id);
             return redirect()->to(base_url('locales'))->with('mensaje', 'Local eliminado correctamente.');
         } catch (\Exception $e) {
+            log_message('error', 'Error al eliminar local: ' . $e->getMessage());
             return redirect()->to(base_url('locales'))->with('error', 'Ocurrió un error al intentar eliminar el local.');
         }
     }
