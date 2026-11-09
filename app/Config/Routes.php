@@ -72,6 +72,7 @@ $routes->group('ventas', ['filter' => 'auth'], static function ($routes) {
     $routes->get('nota-pdf/(:num)', 'NotaVentaPdfController::generar/$1');
     $routes->post('solicitar-anulacion/(:num)', 'VentaAnulacionController::solicitar/$1');
     $routes->post('revisar-anulacion/(:num)', 'VentaAnulacionController::revisar/$1');
+    $routes->post('ejecutar-anulacion/(:num)', 'VentaAnulacionController::ejecutar/$1');
 });
 
 $routes->group('entregas', ['filter' => 'auth'], function ($routes) {

@@ -49,6 +49,7 @@
                                         <span class="badge bg-light text-dark border px-2 py-1 font-monospace fw-bold">
                                             <?= esc($venta['tipodocumento']) ?>: <?= esc($venta['numero']) ?>
                                         </span>
+                                        <?php if (!empty($venta['fechaanulacion'])): ?><span class="badge text-bg-danger ms-1">ANULADA</span><?php endif; ?>
                                     </td>
                                     <td>
                                         <span class="fw-medium text-dark d-block text-truncate" style="max-width: 250px;" title="<?= esc($venta['cliente'] ?? '') ?>">

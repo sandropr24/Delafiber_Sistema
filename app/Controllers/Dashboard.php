@@ -42,6 +42,7 @@ class Dashboard extends BaseController
             ->select('p.idproducto, p.nombre, p.tipo, SUM(dv.cantidad) AS unidades, SUM(dv.cantidad * dv.precioventa) AS importe', false)
             ->join('productos p', 'p.idproducto = dv.idproducto')
             ->join('ventas v', 'v.idventa = dv.idventa')
+            ->where('v.fechaanulacion', null)
             ->where('p.tipo', 'PRODUCTO')
             ->groupBy('p.idproducto, p.nombre, p.tipo')
             ->orderBy('unidades', 'DESC')->limit(5)

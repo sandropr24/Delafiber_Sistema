@@ -139,10 +139,10 @@
                                 <td class="ps-3 fw-semibold"><?= esc($comprobante) ?></td>
                                 <td><?= esc($cliente) ?></td>
                                 <td class="text-muted"><?= esc(date('d/m/Y H:i', strtotime($venta['fecha']))) ?></td>
-                                <td class="text-end fw-bold">S/ <?= number_format((float) $venta['total'], 2) ?></td>
+                                <td class="text-end fw-bold">S/ <?= number_format((float) $venta['total'], 2) ?><?= !empty($venta['fechaanulacion']) ? ' (anulada)' : '' ?></td>
                                 <td class="text-center pe-3">
                                     <span class="badge bg-light text-secondary border">
-                                        <?= !empty($venta['estafacturado']) ? 'Facturado' : 'Emitido' ?>
+                                        <?= !empty($venta['fechaanulacion']) ? 'Anulada' : (!empty($venta['estafacturado']) ? 'Facturado' : 'Emitido') ?>
                                     </span>
                                 </td>
                             </tr>
