@@ -199,15 +199,70 @@ document.addEventListener('DOMContentLoaded', () => {
         return '';
     }
 
-    function totalizar() {
-        const total = filas().reduce((sum, row) => {
-            return sum + Number(row.querySelector('.input-cantidad').value)
-                * Number(row.querySelector('[name$="[precioventa]"]').value);
+    function descuentoVenta() {
+        const tipo = $('tipoDescuento')?.value || 'NINGUNO';
+        const valorTexto = $('valorDescuento')?.value || '0';
+        const valor = Number(valorTexto);
+        const motivo = $('motivoDescuento')?.value.trim() || '';
+        const activo = tipo !== 'NINGUNO';
+        const subtotalCentimos = filas().reduce((sum, row) => {
+            const cantidad = Number(row.querySelector('.input-cantidad').value);
+            const precio = Number(row.querySelector('[name$="[precioventa]"]').value);
+            return sum + Math.round(cantidad * precio * 100);
         }, 0);
+        const error = $('errorDescuento');
+        let mensaje = '';
+        let centimos = 0;
+        if (activo) {
+            if (!Number.isFinite(valor) || valor <= 0 || !/^\d+(?:\.\d{1,2})?$/.test(valorTexto)) {
+                mensaje = 'Ingresa un descuento válido mayor que cero (máximo dos decimales).';
+            } else if (motivo.length < 5 || motivo.length > 300) {
+                mensaje = 'Indica un motivo de al menos 5 caracteres.';
+            } else if (tipo === 'PORCENTAJE') {
+                if (valor > 100) mensaje = 'El porcentaje no puede superar 100 %.';
+                else centimos = Math.round(subtotalCentimos * Math.round(valor * 100) / 10000);
+            } else {
+                centimos = Math.round(valor * 100);
+            }
+            if (centimos >= subtotalCentimos && subtotalCentimos > 0) {
+                mensaje = 'El descuento debe ser menor que el subtotal.';
+            }
+        }
+        if (error) {
+            error.textContent = mensaje;
+            error.classList.toggle('d-none', !mensaje);
+        }
+        return {subtotalCentimos, descuentoCentimos: centimos, error: mensaje};
+    }
+
+    function totalizar() {
+        const calculo = descuentoVenta();
+        const subtotal = calculo.subtotalCentimos / 100;
+        const descuento = calculo.descuentoCentimos / 100;
+        const total = Math.max(0, subtotal - descuento);
+        $('lblSubtotal').textContent = money(subtotal);
+        $('lblDescuento').textContent = `- ${money(descuento)}`;
         $('lblTotal').textContent = money(total);
         $('inputTotal').value = total.toFixed(2);
         totalizarPagos();
     }
+
+    $('tipoDescuento')?.addEventListener('change', () => {
+        const activo = $('tipoDescuento').value !== 'NINGUNO';
+        $('campoValorDescuento').hidden = !activo;
+        $('campoMotivoDescuento').hidden = !activo;
+        $('valorDescuento').disabled = !activo;
+        $('motivoDescuento').disabled = !activo;
+        $('valorDescuento').required = activo;
+        $('motivoDescuento').required = activo;
+        if (!activo) {
+            $('valorDescuento').value = '0.00';
+            $('motivoDescuento').value = '';
+        }
+        totalizar();
+    });
+    $('valorDescuento')?.addEventListener('input', totalizar);
+    $('motivoDescuento')?.addEventListener('input', totalizar);
 
     function actualizarFila(row) {
         const input = row.querySelector('.input-cantidad');
@@ -461,6 +516,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!$('selectCliente')?.value || $('selectCliente').value === 'false') {
             event.preventDefault();
             return alertar('Cliente requerido', 'Seleccione un cliente válido.');
+        }
+
+        const validacionDescuento = descuentoVenta();
+        if (validacionDescuento.error) {
+            event.preventDefault();
+            return alertar('Descuento inválido', validacionDescuento.error);
         }
 
         const total = Number($('inputTotal').value || 0);

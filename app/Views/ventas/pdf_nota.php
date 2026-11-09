@@ -63,6 +63,24 @@
     </table>
 
     <table class="totales">
+        <?php
+            $subtotalNota = (float) ($venta['subtotal'] ?? 0);
+            if ($subtotalNota <= 0) {
+                foreach ($detalles as $d) {
+                    $subtotalNota += round((float)$d['cantidad'] * (float)$d['precioventa'], 2);
+                }
+            }
+        ?>
+        <tr>
+            <td>SUBTOTAL</td>
+            <td class="derecha">S/ <?= number_format($subtotalNota, 2) ?></td>
+        </tr>
+        <?php if ((float) ($venta['descuento'] ?? 0) > 0): ?>
+            <tr>
+                <td>DESCUENTO<?= ($venta['tipodescuento'] ?? '') === 'PORCENTAJE' ? ' (' . number_format((float) ($venta['valordescuento'] ?? 0), 2) . '%)' : '' ?></td>
+                <td class="derecha">- S/ <?= number_format((float)$venta['descuento'], 2) ?></td>
+            </tr>
+        <?php endif; ?>
         <tr class="total">
             <td>TOTAL</td>
             <td class="derecha">S/ <?= number_format((float) ($venta['total'] ?? 0), 2) ?></td>

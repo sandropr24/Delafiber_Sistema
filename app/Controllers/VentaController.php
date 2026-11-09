@@ -80,7 +80,16 @@ class VentaController extends BaseController
             ];
         }
 
+        $idUsuario = (int) session()->get('idusuario');
+        $rolActual = $db->table('usuarios u')
+            ->select('roles.rol')
+            ->join('roles', 'roles.idrol = u.idrol')
+            ->where('u.idusuario', $idUsuario)
+            ->where('u.estado', 1)
+            ->get()->getRow('rol');
+
         $data = [
+            'puedeAplicarDescuento' => $rolActual === 'Administrador',
             'titulo'        => 'Registrar Nueva Venta',
             'clientes'      => $clientes,
             'locales'       => $localModel->findAll(),
@@ -125,7 +134,9 @@ class VentaController extends BaseController
             'numero'        => $this->request->getPost('numero'),
             'estafacturado' => 0,
             'fecha'         => date('Y-m-d H:i:s'),
-            'total'         => $this->request->getPost('total')
+            'tipodescuento' => $this->request->getPost('tipo_descuento') ?: 'NINGUNO',
+            'valordescuento' => $this->request->getPost('valor_descuento') ?: '0',
+            'motivodescuento' => trim((string) $this->request->getPost('motivo_descuento'))
         ];
 
         $detalles = $this->request->getPost('detalles');
@@ -206,6 +217,8 @@ class VentaController extends BaseController
             ->where('s.idventa', $idventa)
             ->orderBy('s.idsolicitud', 'DESC')
             ->get()->getResultArray();
+        $anulacionComercial = $db->table('anulaciones_comerciales')
+            ->where('idventa', $idventa)->get()->getRowArray();
         $solicitudActiva = null;
         foreach ($solicitudes as $solicitud) {
             if (in_array($solicitud['estado'], ['PENDIENTE', 'AUTORIZADA'], true)) {
@@ -220,6 +233,7 @@ class VentaController extends BaseController
             'detalles' => $detalles,
             'pagos' => $pagos,
             'entregaComercial' => $entregaComercial,
+            'anulacionComercial' => $anulacionComercial,
             'solicitudesAnulacion' => $solicitudes,
             'solicitudActiva' => $solicitudActiva,
             'puedeSolicitar' => in_array(session()->get('rol'), ['Administrador', 'Vendedor'], true),

@@ -306,11 +306,54 @@
                     </div>
                 </div>
 
+                <?php if (!empty($puedeAplicarDescuento)): ?>
+                <div class="card border shadow-sm rounded-3 mb-3">
+                    <div class="card-header"><h6 class="m-0 fw-bold"><i class="bi bi-tag me-2 text-primary"></i>Descuento de la venta</h6></div>
+                    <div class="card-body p-3">
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <label for="tipoDescuento" class="form-label">Tipo</label>
+                                <select name="tipo_descuento" id="tipoDescuento" class="form-select">
+                                    <option value="NINGUNO">Sin descuento</option>
+                                    <option value="PORCENTAJE">Porcentaje (%)</option>
+                                    <option value="MONTO">Monto fijo (S/)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-7" id="campoValorDescuento" hidden>
+                                <label for="valorDescuento" class="form-label">Valor del descuento</label>
+                                <input type="number" name="valor_descuento" id="valorDescuento" class="form-control" min="0" step="0.01" value="0.00" disabled>
+                            </div>
+                            <div class="col-12" id="campoMotivoDescuento" hidden>
+                                <label for="motivoDescuento" class="form-label">Motivo</label>
+                                <input type="text" name="motivo_descuento" id="motivoDescuento" class="form-control" maxlength="300" minlength="5" placeholder="Ej. Compra por volumen" list="motivosVenta" disabled>
+                                <datalist id="motivosVenta">
+                                    <option value="Compra por volumen">
+                                    <option value="Promoción">
+                                    <option value="Negociación comercial">
+                                    <option value="Cliente frecuente">
+                                    <option value="Cortesía comercial">
+                                </datalist>
+                            </div>
+                        </div>
+                        <div class="text-danger small mt-2 d-none" id="errorDescuento" role="alert"></div>
+                    </div>
+                </div>
+
+                <?php endif; ?>
+
                 <div class="card border shadow-sm rounded-3 resumen-venta">
                     <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="fw-bold text-secondary fs-6 text-uppercase">Total a pagar:</span>
-                            <h3 class="fw-bold text-success mb-0" id="lblTotal">S/ 0.00</h3>
+                        <div class="d-flex justify-content-between align-items-center mb-2 small">
+                            <span class="text-secondary">Subtotal</span>
+                            <span class="fw-semibold" id="lblSubtotal">S/ 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3 small">
+                            <span class="text-secondary">Descuento</span>
+                            <span class="fw-semibold text-danger" id="lblDescuento">- S/ 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                            <span class="fw-bold text-secondary text-uppercase">Total a pagar</span>
+                            <h3 class="fw-bold text-success mb-0 text-nowrap" id="lblTotal">S/ 0.00</h3>
                             <input type="hidden" name="total" id="inputTotal" value="0.00">
                         </div>
                         <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">

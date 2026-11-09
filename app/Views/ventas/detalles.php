@@ -8,7 +8,7 @@
             <h1 class="h3 fw-bold text-dark mb-1">
                 <i class="fas fa-file-invoice-dollar text-primary me-2"></i><?= esc($titulo) ?>
             </h1>
-            <p class="text-muted small mb-0">Detalle completo del comprobante de pago emitido y afectación en el inventario.</p>
+            <p class="text-muted small mb-0">Productos, importes, pagos y seguimiento de la venta.</p>
         </div>
         <div>
             <a href="<?= base_url('ventas') ?>" class="btn btn-sm btn-outline-secondary bg-white shadow-sm px-3 py-2">
@@ -79,7 +79,7 @@
             <div class="card border rounded-3 overflow-hidden shadow-sm mb-4" style="border-color: #e0e0e0 !important;">
                 <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
                     <h6 class="m-0 fw-bold text-dark">
-                        <i class="fas fa-boxes text-primary me-2"></i>Productos Retirados del Inventario
+                        <i class="fas fa-boxes text-primary me-2"></i>Productos y servicios de la venta
                     </h6>
                 </div>
                 <div class="table-responsive">
@@ -127,9 +127,30 @@
                             <?php endif; ?>
                         </tbody>
                         <tfoot class="table-light border-top">
+                            <?php
+                                $subtotalVenta = (float) ($venta['subtotal'] ?? 0);
+                                if ($subtotalVenta <= 0) {
+                                    foreach ($detalles ?? [] as $d) {
+                                        $subtotalVenta += round((float)$d['cantidad'] * (float)$d['precioventa'], 2);
+                                    }
+                                }
+                            ?>
+                            <tr>
+                                <td colspan="3" class="text-end py-2 text-secondary">Subtotal:</td>
+                                <td class="text-end pe-4 py-2 text-nowrap">S/ <?= number_format($subtotalVenta, 2) ?></td>
+                            </tr>
+                            <?php if ((float) ($venta['descuento'] ?? 0) > 0): ?>
+                                <tr>
+                                    <td colspan="3" class="text-end py-2 text-secondary">
+                                        Descuento<?= ($venta['tipodescuento'] ?? '') === 'PORCENTAJE' ? ' (' . number_format((float)$venta['valordescuento'], 2) . '%)' : '' ?>:
+                                        <?php if (!empty($venta['motivodescuento'])): ?><div class="small fw-normal"><?= esc($venta['motivodescuento']) ?></div><?php endif; ?>
+                                    </td>
+                                    <td class="text-end pe-4 py-2 text-danger text-nowrap">- S/ <?= number_format((float)$venta['descuento'], 2) ?></td>
+                                </tr>
+                            <?php endif; ?>
                             <tr>
                                 <td colspan="3" class="text-end fw-bold py-3 text-secondary text-uppercase fs-7 tracking-wider">Total General:</td>
-                                <td class="text-end pe-4 fw-bold text-primary fs-4 py-3 font-monospace">
+                                <td class="text-end pe-4 fw-bold text-primary fs-5 py-3 font-monospace text-nowrap">
                                     S/ <?= number_format($venta['total'], 2) ?>
                                 </td>
                             </tr>
@@ -189,9 +210,8 @@
 
 
     <div class="card border rounded-3 shadow-sm mt-4">
-        <div class="card-header bg-light px-4 py-3 d-flex align-items-center justify-content-between">
-            <h6 class="mb-0 fw-bold"><i class="bi bi-clipboard-check me-2" style="color: #32005A;"></i>Resolución comercial</h6>
-            <span class="badge bg-secondary">Etapa 4E1</span>
+        <div class="card-header bg-light px-4 py-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-clipboard-check me-2" style="color: #32005A;"></i>Gestión de cancelaciones</h6>
         </div>
         <div class="card-body px-4 py-3">
             <div class="d-flex flex-wrap gap-2 mb-3">
@@ -209,14 +229,30 @@
             <?php if (empty($venta['fechaanulacion']) && ($entregaComercial['estado'] ?? '') === 'CANCELADO' && !$solicitudActiva && $puedeSolicitar): ?>
                 <form action="<?= site_url('ventas/solicitar-anulacion/' . $venta['idventa']) ?>" method="post" class="mb-3">
                     <?= csrf_field() ?>
-                    <label for="motivoAnulacion" class="form-label fw-semibold">Solicitar evaluación de anulación de venta</label>
-                    <textarea name="motivo" id="motivoAnulacion" class="form-control" minlength="15" maxlength="2000" rows="3" required placeholder="Explica por qué el cliente quiere cancelar su compra, no solo su entrega."></textarea>
+                    <label for="motivoAnulacion" class="form-label fw-semibold">Solicitar anulación de venta</label>
+                    <textarea name="motivo" id="motivoAnulacion" class="form-control" minlength="15" maxlength="2000" rows="3" required placeholder="Motivo de la solicitud de anulación"></textarea>
                     <button type="submit" class="btn mt-2 text-white" style="background: #32005A;">Enviar solicitud</button>
                 </form>
             <?php elseif ($solicitudActiva && $solicitudActiva['estado'] === 'AUTORIZADA'): ?>
-                <div class="alert alert-info small">La solicitud fue autorizada para continuar el trámite. <strong>La venta sigue vigente</strong> hasta verificar el inventario, los cobros y la devolución correspondiente.</div>
+                <?php if (empty($venta['fechaanulacion'])): ?>
+                    <div class="alert alert-info small">Solicitud autorizada. Verifica la disponibilidad física de los productos antes de anular la venta.</div>
+                    <?php if ($puedeAutorizar): ?>
+                        <form action="<?= site_url('ventas/ejecutar-anulacion/' . $solicitudActiva['idsolicitud']) ?>" method="post" class="p-3 border rounded-3 mb-3" onsubmit="return confirm('¿Confirmas la anulación de esta venta? Se liberarán las reservas y cualquier reembolso quedará pendiente de gestión.');">
+                            <?= csrf_field() ?>
+                            <h6 class="fw-bold">Confirmar anulación de venta</h6>
+                            <p class="small text-muted">La anulación libera las reservas. Los reembolsos se gestionan por separado.</p>
+                            <label for="inventarioNota" class="form-label fw-semibold">Verificación física del inventario</label>
+                            <textarea id="inventarioNota" name="observacion_inventario" class="form-control mb-2" rows="3" minlength="15" maxlength="1000" required placeholder="Describe la ubicación y el estado físico de los productos"></textarea>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="inventario_verificado" value="1" id="confirmarInventario" required>
+                                <label class="form-check-label" for="confirmarInventario">Confirmo que los productos están bajo control del almacén y no hay unidades pendientes de retorno.</label>
+                            </div>
+                            <button class="btn text-white" type="submit" style="background: #b42336;"><i class="bi bi-ban me-1"></i> Anular venta</button>
+                        </form>
+                    <?php endif; ?>
+                <?php endif; ?>
             <?php elseif ($solicitudActiva && $solicitudActiva['estado'] === 'PENDIENTE'): ?>
-                <div class="alert alert-warning small">Solicitud pendiente de revisión del administrador.</div>
+                <div class="alert alert-warning small">Solicitud pendiente de aprobación.</div>
             <?php endif; ?>
 
             <?php if ($solicitudActiva && $solicitudActiva['estado'] === 'PENDIENTE' && $puedeAutorizar): ?>
@@ -224,12 +260,26 @@
                     <?= csrf_field() ?>
                     <p class="mb-2 small"><strong>Motivo solicitado:</strong> <?= esc($solicitudActiva['motivo']) ?></p>
                     <label for="observacionRevision" class="form-label fw-semibold">Observación del administrador</label>
-                    <textarea id="observacionRevision" name="observacion" class="form-control mb-2" minlength="10" maxlength="2000" rows="2" required placeholder="Indica tu evaluación (mínimo 10 caracteres)."></textarea>
+                    <textarea id="observacionRevision" name="observacion" class="form-control mb-2" minlength="10" maxlength="2000" rows="2" required placeholder="Motivo de la decisión"></textarea>
                     <div class="d-flex flex-wrap gap-2">
-                        <button type="submit" name="decision" value="AUTORIZADA" class="btn btn-primary">Autorizar trámite (sin anular)</button>
+                        <button type="submit" name="decision" value="AUTORIZADA" class="btn btn-primary">Autorizar solicitud</button>
                         <button type="submit" name="decision" value="RECHAZADA" class="btn btn-outline-danger">Rechazar solicitud</button>
                     </div>
                 </form>
+            <?php endif; ?>
+
+            <?php if (!empty($venta['fechaanulacion'])): ?>
+                <div class="alert alert-danger"><strong>VENTA ANULADA</strong> el <?= esc($venta['fechaanulacion']) ?>.</div>
+                <?php if (!empty($anulacionComercial)): ?>
+                    <div class="border rounded-3 p-3 mb-3 small">
+                        <strong>Acta de anulación:</strong> <?= esc($anulacionComercial['observacion_inventario']) ?><br>
+                        <strong>Importe pagado:</strong> S/ <?= number_format((float) $anulacionComercial['monto_pagado'], 2) ?><br>
+                        <strong>Reembolso:</strong> <span class="badge text-bg-warning"><?= esc($anulacionComercial['estado_reembolso']) ?></span>
+                        <?php if ($anulacionComercial['estado_reembolso'] === 'PENDIENTE'): ?>
+                            S/ <?= number_format((float) $anulacionComercial['monto_pendiente_reembolso'], 2) ?> pendiente de devolución.
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <?php if (!empty($solicitudesAnulacion)): ?>
@@ -244,7 +294,7 @@
                                     <td><?= esc($s['solicitante']) ?></td>
                                     <td style="min-width: 180px;"><?= esc($s['motivo']) ?></td>
                                     <td><span class="badge bg-secondary"><?= esc($s['estado']) ?></span></td>
-                                    <td><?= esc($s['observacion_revision'] ?? 'Pendiente') ?></td>
+                                    <td><?= esc($s['observacion_revision'] ?: '—') ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

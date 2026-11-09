@@ -34,6 +34,11 @@ class NotaVentaPdfController extends BaseController
             throw PageNotFoundException::forPageNotFound('La venta no existe.');
         }
 
+        if (!empty($venta['fechaanulacion'])) {
+            return redirect()->to('ventas/detalles/' . $idventa)
+                ->with('error', 'La nota de venta fue anulada. Consulta su historial comercial.');
+        }
+
         $detalles = model(DetVentaModel::class)
             ->select('detventa.*, productos.nombre AS producto')
             ->join('productos', 'productos.idproducto = detventa.idproducto', 'left')
