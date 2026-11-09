@@ -122,7 +122,7 @@ class EntregaController extends BaseController
                     throw new \RuntimeException('No se identificó al usuario responsable del cambio.');
                 }
                 $ahora = date('Y-m-d H:i:s');
-                if (!$db->table('registro_incidencias')->insert([
+                if (!$db->table('entrega_incidencias')->insert([
                     'identrega' => $idEntrega,
                     'idusuario' => $idUsuario,
                     'idtecnico' => $actualizar['idtecnico'] ?? ($entrega['idtecnico'] ?: null),
@@ -191,7 +191,7 @@ class EntregaController extends BaseController
                 throw new \RuntimeException('No se pudo cerrar la entrega.');
             }
             $ahora = date('Y-m-d H:i:s');
-            if (!$db->table('registro_incidencias')->insert([
+            if (!$db->table('entrega_incidencias')->insert([
                 'identrega' => $id,
                 'idusuario' => $idUsuario,
                 'idtecnico' => $entrega['idtecnico'] ?: null,
@@ -257,7 +257,7 @@ class EntregaController extends BaseController
                 throw new \RuntimeException('No se pudo actualizar el estado.');
             }
             $ahora = date('Y-m-d H:i:s');
-            if (!$db->table('registro_incidencias')->insert([
+            if (!$db->table('entrega_incidencias')->insert([
                 'identrega' => $id,
                 'idusuario' => $idUsuario,
                 'idtecnico' => $entrega['idtecnico'] ?: null,
@@ -292,7 +292,7 @@ class EntregaController extends BaseController
         if (!$db->table('entregas')->where('identrega', (int) $id)->countAllResults()) {
             return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Entrega no encontrada.']);
         }
-        $registros = $db->table('registro_incidencias ri')
+        $registros = $db->table('entrega_incidencias ri')
             ->select('ri.tipo, ri.motivo, ri.estado_anterior, ri.estado_nuevo, ri.fechaintento, ri.fechareprogramada, ri.created_at')
             ->where('ri.identrega', (int) $id)
             ->orderBy('ri.idincidencia', 'DESC')->get()->getResultArray();
