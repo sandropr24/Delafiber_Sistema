@@ -366,6 +366,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let temporizador = null;
   let ultimaPeticion = 0;
+  let paginaActual = 1;
+  let porPagina = 10;
+  const contenedorPaginacion = $("paginacionProductos");
 
   function buscar() {
     if (!tbody || !urlBuscar) return;
@@ -375,6 +378,8 @@ document.addEventListener("DOMContentLoaded", function () {
       categoria: $("filtroCategoria")?.value || "",
       tipo: $("filtroTipo")?.value || "",
       estado: $("filtroEstado")?.value || "",
+      pagina: String(paginaActual),
+      por_pagina: String(porPagina),
     });
 
     const numero = ++ultimaPeticion;
@@ -389,11 +394,13 @@ document.addEventListener("DOMContentLoaded", function () {
           throw new Error("HTTP " + res.status);
         }
 
-        return res.text();
+        return res.json();
       })
-      .then((html) => {
+      .then((datos) => {
         if (numero === ultimaPeticion) {
-          tbody.innerHTML = html;
+          tbody.innerHTML = datos.filas;
+          if (contenedorPaginacion) contenedorPaginacion.innerHTML = datos.paginacion;
+          paginaActual = datos.pagina;
         }
       })
       .catch((error) => {
@@ -403,10 +410,33 @@ document.addEventListener("DOMContentLoaded", function () {
 
   $("inputBuscarTablaProductos")?.addEventListener("input", () => {
     clearTimeout(temporizador);
+    paginaActual = 1;
     temporizador = setTimeout(buscar, 300);
   });
 
   ["filtroCategoria", "filtroTipo", "filtroEstado"].forEach((id) => {
-    $(id)?.addEventListener("change", buscar);
+    $(id)?.addEventListener("change", () => {
+      clearTimeout(temporizador);
+      paginaActual = 1;
+      buscar();
+    });
+  });
+
+  contenedorPaginacion?.addEventListener("click", (event) => {
+    const boton = event.target.closest("button[data-pagina]");
+    if (!boton || boton.disabled) return;
+    const nuevaPagina = Number(boton.dataset.pagina);
+    if (!Number.isInteger(nuevaPagina) || nuevaPagina < 1) return;
+    clearTimeout(temporizador);
+    paginaActual = nuevaPagina;
+    buscar();
+  });
+
+  contenedorPaginacion?.addEventListener("change", (event) => {
+    if (event.target.id !== "porPaginaProductos") return;
+    porPagina = Number(event.target.value) || 10;
+    paginaActual = 1;
+    clearTimeout(temporizador);
+    buscar();
   });
 });

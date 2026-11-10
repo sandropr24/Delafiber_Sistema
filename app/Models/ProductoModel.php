@@ -85,6 +85,58 @@ class ProductoModel extends Model
             ->join('marcas', 'marcas.idmarca = productos.idmarca', 'left');
     }
 
+    /** Paginación en servidor usando los mismos filtros del catálogo. */
+    public function paginarConRelaciones(?string $q, array $idsCategoria, ?string $tipo, ?int $estado, int $pagina, int $porPagina): array
+    {
+        $aplicarFiltros = static function ($builder) use ($q, $idsCategoria, $tipo, $estado) {
+            if ($q !== null && $q !== '') {
+                $builder->groupStart()
+                    ->like('productos.nombre', $q)
+                    ->orLike('productos.descripcion', $q)
+                    ->orLike('productos.modelo', $q)
+                    ->orLike('productos.codigobarras', $q)
+                    ->orLike('categorias.categoria', $q)
+                    ->orLike('marcas.marca', $q)
+                    ->groupEnd();
+            }
+            if ($idsCategoria) {
+                $builder->whereIn('productos.idcategoria', $idsCategoria);
+            }
+            if ($tipo !== null) {
+                $builder->where('productos.tipo', $tipo);
+            }
+            if ($estado !== null) {
+                $builder->where('productos.estado', $estado);
+            }
+            return $builder;
+        };
+
+        // Builders separados: evita acumular JOINs o filtros entre conteo y listado.
+        $crearConsulta = static function () {
+            return db_connect()->table('productos')
+                ->select('productos.*, categorias.categoria, marcas.marca')
+                ->join('categorias', 'categorias.idcategoria = productos.idcategoria')
+                ->join('marcas', 'marcas.idmarca = productos.idmarca', 'left');
+        };
+        $total = (int) $aplicarFiltros($crearConsulta())->countAllResults();
+        $totalPaginas = max(1, (int) ceil($total / $porPagina));
+        $pagina = min(max(1, $pagina), $totalPaginas);
+        $productos = $aplicarFiltros($crearConsulta())
+            ->orderBy('productos.idproducto', 'DESC')
+            ->get($porPagina, ($pagina - 1) * $porPagina)
+            ->getResultArray();
+
+        return [
+            'productos' => $productos,
+            'total' => $total,
+            'pagina' => $pagina,
+            'porPagina' => $porPagina,
+            'totalPaginas' => $totalPaginas,
+            'desde' => $total ? ($pagina - 1) * $porPagina + 1 : 0,
+            'hasta' => min($total, $pagina * $porPagina),
+        ];
+    }
+
     /**
      * @param int[]       $idsCategoria Si viene, filtra por esas categorías (padre + hijas)
      * @param string|null $tipo         PRODUCTO | SERVICIO | COMBO

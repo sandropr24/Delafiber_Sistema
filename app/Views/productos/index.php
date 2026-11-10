@@ -1,5 +1,9 @@
 <?= $this->extend('layouts/main') ?>
 
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="<?= base_url('css/productos/index.css') ?>">
+<?= $this->endSection() ?>
+
 <?= $this->section('contenido') ?>
 <div class="container-fluid px-4 py-4" id="viewProductos" data-url-buscar="<?= site_url('productos/buscar_tabla') ?>">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -80,24 +84,27 @@
                 </tbody>
             </table>
         </div>
+        <div id="paginacionProductos" class="border-top px-3 py-3" aria-live="polite">
+            <?= $this->include('productos/_paginacion') ?>
+        </div>
     </div>
 </div>
 
 <div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable producto-modal">
         <div class="modal-content border-0 shadow">
             <form action="<?= base_url('productos/guardar') ?>" method="POST" enctype="multipart/form-data">
                 <?= csrf_field() ?>
                 <input type="hidden" name="idproducto" id="idproducto">
 
-                <div class="modal-header py-3">
+                <div class="modal-header py-3 px-4 producto-modal-header">
                     <h5 class="modal-title fw-bold" id="modalTitulo">Nuevo Producto</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
-                <div class="modal-body py-3">
-                    <div class="row g-3">
-
+                <div class="modal-body px-4 py-4">
+                    <div class="row g-3 producto-form-grid">
+                        <div class="col-12 producto-section-heading"><span class="producto-step">01</span><div><div class="producto-section-title">Información general</div><div class="producto-section-subtitle">Datos para identificar el artículo en el catálogo</div></div></div>
                         <div class="col-12 col-md-4">
                             <label for="tipo" class="form-label small fw-semibold">Tipo <span class="text-danger">*</span></label>
                             <select class="form-select" id="tipo" name="tipo" required>
@@ -153,6 +160,7 @@
                             <input type="text" class="form-control" id="codigobarras" name="codigobarras" maxlength="13">
                         </div>
 
+                        <div class="col-12 producto-section-heading"><span class="producto-step">02</span><div><div class="producto-section-title">Inventario y condiciones</div><div class="producto-section-subtitle">Configura su control y los datos comerciales de referencia</div></div></div>
                         <div class="col-12 col-md-4" id="contenedorUnidad">
                             <label for="idunidad" class="form-label small fw-semibold">Unidad de medida <span class="text-danger">*</span></label>
                             <select class="form-select" id="idunidad" name="idunidad" required>
@@ -193,6 +201,7 @@
                             <div class="form-text">La serie se registra sin stock. Estará disponible cuando se registre su ingreso en Compras.</div>
                         </div>
 
+                        <div class="col-12 producto-section-heading"><span class="producto-step">03</span><div><div class="producto-section-title">Imagen del artículo</div><div class="producto-section-subtitle">Opcional: ayuda a reconocerlo durante una venta</div></div></div>
                         <div class="col-12 col-md-8">
                             <label for="imagen" class="form-label small fw-semibold">Imagen (opcional)</label>
                             <input type="file" class="form-control" id="imagen" name="imagen" accept="image/png, image/jpeg, image/webp" onchange="previsualizarImagen(event)">
@@ -201,7 +210,7 @@
 
                         <div class="col-12 col-md-4 text-center">
                             <label class="form-label small fw-semibold d-block">Vista previa</label>
-                            <div class="d-flex align-items-center justify-content-center bg-light border rounded mx-auto" style="width: 70px; height: 70px; overflow: hidden;">
+                            <div class="d-flex align-items-center justify-content-center bg-light border rounded mx-auto" style="width: 116px; height: 116px; overflow: hidden;">
                                 <img id="previewImg" src="" alt="Previsualización" class="w-100 h-100 object-fit-cover" style="display: none;">
                                 <i id="previewIcon" class="bi bi-image fs-3 text-secondary"></i>
                             </div>
@@ -259,9 +268,9 @@
                     </div>
                 </div>
 
-                <div class="modal-footer py-2 bg-light">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Guardar Producto</button>
+                <div class="modal-footer px-4 py-3 bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4">Guardar Producto</button>
                 </div>
             </form>
         </div>

@@ -43,10 +43,12 @@ class ProductoController extends BaseController
     public function index(): string
     {
         $todasCategorias = $this->categoriaModel->obtenerCategoriasConPadre();
+        $listado = $this->productoModel->paginarConRelaciones(null, [], null, null, 1, 10);
 
         $data = [
             'titulo'           => 'Productos',
-            'productos'        => $this->agregarSeriesIniciales($this->productoModel->buscarConRelaciones()),
+            'productos'        => $this->agregarSeriesIniciales($listado['productos']),
+            'paginacion'       => $listado,
             'categoriasFiltro' => $todasCategorias,
             'categorias'       => array_values(array_filter($todasCategorias, static fn($c) => (int) $c['estado'] === 1)),
             'marcas'           => array_values(array_filter(
@@ -81,8 +83,15 @@ class ProductoController extends BaseController
             $ids[] = $idCat;
         }
 
-        return view('productos/_filas', [
-            'productos' => $this->agregarSeriesIniciales($this->productoModel->buscarConRelaciones($q, $ids, $tipo, $estado)),
+        $pagina = max(1, (int) $this->request->getGet('pagina'));
+        $porPagina = (int) $this->request->getGet('por_pagina');
+        $porPagina = in_array($porPagina, [10, 20, 50], true) ? $porPagina : 10;
+        $listado = $this->productoModel->paginarConRelaciones($q, $ids, $tipo, $estado, $pagina, $porPagina);
+
+        return $this->response->setJSON([
+            'filas' => view('productos/_filas', ['productos' => $this->agregarSeriesIniciales($listado['productos'])]),
+            'paginacion' => view('productos/_paginacion', ['paginacion' => $listado]),
+            'pagina' => $listado['pagina'],
         ]);
     }
 

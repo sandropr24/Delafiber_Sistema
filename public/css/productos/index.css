@@ -1,0 +1,149 @@
+.producto-modal {
+  --bs-modal-width: 940px;
+}
+
+#modalProducto .modal-dialog {
+  max-height: calc(100dvh - 2rem);
+}
+
+#modalProducto .modal-content {
+  border-radius: 14px;
+  overflow: hidden;
+  max-height: calc(100dvh - 2rem);
+}
+
+#modalProducto .modal-content > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100dvh - 2rem);
+}
+
+#modalProducto .modal-header,
+#modalProducto .modal-footer {
+  flex-shrink: 0;
+}
+
+#modalProducto .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#modalProducto .modal-footer {
+  position: relative;
+  z-index: 1;
+  background: #fff !important;
+}
+
+@supports not (height: 100dvh) {
+  #modalProducto .modal-dialog,
+  #modalProducto .modal-content,
+  #modalProducto .modal-content > form {
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+.producto-modal .modal-header {
+  background: #fff;
+}
+
+.producto-modal .modal-body {
+  background: #fafbfc;
+}
+
+.producto-modal .modal-title {
+  font-size: 1.12rem;
+}
+
+.producto-form-grid {
+  --bs-gutter-x: 1rem;
+  --bs-gutter-y: 1.1rem;
+}
+
+.producto-form-grid .form-label {
+  font-size: .85rem !important;
+  margin-bottom: .4rem;
+  color: #344054;
+}
+
+.producto-form-grid .form-control,
+.producto-form-grid .form-select {
+  min-height: 40px;
+  font-size: .9rem;
+  border-radius: 8px;
+}
+
+.producto-form-grid .form-text {
+  font-size: .8rem;
+  line-height: 1.45;
+}
+
+.producto-form-grid .form-check-label {
+  font-size: .86rem !important;
+}
+
+.producto-section-heading {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding-top: .9rem;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid #e8ebef;
+}
+
+.producto-section-heading:first-child {
+  padding-top: 0;
+}
+
+.producto-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 30px;
+  height: 30px;
+  background: #fff1f3;
+  color: #dc2449;
+  border-radius: 9px;
+  font-size: .75rem;
+  font-weight: 800;
+}
+
+.producto-section-title {
+  font-size: .94rem;
+  font-weight: 700;
+  color: #202b3d;
+}
+
+.producto-section-subtitle {
+  font-size: .77rem;
+  color: #667085;
+  margin-top: 2px;
+}
+
+.producto-modal .modal-footer {
+  border-top: 1px solid #e9edf2;
+}
+
+@media (max-width: 767.98px) {
+  .producto-modal .modal-body {
+    padding: 1rem !important;
+  }
+
+  .producto-modal .modal-header,
+  .producto-modal .modal-footer {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .producto-section-subtitle {
+    font-size: .73rem;
+  }
+
+  #modalProducto .modal-dialog,
+  #modalProducto .modal-content,
+  #modalProducto .modal-content > form {
+    max-height: calc(100dvh - 1rem);
+  }
+}
