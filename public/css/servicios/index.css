@@ -1,0 +1,180 @@
+.df-servicios {
+  --df-purple: #35035b;
+  --df-pink: #dc255d;
+  --df-border: #e7e8ef;
+  --df-muted: #73788b;
+  color: #293042;
+}
+.df-servicios .df-sv-eyebrow {
+  color: #ad326c;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 800;
+}
+.df-servicios .df-sv-card {
+  border: 1px solid var(--df-border);
+  border-radius: 14px;
+  box-shadow: 0 3px 18px rgba(32, 19, 56, 0.045);
+  overflow: hidden;
+}
+.df-servicios .df-sv-section-title {
+  padding: 16px 20px;
+  background: #fff;
+  border-bottom: 1px solid var(--df-border);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #34334c;
+}
+.df-servicios .df-sv-btn {
+  background: var(--df-purple);
+  color: white;
+  border: 1px solid var(--df-purple);
+  font-weight: 600;
+}
+.df-servicios .df-sv-btn:hover,
+.df-servicios .df-sv-btn:focus {
+  background: #4b107a;
+  border-color: #4b107a;
+  color: #fff;
+}
+.df-servicios .df-sv-btn:disabled {
+  opacity: 0.65;
+}
+.df-servicios .df-sv-kpi {
+  background: #fff;
+  border: 1px solid var(--df-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  min-height: 112px;
+  box-shadow: 0 3px 18px rgba(32, 19, 56, 0.035);
+}
+.df-servicios .df-sv-kpi-label {
+  font-size: 0.84rem;
+  color: var(--df-muted);
+  font-weight: 600;
+}
+.df-servicios .df-sv-kpi-icon {
+  border-radius: 10px;
+  padding: 7px 10px;
+  background: #f7f2fc;
+  color: var(--df-purple);
+}
+.df-servicios .df-sv-kpi strong {
+  display: block;
+  font-size: 1.85rem;
+  margin-top: 8px;
+  line-height: 1.1;
+  color: #25243e;
+}
+.df-servicios .df-sv-table {
+  white-space: normal;
+  font-size: 0.89rem;
+}
+.df-servicios .df-sv-table th {
+  background: #f7f7fb;
+  border: 0;
+  color: #667085;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  padding: 14px 12px;
+  white-space: nowrap;
+}
+.df-servicios .df-sv-table td {
+  border-color: #f1f1f5;
+  padding: 14px 12px;
+}
+.df-servicios .df-sv-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 20px;
+  padding: 6px 10px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.df-servicios .df-sv-status-PENDIENTE {
+  background: #fff4db;
+  color: #8a5500;
+}
+.df-servicios .df-sv-status-PROGRAMADO {
+  background: #eee9fe;
+  color: #5b3b9d;
+}
+.df-servicios .df-sv-status-EN_PROCESO {
+  background: #e0f2fe;
+  color: #075985;
+}
+.df-servicios .df-sv-status-FINALIZADO {
+  background: #def8eb;
+  color: #116b43;
+}
+.df-servicios .df-sv-status-CANCELADO {
+  background: #f8e7ea;
+  color: #a03048;
+}
+.df-servicios .df-sv-description dt {
+  font-size: 0.83rem;
+  color: #6b7183;
+  font-weight: 650;
+  margin-bottom: 12px;
+}
+.df-servicios .df-sv-description dd {
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+.df-servicios .df-sv-event {
+  position: relative;
+  border-left: 2px solid #e5d5f6;
+  padding: 0 0 22px 20px;
+}
+.df-servicios .df-sv-event:last-child {
+  padding-bottom: 2px;
+}
+.df-servicios .df-sv-event::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--df-purple);
+  box-shadow: 0 0 0 3px #f0e5fb;
+}
+.df-servicios .df-sv-tip {
+  background: #f6f3fa;
+  border: 1px solid #ebdff5;
+  padding: 13px;
+  border-radius: 10px;
+  color: #5c5270;
+  font-size: 0.82rem;
+}
+.df-servicios .form-label {
+  font-size: 0.83rem;
+}
+.df-servicios .form-control,
+.df-servicios .form-select {
+  border-color: #dfe2eb;
+  padding: 0.62rem 0.75rem;
+}
+.df-servicios .form-control:focus,
+.df-servicios .form-select:focus {
+  border-color: #a37dc8;
+  box-shadow: 0 0 0 0.18rem rgba(81, 25, 120, 0.12);
+}
+@media (max-width: 767px) {
+  .df-servicios .df-sv-table {
+    min-width: 770px;
+  }
+  .df-servicios .df-sv-kpi {
+    padding: 14px;
+    min-height: 99px;
+  }
+  .df-servicios .df-sv-kpi strong {
+    font-size: 1.55rem;
+  }
+}

@@ -89,3 +89,14 @@ $routes->group('tecnicos', ['filter' => 'auth'], static function ($routes) {
     $routes->post('guardar', 'TecnicoController::guardar');
     $routes->post('cambiar-estado/(:num)', 'TecnicoController::cambiarEstado/$1');
 });
+
+$routes->group('servicios', ['filter' => 'auth'], static function ($routes) {
+    $routes->get('', 'ServicioController::index');
+    $routes->get('crear', 'ServicioController::crear');
+    $routes->post('guardar', 'ServicioController::guardar');
+    $routes->get('agenda', 'ServicioController::agenda');
+    $routes->get('detalles/(:num)', 'ServicioController::detalles/$1');
+    $routes->post('reprogramar/(:num)', 'ServicioController::reprogramar/$1');
+    $routes->post('cambiar-estado/(:num)', 'ServicioController::cambiarEstado/$1');
+    $routes->post('registrar-material/(:num)', 'ServicioController::registrarMaterial/$1');
+});

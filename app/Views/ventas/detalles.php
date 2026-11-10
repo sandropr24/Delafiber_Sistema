@@ -1,308 +1,167 @@
 <?= $this->extend('layouts/main') ?>
-
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="<?= base_url('css/servicios/index.css') ?>"><?= $this->endSection() ?>
 <?= $this->section('contenido') ?>
-<div class="container-fluid px-4 py-4">
-
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<?php
+$estados = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROCESO' => 'En proceso', 'FINALIZADO' => 'Finalizado', 'CANCELADO' => 'Cancelado'];
+$estado = $orden['estado'];
+$codigo = 'OS-' . str_pad((string) $orden['idorden'], 5, '0', STR_PAD_LEFT);
+?>
+<div class="container-fluid px-3 px-lg-4 py-4 df-servicios">
+    <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 fw-bold text-dark mb-1">
-                <i class="fas fa-file-invoice-dollar text-primary me-2"></i><?= esc($titulo) ?>
-            </h1>
-            <p class="text-muted small mb-0">Productos, importes, pagos y seguimiento de la venta.</p>
+            <p class="df-sv-eyebrow mb-1">Servicios / Detalle</p>
+            <h1 class="h3 fw-bold mb-1">Orden <?= esc($codigo) ?></h1>
+            <p class="text-muted small mb-0"><?= esc($orden['titulo']) ?></p>
         </div>
-        <div>
-            <a href="<?= base_url('ventas') ?>" class="btn btn-sm btn-outline-secondary bg-white shadow-sm px-3 py-2">
-                <i class="fas fa-arrow-left me-1"></i> Volver al listado
-            </a>
-        </div>
+        <div class="d-flex gap-2 align-items-center"><span class="df-sv-status df-sv-status-<?= esc($estado, 'attr') ?>"><?= esc($estados[$estado] ?? $estado) ?></span><a class="btn btn-light border" href="<?= base_url('servicios') ?>"><i class="bi bi-arrow-left me-1"></i>Volver</a></div>
     </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
-                <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 me-3">
-                            <i class="fas fa-user-tie fa-lg"></i>
-                        </div>
-                        <h6 class="fw-bold text-dark m-0">Datos del Cliente</h6>
-                    </div>
-                    <div class="ps-1">
-                        <div class="mb-2">
-                            <span class="text-muted small d-block">Cliente / Razón Social</span>
-                            <span class="text-dark fw-semibold"><?= esc($venta['cliente'] ?: 'Cliente General') ?></span>
-                        </div>
-                        <div class="mb-0">
-                            <span class="text-muted small d-block mb-1">N° Documento</span>
-                            <span class="badge bg-light text-secondary border px-2 py-1.5 font-monospace fs-7">
-                                <?= esc($venta['numerodoc'] ?? 'Sin Documento') ?>
-                            </span>
-                        </div>
-                    </div>
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-7">
+            <div class="card df-sv-card mb-4">
+                <div class="card-header df-sv-section-title">Información de la orden</div>
+                <div class="card-body p-3 p-lg-4">
+                    <dl class="row mb-0 df-sv-description">
+                        <dt class="col-sm-4">Cliente</dt>
+                        <dd class="col-sm-8"><?= esc($orden['cliente']) ?></dd>
+                        <dt class="col-sm-4">Servicio</dt>
+                        <dd class="col-sm-8"><?= esc($orden['servicio'] ?: 'Servicio personalizado') ?></dd>
+                        <dt class="col-sm-4">Trabajo</dt>
+                        <dd class="col-sm-8"><?= esc($orden['titulo']) ?></dd>
+                        <dt class="col-sm-4">Descripción</dt>
+                        <dd class="col-sm-8"><?= nl2br(esc($orden['descripcion'] ?: 'Sin descripción')) ?></dd>
+                        <dt class="col-sm-4">Dirección</dt>
+                        <dd class="col-sm-8"><?= esc($orden['direccion'] ?: 'No indicada') ?></dd>
+                        <dt class="col-sm-4">Teléfono</dt>
+                        <dd class="col-sm-8"><?= esc($orden['telefono'] ?: 'No indicado') ?></dd>
+                        <dt class="col-sm-4">Observaciones</dt>
+                        <dd class="col-sm-8"><?= nl2br(esc($orden['observaciones'] ?: 'Sin observaciones')) ?></dd>
+                        <dt class="col-sm-4">Venta vinculada</dt>
+                        <dd class="col-sm-8"><?= $orden['idventa'] ? '<a href="' . base_url('ventas/detalles/' . $orden['idventa']) . '">Venta N.º ' . (int) $orden['idventa'] . '</a>' : '<span class="text-muted">Sin vincular</span>' ?></dd>
+                        <?php if ($orden['resultado']): ?><dt class="col-sm-4">Trabajo realizado</dt>
+                            <dd class="col-sm-8"><?= nl2br(esc($orden['resultado'])) ?></dd><?php endif; ?>
+                    </dl>
                 </div>
             </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
-                <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-success bg-opacity-10 text-success p-2 rounded-3 me-3">
-                            <i class="fas fa-receipt fa-lg"></i>
-                        </div>
-                        <h6 class="fw-bold text-dark m-0">Comprobante y Sucursal</h6>
-                    </div>
-                    <div class="ps-1">
-                        <div class="mb-2">
-                            <span class="text-muted small d-block mb-1">Comprobante</span>
-                            <span class="badge bg-primary px-2 py-1 me-1"><?= esc($venta['tipodocumento']) ?></span>
-                            <span class="text-dark fw-bold"><?= esc($venta['serie']) ?> - <?= esc($venta['numero']) ?></span>
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Local / Sucursal</span>
-                                <span class="text-secondary fw-medium"><?= esc($venta['local']) ?></span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Fecha de Emisión</span>
-                                <span class="text-secondary fw-medium"><?= esc($venta['fecha']) ?></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card border rounded-3 overflow-hidden shadow-sm mb-4" style="border-color: #e0e0e0 !important;">
-                <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
-                    <h6 class="m-0 fw-bold text-dark">
-                        <i class="fas fa-boxes text-primary me-2"></i>Productos y servicios de la venta
-                    </h6>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light text-uppercase fs-7 text-muted tracking-wider">
-                            <tr>
-                                <th class="ps-4 py-3">Producto</th>
-                                <th class="text-center py-3" style="width: 120px;">Cantidad</th>
-                                <th class="text-end py-3" style="width: 150px;">P. Venta Unit.</th>
-                                <th class="text-end pe-4 py-3" style="width: 150px;">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody class="border-top-0">
-                            <?php if (!empty($detalles)): ?>
-                                <?php foreach ($detalles as $det): ?>
+            <div class="card df-sv-card mb-4">
+                <div class="card-header df-sv-section-title"><i class="bi bi-box-seam me-2"></i>Materiales utilizados</div>
+                <div class="card-body p-3 p-lg-4">
+                    <p class="small text-muted mb-3">Registra solo materiales adicionales usados en este trabajo. Los productos vendidos se controlan desde Entregas.</p>
+                    <?php if (!empty($materiales)): ?>
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead class="table-light">
                                     <tr>
-                                        <td class="ps-4 fw-semibold text-dark py-3">
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-cube text-muted me-2 opacity-50"></i>
-                                                <span><?= esc($det['producto']) ?></span>
-                                            </div>
-                                        </td>
-                                        <td class="text-center py-3">
-                                            <span class="badge bg-light text-dark border px-2.5 py-1.5 font-monospace">
-                                                <?= esc($det['cantidad']) ?>
-                                            </span>
-                                        </td>
-                                        <td class="text-end text-secondary py-3 font-monospace">
-                                            S/ <?= number_format($det['precioventa'], 2) ?>
-                                        </td>
-                                        <td class="text-end pe-4 fw-bold text-dark py-3 font-monospace">
-                                            S/ <?= number_format($det['cantidad'] * $det['precioventa'], 2) ?>
-                                        </td>
+                                        <th>Material</th>
+                                        <th>Almacén</th>
+                                        <th class="text-end">Cantidad</th>
+                                        <th class="text-end">Movimiento</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-5 bg-light bg-opacity-25">
-                                        <div class="py-4">
-                                            <i class="fas fa-folder-open fa-3x text-muted mb-3 opacity-40"></i>
-                                            <p class="mb-0 fw-medium">No hay detalles registrados para esta venta.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                        <tfoot class="table-light border-top">
-                            <?php
-                                $subtotalVenta = (float) ($venta['subtotal'] ?? 0);
-                                if ($subtotalVenta <= 0) {
-                                    foreach ($detalles ?? [] as $d) {
-                                        $subtotalVenta += round((float)$d['cantidad'] * (float)$d['precioventa'], 2);
-                                    }
-                                }
-                            ?>
-                            <tr>
-                                <td colspan="3" class="text-end py-2 text-secondary">Subtotal:</td>
-                                <td class="text-end pe-4 py-2 text-nowrap">S/ <?= number_format($subtotalVenta, 2) ?></td>
-                            </tr>
-                            <?php if ((float) ($venta['descuento'] ?? 0) > 0): ?>
-                                <tr>
-                                    <td colspan="3" class="text-end py-2 text-secondary">
-                                        Descuento<?= ($venta['tipodescuento'] ?? '') === 'PORCENTAJE' ? ' (' . number_format((float)$venta['valordescuento'], 2) . '%)' : '' ?>:
-                                        <?php if (!empty($venta['motivodescuento'])): ?><div class="small fw-normal"><?= esc($venta['motivodescuento']) ?></div><?php endif; ?>
-                                    </td>
-                                    <td class="text-end pe-4 py-2 text-danger text-nowrap">- S/ <?= number_format((float)$venta['descuento'], 2) ?></td>
-                                </tr>
-                            <?php endif; ?>
-                            <tr>
-                                <td colspan="3" class="text-end fw-bold py-3 text-secondary text-uppercase fs-7 tracking-wider">Total General:</td>
-                                <td class="text-end pe-4 fw-bold text-primary fs-5 py-3 font-monospace text-nowrap">
-                                    S/ <?= number_format($venta['total'], 2) ?>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
-                <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-success bg-opacity-10 text-success p-2 rounded-3 me-3">
-                            <i class="fas fa-wallet fa-lg"></i>
+                                </thead>
+                                <tbody><?php foreach ($materiales as $m): ?><tr>
+                                            <td><?= esc($m['producto']) ?><div class="small text-muted"><?= esc($m['fecha']) ?></div>
+                                            </td>
+                                            <td><?= esc($m['nombrelocal']) ?></td>
+                                            <td class="text-end"><?= number_format((float) $m['cantidad'], 2) ?></td>
+                                            <td class="text-end">#<?= (int) $m['idmovimiento'] ?></td>
+                                        </tr><?php endforeach; ?></tbody>
+                            </table>
                         </div>
-                        <h6 class="fw-bold text-dark m-0">Formas de Pago</h6>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light text-uppercase fs-7 text-muted tracking-wider">
-                                <tr>
-                                    <th class="ps-4 py-3">Método</th>
-                                    <th class="text-end pe-4 py-3">Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody class="border-top-0">
-                                <?php if (!empty($pagos)): ?>
-                                    <?php foreach ($pagos as $pago): ?>
-                                        <tr>
-                                            <td class="ps-4 py-3">
-                                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
-                                                    <?= esc($pago['tipopago']) ?>
-                                                </span>
-                                            </td>
-                                            <td class="text-end pe-4 fw-bold text-dark py-3 font-monospace">
-                                                S/ <?= number_format($pago['monto'], 2) ?>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="2" class="text-center text-muted py-4">
-                                            Sin registros de pago.
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="card border rounded-3 shadow-sm mt-4">
-        <div class="card-header bg-light px-4 py-3">
-            <h6 class="mb-0 fw-bold"><i class="bi bi-clipboard-check me-2" style="color: #32005A;"></i>Gestión de cancelaciones</h6>
-        </div>
-        <div class="card-body px-4 py-3">
-            <div class="d-flex flex-wrap gap-2 mb-3">
-                <span class="badge text-bg-light border">Entrega: <?= esc($entregaComercial['estado'] ?? 'SIN ENTREGA') ?></span>
-                <span class="badge <?= empty($venta['fechaanulacion']) ? 'text-bg-success' : 'text-bg-danger' ?>">
-                    Venta: <?= empty($venta['fechaanulacion']) ? 'VIGENTE' : 'ANULADA' ?>
-                </span>
-                <?php if ($solicitudActiva): ?>
-                    <span class="badge <?= $solicitudActiva['estado'] === 'PENDIENTE' ? 'text-bg-warning' : 'text-bg-info' ?>">
-                        Solicitud: <?= esc($solicitudActiva['estado']) ?>
-                    </span>
-                <?php endif; ?>
-            </div>
-
-            <?php if (empty($venta['fechaanulacion']) && ($entregaComercial['estado'] ?? '') === 'CANCELADO' && !$solicitudActiva && $puedeSolicitar): ?>
-                <form action="<?= site_url('ventas/solicitar-anulacion/' . $venta['idventa']) ?>" method="post" class="mb-3">
-                    <?= csrf_field() ?>
-                    <label for="motivoAnulacion" class="form-label fw-semibold">Solicitar anulación de venta</label>
-                    <textarea name="motivo" id="motivoAnulacion" class="form-control" minlength="15" maxlength="2000" rows="3" required placeholder="Motivo de la solicitud de anulación"></textarea>
-                    <button type="submit" class="btn mt-2 text-white" style="background: #32005A;">Enviar solicitud</button>
-                </form>
-            <?php elseif ($solicitudActiva && $solicitudActiva['estado'] === 'AUTORIZADA'): ?>
-                <?php if (empty($venta['fechaanulacion'])): ?>
-                    <div class="alert alert-info small">Solicitud autorizada. Verifica la disponibilidad física de los productos antes de anular la venta.</div>
-                    <?php if ($puedeAutorizar): ?>
-                        <form action="<?= site_url('ventas/ejecutar-anulacion/' . $solicitudActiva['idsolicitud']) ?>" method="post" class="p-3 border rounded-3 mb-3" onsubmit="return confirm('¿Confirmas la anulación de esta venta? Se liberarán las reservas y cualquier reembolso quedará pendiente de gestión.');">
+                    <?php else: ?><div class="text-muted small mb-3">Todavía no se han utilizado materiales adicionales.</div><?php endif; ?>
+                    <?php if ($estado === 'EN_PROCESO'): ?>
+                        <form action="<?= base_url('servicios/registrar-material/' . $orden['idorden']) ?>" method="post" id="formConsumoServicio">
                             <?= csrf_field() ?>
-                            <h6 class="fw-bold">Confirmar anulación de venta</h6>
-                            <p class="small text-muted">La anulación libera las reservas. Los reembolsos se gestionan por separado.</p>
-                            <label for="inventarioNota" class="form-label fw-semibold">Verificación física del inventario</label>
-                            <textarea id="inventarioNota" name="observacion_inventario" class="form-control mb-2" rows="3" minlength="15" maxlength="1000" required placeholder="Describe la ubicación y el estado físico de los productos"></textarea>
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="checkbox" name="inventario_verificado" value="1" id="confirmarInventario" required>
-                                <label class="form-check-label" for="confirmarInventario">Confirmo que los productos están bajo control del almacén y no hay unidades pendientes de retorno.</label>
+                            <input type="hidden" name="token_operacion" value="<?= esc($tokenConsumo, 'attr') ?>">
+                            <div class="row g-3">
+                                <div class="col-12"><label class="form-label" for="materialKardex">Material y almacén <span class="text-danger">*</span></label>
+                                    <select id="materialKardex" name="idkardex" class="form-select" required>
+                                        <option value="">Selecciona material</option>
+                                        <?php foreach ($materialesDisponibles as $p): ?>
+                                            <option value="<?= (int) $p['idkardex'] ?>">
+                                                <?= esc($p['producto'] . ' · ' . $p['nombrelocal'] . ' · Disp.: ' . number_format((float) $p['disponible'], 2)) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-4"><label for="cantidadConsumo" class="form-label">Cantidad <span class="text-danger">*</span></label>
+                                    <input id="cantidadConsumo" name="cantidad" class="form-control" type="number" min="0.01" step="0.01" required placeholder="0.00">
+                                </div>
+                                <div class="col-md-8"><label for="observacionConsumo" class="form-label">Observación</label>
+                                    <input id="observacionConsumo" name="observacion" class="form-control" maxlength="255" placeholder="Ej.: cable instalado en oficina">
+                                </div>
+                                <div class="col-12"><button class="btn df-sv-btn" type="submit" onclick="return confirm('¿Confirmas la salida física de este material del Kardex?');">
+                                        <i class="bi bi-box-arrow-up me-1"></i> Registrar consumo
+                                    </button></div>
                             </div>
-                            <button class="btn text-white" type="submit" style="background: #b42336;"><i class="bi bi-ban me-1"></i> Anular venta</button>
                         </form>
-                    <?php endif; ?>
-                <?php endif; ?>
-            <?php elseif ($solicitudActiva && $solicitudActiva['estado'] === 'PENDIENTE'): ?>
-                <div class="alert alert-warning small">Solicitud pendiente de aprobación.</div>
-            <?php endif; ?>
-
-            <?php if ($solicitudActiva && $solicitudActiva['estado'] === 'PENDIENTE' && $puedeAutorizar): ?>
-                <form action="<?= site_url('ventas/revisar-anulacion/' . $solicitudActiva['idsolicitud']) ?>" method="post" class="p-3 border rounded-3 bg-light mb-3">
-                    <?= csrf_field() ?>
-                    <p class="mb-2 small"><strong>Motivo solicitado:</strong> <?= esc($solicitudActiva['motivo']) ?></p>
-                    <label for="observacionRevision" class="form-label fw-semibold">Observación del administrador</label>
-                    <textarea id="observacionRevision" name="observacion" class="form-control mb-2" minlength="10" maxlength="2000" rows="2" required placeholder="Motivo de la decisión"></textarea>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="submit" name="decision" value="AUTORIZADA" class="btn btn-primary">Autorizar solicitud</button>
-                        <button type="submit" name="decision" value="RECHAZADA" class="btn btn-outline-danger">Rechazar solicitud</button>
+                    <?php else: ?><p class="small text-muted mb-0">Para registrar consumos, la orden debe estar <strong>En proceso</strong>.</p><?php endif; ?>
+                </div>
+            </div>
+            <div class="card df-sv-card">
+                <div class="card-header df-sv-section-title">Historial y seguimiento</div>
+                <div class="card-body p-3 p-lg-4">
+                    <div class="df-sv-timeline">
+                        <?php foreach ($historial as $evento): ?><div class="df-sv-event">
+                                <div class="d-flex flex-wrap justify-content-between gap-2"><strong><?= esc(str_replace('_', ' ', $evento['tipoevento'])) ?></strong><span class="text-muted small"><?= esc(date('d/m/Y H:i', strtotime($evento['fecha']))) ?></span></div>
+                                <div class="text-muted small mb-1">Por <?= esc($evento['nombreusuario']) ?><?php if ($evento['estado_nuevo']): ?> · <?= esc($estados[$evento['estado_nuevo']] ?? $evento['estado_nuevo']) ?><?php endif; ?></div>
+                                <div class="small"><?= esc($evento['observacion'] ?: 'Sin observaciones') ?></div>
+                            </div><?php endforeach; ?>
                     </div>
-                </form>
-            <?php endif; ?>
-
-            <?php if (!empty($venta['fechaanulacion'])): ?>
-                <div class="alert alert-danger"><strong>VENTA ANULADA</strong> el <?= esc($venta['fechaanulacion']) ?>.</div>
-                <?php if (!empty($anulacionComercial)): ?>
-                    <div class="border rounded-3 p-3 mb-3 small">
-                        <strong>Acta de anulación:</strong> <?= esc($anulacionComercial['observacion_inventario']) ?><br>
-                        <strong>Importe pagado:</strong> S/ <?= number_format((float) $anulacionComercial['monto_pagado'], 2) ?><br>
-                        <strong>Reembolso:</strong> <span class="badge text-bg-warning"><?= esc($anulacionComercial['estado_reembolso']) ?></span>
-                        <?php if ($anulacionComercial['estado_reembolso'] === 'PENDIENTE'): ?>
-                            S/ <?= number_format((float) $anulacionComercial['monto_pendiente_reembolso'], 2) ?> pendiente de devolución.
-                        <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card df-sv-card mb-4">
+                <div class="card-header df-sv-section-title">Programación y técnico</div>
+                <div class="card-body p-3 p-lg-4">
+                    <dl class="row mb-0 df-sv-description">
+                        <dt class="col-5">Técnico</dt>
+                        <dd class="col-7"><?= $orden['idtecnico'] ? esc(trim($orden['tecnico'])) : 'Sin asignar' ?></dd>
+                        <dt class="col-5">Inicio</dt>
+                        <dd class="col-7"><?= $orden['fecha_inicio'] ? esc(date('d/m/Y H:i', strtotime($orden['fecha_inicio']))) : 'Sin programar' ?></dd>
+                        <dt class="col-5">Fin estimado</dt>
+                        <dd class="col-7"><?= $orden['fecha_fin'] ? esc(date('d/m/Y H:i', strtotime($orden['fecha_fin']))) : 'Sin programar' ?></dd><?php if ($orden['fecha_finalizacion']): ?><dt class="col-5">Finalizado</dt>
+                            <dd class="col-7"><?= esc(date('d/m/Y H:i', strtotime($orden['fecha_finalizacion']))) ?></dd><?php endif; ?>
+                    </dl>
+                </div>
+            </div>
+            <?php if (in_array($estado, ['PENDIENTE', 'PROGRAMADO'], true)): ?>
+                <div class="card df-sv-card mb-4">
+                    <div class="card-header df-sv-section-title"><i class="bi bi-calendar2-plus me-2"></i><?= $estado === 'PENDIENTE' ? 'Programar orden' : 'Reprogramar orden' ?></div>
+                    <div class="card-body p-3 p-lg-4">
+                        <form method="post" action="<?= base_url('servicios/reprogramar/' . $orden['idorden']) ?>" class="df-sv-confirm-form" data-confirmacion="¿Confirmas la programación de esta orden?">
+                            <?= csrf_field() ?>
+                            <div class="mb-3"><label for="idtecnico" class="form-label">Técnico <span class="text-danger">*</span></label><select class="form-select" id="idtecnico" name="idtecnico" required>
+                                    <option value="">Selecciona un técnico</option><?php foreach ($tecnicos as $t): ?><option value="<?= (int) $t['idtecnico'] ?>" <?= (int) $orden['idtecnico'] === (int) $t['idtecnico'] ? 'selected' : '' ?>><?= esc($t['nombres'] . ' ' . $t['apellidos']) ?></option><?php endforeach; ?>
+                                </select></div>
+                            <div class="mb-3"><label for="fecha_inicio" class="form-label">Inicio <span class="text-danger">*</span></label><input type="datetime-local" class="form-control" id="fecha_inicio" name="fecha_inicio" required value="<?= $orden['fecha_inicio'] ? esc(date('Y-m-d\TH:i', strtotime($orden['fecha_inicio'])), 'attr') : '' ?>"></div>
+                            <div class="mb-3"><label for="fecha_fin" class="form-label">Fin <span class="text-danger">*</span></label><input type="datetime-local" class="form-control" id="fecha_fin" name="fecha_fin" required value="<?= $orden['fecha_fin'] ? esc(date('Y-m-d\TH:i', strtotime($orden['fecha_fin'])), 'attr') : '' ?>"></div>
+                            <div class="mb-3"><label for="notaProgramacion" class="form-label">Motivo / observación</label><textarea id="notaProgramacion" class="form-control" name="observacion" rows="2" maxlength="255" placeholder="Opcional"></textarea></div>
+                            <button type="submit" class="btn df-sv-btn w-100">Guardar programación</button>
+                        </form>
                     </div>
-                <?php endif; ?>
+                </div>
             <?php endif; ?>
-
-            <?php if (!empty($solicitudesAnulacion)): ?>
-                <h6 class="fw-bold mb-2">Historial de solicitudes</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle">
-                        <thead><tr><th>Fecha</th><th>Solicitante</th><th>Motivo</th><th>Estado</th><th>Observación</th></tr></thead>
-                        <tbody>
-                            <?php foreach ($solicitudesAnulacion as $s): ?>
-                                <tr>
-                                    <td><?= esc($s['fecha_solicitud']) ?></td>
-                                    <td><?= esc($s['solicitante']) ?></td>
-                                    <td style="min-width: 180px;"><?= esc($s['motivo']) ?></td>
-                                    <td><span class="badge bg-secondary"><?= esc($s['estado']) ?></span></td>
-                                    <td><?= esc($s['observacion_revision'] ?: '—') ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+            <?php if (in_array($estado, ['PENDIENTE', 'PROGRAMADO', 'EN_PROCESO'], true)): ?>
+                <div class="card df-sv-card">
+                    <div class="card-header df-sv-section-title">Actualizar el trabajo</div>
+                    <div class="card-body p-3 p-lg-4">
+                        <form action="<?= base_url('servicios/cambiar-estado/' . $orden['idorden']) ?>" method="post" class="df-sv-confirm-form" data-confirmacion="¿Confirmas el cambio de estado de esta orden?">
+                            <?= csrf_field() ?>
+                            <div class="mb-3"><label for="notaEstado" class="form-label"><?= $estado === 'EN_PROCESO' ? 'Trabajo realizado *' : 'Observación / motivo' ?></label><textarea class="form-control" id="notaEstado" name="observacion" rows="3" maxlength="255" <?= in_array($estado, ['PENDIENTE', 'EN_PROCESO'], true) ? 'required' : '' ?> placeholder="Describe el avance o el motivo de la actualización"></textarea>
+                                <div class="form-text">Para finalizar o cancelar se requiere un texto de al menos 5 caracteres.</div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <?php if ($estado === 'PENDIENTE' || $estado === 'PROGRAMADO'): ?><button type="submit" class="btn btn-outline-danger btn-sm" name="estado" value="CANCELADO">Cancelar orden</button><?php endif; ?>
+                                <?php if ($estado === 'PROGRAMADO'): ?><button type="submit" class="btn df-sv-btn btn-sm" name="estado" value="EN_PROCESO">Iniciar trabajo</button><?php endif; ?>
+                                <?php if ($estado === 'EN_PROCESO'): ?><button type="submit" class="btn df-sv-btn btn-sm" name="estado" value="FINALIZADO">Finalizar servicio</button><?php endif; ?>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
     </div>
-
 </div>
 <?= $this->endSection() ?>
+<?= $this->section('scripts') ?><script src="<?= base_url('js/servicios/detalles.js') ?>"></script><?= $this->endSection() ?>

@@ -60,6 +60,13 @@
                         <i class="bi bi-send"></i>
                         <span>Entregas</span>
                     </a>
+
+                    <?php if (in_array($userRol, ['Administrador', 'Operador'], true)): ?>
+                        <a href="<?= base_url('servicios') ?>" class="sidebar-link <?= url_is('servicios*') ? 'active' : '' ?>">
+                            <i class="bi bi-tools"></i>
+                            <span>Servicios Técnicos</span>
+                        </a>
+                    <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if (in_array($userRol, ['Administrador', 'Vendedor'], true)): ?>
