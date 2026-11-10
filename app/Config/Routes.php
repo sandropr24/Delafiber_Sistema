@@ -9,15 +9,17 @@ $routes->post('login', 'Auth::autenticar');
 $routes->get('logout', 'Auth::logout', ['filter' => 'auth']);
 $routes->get('dashboard', 'Dashboard::index', ['filter' => 'auth']);
 
-$routes->group('catalogos', function ($routes) {
+
+$routes->group('catalogos', ['filter' => 'auth'], static function ($routes) {
     $routes->get('', 'CatalogoController::index');
     $routes->post('guardar-categoria', 'CatalogoController::guardarCategoria');
     $routes->post('guardar-marca', 'CatalogoController::guardarMarca');
-    $routes->get('cambiar-estado-categoria/(:num)', 'CatalogoController::cambiarEstadoCategoria/$1');
-    $routes->get('cambiar-estado-marca/(:num)', 'CatalogoController::cambiarEstadoMarca/$1');
+    $routes->post('cambiar-estado-categoria/(:num)', 'CatalogoController::cambiarEstadoCategoria/$1');
+    $routes->post('cambiar-estado-marca/(:num)', 'CatalogoController::cambiarEstadoMarca/$1');
     $routes->get('buscarCategorias', 'CatalogoController::buscarCategorias');
     $routes->get('buscarMarcas', 'CatalogoController::buscarMarcas');
 });
+
 
 $routes->group('productos', ['filter' => 'auth'], static function ($routes) {
     $routes->get('buscar_tabla', 'ProductoController::buscar_tabla');

@@ -9,9 +9,9 @@
             </td>
             <td class="text-center">
                 <?php if (array_key_exists('estado', $mar)): ?>
-                    <form action="<?= base_url('catalogos/cambiar-estado-marca/' . $mar['idmarca']) ?>" method="POST" class="d-inline">
+                    <form action="<?= base_url('catalogos/cambiar-estado-marca/' . $mar['idmarca']) ?>" method="POST" class="d-inline form-cambiar-estado" data-elemento="marca" data-nombre="<?= esc($mar['marca'], 'attr') ?>" data-accion="<?= $marcaActiva ? 'desactivar' : 'activar' ?>">
                         <?= csrf_field() ?>
-                        <button type="submit" title="Clic para alternar estado"
+                        <button type="submit" title="<?= $marcaActiva ? 'Desactivar' : 'Activar' ?> marca"
                             class="badge border <?= $marcaActiva ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' ?> px-2 py-1 fw-semibold">
                             <?= $marcaActiva ? 'Activo' : 'Inactivo' ?>
                         </button>
@@ -22,7 +22,7 @@
             </td>
             <td class="text-end pe-4" style="white-space: nowrap;">
                 <button type="button"
-                    class="btn btn-sm btn-light text-primary border-0 shadow-sm"
+                    class="btn btn-sm btn-light text-primary border catalogo-accion"
                     onclick="editarMarca(<?= esc(json_encode($mar, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>)"
                     title="Editar Marca">
                     <i class="bi bi-pencil-square fs-5"></i>

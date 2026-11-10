@@ -1,6 +1,7 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('contenido') ?>
+<link rel="stylesheet" href="<?= base_url('css/catalogos/index.css') ?>?v=2">
 <div class="container-fluid px-4 py-4" id="viewCatalogos">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
@@ -17,7 +18,11 @@
         </div>
     </div>
 
-    <ul class="nav nav-tabs mb-4" id="catalogoTab" role="tablist">
+    <div class="catalogo-resumen d-flex flex-wrap gap-2 mb-3">
+        <span class="catalogo-chip"><i class="bi bi-folder2-open"></i> <?= (int) ($totalCategorias ?? 0) ?> categorías</span>
+        <span class="catalogo-chip"><i class="bi bi-tags"></i> <?= (int) ($totalMarcas ?? 0) ?> marcas</span>
+    </div>
+    <ul class="nav nav-tabs mb-3" id="catalogoTab" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active fw-bold" id="categorias-tab" data-bs-toggle="tab" data-bs-target="#categorias-pane" type="button" role="tab">
                 <i class="bi bi-tags me-1"></i> Categorías
@@ -35,6 +40,16 @@
     <div class="tab-content" id="catalogoTabContent">
         <div class="tab-pane fade show active" id="categorias-pane" role="tabpanel">
             <div class="card border rounded-3 shadow-sm overflow-hidden" style="border-color: #e0e0e0 !important;">
+                <div class="catalogo-filtros d-flex flex-column flex-md-row gap-2 align-items-md-center p-3 border-bottom">
+                    <div class="input-group catalogo-busqueda flex-grow-1">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="search" id="buscarCategoriasInput" class="form-control" placeholder="Buscar categoría o subcategoría..." aria-label="Buscar categorías">
+                    </div>
+                    <select id="estadoCategoriasFiltro" class="form-select catalogo-estado" aria-label="Filtrar categorías por estado">
+                        <option value="todos">Todos los estados</option><option value="activo">Activas</option><option value="inactivo">Inactivas</option>
+                    </select>
+                    <button type="button" id="limpiarCategoriasFiltro" class="btn btn-outline-secondary catalogo-limpiar"><i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar</button>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light text-uppercase fs-7 text-secondary">
@@ -63,6 +78,16 @@
 
         <div class="tab-pane fade" id="marcas-pane" role="tabpanel">
             <div class="card border rounded-3 shadow-sm overflow-hidden" style="border-color: #e0e0e0 !important;">
+                <div class="catalogo-filtros d-flex flex-column flex-md-row gap-2 align-items-md-center p-3 border-bottom">
+                    <div class="input-group catalogo-busqueda flex-grow-1">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="search" id="buscarMarcasInput" class="form-control" placeholder="Buscar marca..." aria-label="Buscar marcas">
+                    </div>
+                    <select id="estadoMarcasFiltro" class="form-select catalogo-estado" aria-label="Filtrar marcas por estado">
+                        <option value="todos">Todos los estados</option><option value="activo">Activas</option><option value="inactivo">Inactivas</option>
+                    </select>
+                    <button type="button" id="limpiarMarcasFiltro" class="btn btn-outline-secondary catalogo-limpiar"><i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar</button>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light text-uppercase fs-7 text-secondary">
@@ -157,5 +182,5 @@
 <script>
     const BASE_URL = "<?= rtrim(base_url(), '/') ?>";
 </script>
-<script src="<?= base_url('js/catalogos/index.js') ?>"></script>
+<script src="<?= base_url('js/catalogos/index.js') ?>?v=2"></script>
 <?= $this->endSection() ?>

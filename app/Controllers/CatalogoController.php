@@ -30,7 +30,9 @@ class CatalogoController extends BaseController
         }
 
         $pagina    = (int) ($this->request->getGet('page') ?? 1);
-        $resultado = model(CategoriaModel::class)->obtenerCategoriasPaginadas($pagina, self::LIMITE_PAGINA);
+        $busqueda  = trim((string) $this->request->getGet('buscar'));
+        $estado    = (string) ($this->request->getGet('estado') ?? 'todos');
+        $resultado = model(CategoriaModel::class)->obtenerCategoriasPaginadas($pagina, self::LIMITE_PAGINA, $busqueda, $estado);
 
         return $this->response->setJSON([
             'html'           => view('catalogos/_filas_categorias', ['categorias' => $resultado['filas']]),
@@ -46,12 +48,24 @@ class CatalogoController extends BaseController
             return redirect()->to(base_url('catalogos'));
         }
 
-        $marcaModel   = model(MarcaModel::class);
-        $totalMarcas  = $marcaModel->countAllResults();
+        $marcaModel = model(MarcaModel::class);
+        $busqueda   = trim((string) $this->request->getGet('buscar'));
+        $estado     = (string) ($this->request->getGet('estado') ?? 'todos');
+        $filtrar = static function ($query) use ($busqueda, $estado) {
+            if ($busqueda !== '') {
+                $query->like('marca', $busqueda);
+            }
+            if ($estado === 'activo' || $estado === 'inactivo') {
+                $query->where('estado', $estado === 'activo' ? 1 : 0);
+            }
+            return $query;
+        };
+        $totalMarcas  = $filtrar(model(MarcaModel::class))->countAllResults();
         $totalPaginas = max(1, (int) ceil($totalMarcas / self::LIMITE_PAGINA));
         $pagina       = min(max(1, (int) ($this->request->getGet('page') ?? 1)), $totalPaginas);
-
-        $marcas = $marcaModel->orderBy('idmarca', 'ASC')
+        $marcas = $filtrar(model(MarcaModel::class))
+            ->select('marcas.*, (SELECT COUNT(*) FROM productos pr WHERE pr.idmarca = marcas.idmarca) AS total_productos', false)
+            ->orderBy('idmarca', 'ASC')
             ->findAll(self::LIMITE_PAGINA, ($pagina - 1) * self::LIMITE_PAGINA);
 
         return $this->response->setJSON([

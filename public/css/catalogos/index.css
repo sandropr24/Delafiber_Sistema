@@ -1,0 +1,95 @@
+#viewCatalogos {
+  color: #243047;
+}
+
+#viewCatalogos .catalogo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #e5e9ef;
+  border-radius: 7px;
+  padding: 6px 11px;
+  background: #fff;
+  color: #536176;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#viewCatalogos .catalogo-chip i {
+  color: #fc2852;
+}
+
+#viewCatalogos .catalogo-filtros {
+  background: #fafbfc;
+}
+
+#viewCatalogos .catalogo-busqueda {
+  max-width: 460px;
+}
+
+#viewCatalogos .catalogo-estado {
+  max-width: 190px;
+}
+
+#viewCatalogos .catalogo-limpiar {
+  white-space: nowrap;
+}
+
+#viewCatalogos .form-control,
+#viewCatalogos .form-select,
+#viewCatalogos .btn {
+  font-size: 13px;
+}
+
+#viewCatalogos .table th {
+  color: #59657a;
+  font-size: 11px;
+  letter-spacing: .035em;
+  background: #f8f9fb;
+  border-bottom: 1px solid #e8ebf0;
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+#viewCatalogos .table td {
+  font-size: 13px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+#viewCatalogos .catalogo-accion {
+  min-width: 32px;
+  min-height: 31px;
+  background: #fff;
+}
+
+#viewCatalogos .btn-toggle-hijos {
+  width: 22px;
+  min-height: 25px;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+#viewCatalogos .fila-hija {
+  background: #f8fafc;
+}
+
+#viewCatalogos .card-footer {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 767.98px) {
+  #viewCatalogos .catalogo-busqueda,
+  #viewCatalogos .catalogo-estado {
+    max-width: none;
+  }
+
+  #viewCatalogos .table {
+    min-width: 790px;
+  }
+
+  #viewCatalogos .catalogo-limpiar {
+    align-self: flex-start;
+  }
+}

@@ -14,7 +14,7 @@
                     style="padding-left: <?= $cat['nivel'] * 1.5 ?>rem">
                     <?php if ($esPadre): ?>
                         <?php if ($tieneHijos): ?>
-                            <span class="btn-toggle-hijos me-1 text-primary" style="cursor: pointer; display: inline-block; width: 15px;">▸</span>
+                            <button type="button" class="btn-toggle-hijos btn btn-sm btn-link p-0 me-1 text-primary" aria-expanded="false" aria-label="Mostrar subcategorías" title="Mostrar u ocultar subcategorías">▸</button>
                         <?php else: ?>
                             <span class="me-1 text-muted" style="display: inline-block; width: 15px;">•</span>
                         <?php endif; ?>
@@ -36,9 +36,9 @@
                 <?php endif; ?>
             </td>
             <td class="text-center">
-                <form action="<?= base_url('catalogos/cambiar-estado-categoria/' . $cat['idcategoria']) ?>" method="POST" class="d-inline">
+                <form action="<?= base_url('catalogos/cambiar-estado-categoria/' . $cat['idcategoria']) ?>" method="POST" class="d-inline form-cambiar-estado" data-elemento="categoría" data-nombre="<?= esc($cat['categoria'], 'attr') ?>" data-accion="<?= $activa ? 'desactivar' : 'activar' ?>">
                     <?= csrf_field() ?>
-                    <button type="submit" title="Clic para alternar estado"
+                    <button type="submit" title="<?= $activa ? 'Desactivar' : 'Activar' ?> categoría"
                         class="badge border <?= $activa ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' ?> px-2 py-1 fw-semibold">
                         <?= $activa ? 'Activo' : 'Inactivo' ?>
                     </button>
@@ -47,14 +47,14 @@
             <td class="text-end pe-4" style="white-space: nowrap;">
                 <?php if ($esPadre && $activa): ?>
                     <button type="button"
-                        class="btn btn-sm btn-light text-success border-0 shadow-sm"
+                        class="btn btn-sm btn-light text-success border catalogo-accion"
                         onclick="nuevaSubcategoria(<?= (int) $cat['idcategoria'] ?>)"
                         title="Agregar subcategoría">
                         <i class="bi bi-node-plus fs-5"></i>
                     </button>
                 <?php endif; ?>
                 <button type="button"
-                    class="btn btn-sm btn-light text-primary border-0 shadow-sm"
+                    class="btn btn-sm btn-light text-primary border catalogo-accion"
                     onclick="editarCategoria(<?= esc(json_encode($cat, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>)"
                     title="Editar Categoría">
                     <i class="bi bi-pencil-square fs-5"></i>
