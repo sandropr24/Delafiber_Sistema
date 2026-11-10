@@ -178,3 +178,17 @@
     font-size: 1.55rem;
   }
 }
+
+.df-servicios .btn:focus-visible,
+.df-servicios .form-control:focus-visible,
+.df-servicios .form-select:focus-visible {
+  outline: 2px solid #6a3ab0;
+  outline-offset: 2px;
+}
+.df-servicios .df-sv-table td:last-child { white-space: nowrap; }
+.df-servicios .df-sv-agenda-item .card { transition: border-color .15s ease; }
+.df-servicios .df-sv-agenda-item .card:hover { border-color: #bda4d5; }
+@media (max-width: 575px) {
+  .df-servicios .df-sv-section-title { padding: 13px 15px; }
+  .df-servicios .df-sv-card .card-body { padding: 15px !important; }
+}

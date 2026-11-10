@@ -8,6 +8,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const texto = form.dataset.confirmacion || '¿Confirmar esta operación?';
             const mensaje = estado === 'CANCELADO' ? 'La orden quedará cancelada.' : texto;
             const nota = form.querySelector('textarea[name="observacion"]')?.value.trim() || '';
+            const inicio = form.querySelector('input[name="fecha_inicio"]');
+            const fin = form.querySelector('input[name="fecha_fin"]');
+            if (inicio && fin) {
+                const desde = new Date(inicio.value);
+                const hasta = new Date(fin.value);
+                if (!Number.isFinite(desde.getTime()) || desde.getTime() <= Date.now()) {
+                    alert('La programación debe comenzar en una fecha y hora futuras.');
+                    inicio.focus();
+                    return;
+                }
+                if (!Number.isFinite(hasta.getTime()) || hasta.getTime() <= desde.getTime()) {
+                    alert('La hora de término debe ser posterior a la de inicio.');
+                    fin.focus();
+                    return;
+                }
+            }
+
             if (['CANCELADO', 'FINALIZADO'].includes(estado) && nota.length < 5) {
                 alert('Escribe al menos 5 caracteres para justificar esta operación.');
                 return;

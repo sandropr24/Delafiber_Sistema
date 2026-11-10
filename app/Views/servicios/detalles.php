@@ -6,7 +6,7 @@ $estados = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROCES
 $estado = $orden['estado'];
 $codigo = 'OS-' . str_pad((string) $orden['idorden'], 5, '0', STR_PAD_LEFT);
 $etiquetasEventos = [
-    'CREACION' => 'Orden registrada', 'CAMBIO_ESTADO' => 'Cambio de estado',
+    'CREACION' => 'Orden registrada', 'CAMBIO_ESTADO' => 'Estado actualizado',
     'REPROGRAMACION' => 'Programación actualizada', 'CONSUMO_MATERIAL' => 'Material registrado'
 ];
 ?>
@@ -87,6 +87,7 @@ $etiquetasEventos = [
             <div class="card df-sv-card"><div class="card-header df-sv-section-title">Actualizar el trabajo</div><div class="card-body p-3 p-lg-4"><form action="<?= base_url('servicios/cambiar-estado/' . $orden['idorden']) ?>" method="post" class="df-sv-confirm-form" data-confirmacion="¿Confirmas el cambio de estado de esta orden?">
                 <?= csrf_field() ?>
                 <div class="mb-3"><label for="notaEstado" class="form-label"><?= $estado === 'EN_PROCESO' ? 'Trabajo realizado *' : 'Observación / motivo' ?></label><textarea class="form-control" id="notaEstado" name="observacion" rows="3" maxlength="255" <?= in_array($estado, ['PENDIENTE', 'EN_PROCESO'], true) ? 'required' : '' ?> placeholder="Describe el avance o el motivo de la actualización"></textarea><div class="form-text">Para finalizar o cancelar se requiere un texto de al menos 5 caracteres.</div></div>
+                <?php if ($estado === 'PROGRAMADO'): ?><p class="form-text mb-2">Si el servicio comienza antes de la hora programada, indica el motivo (mínimo 10 caracteres).</p><?php endif; ?>
                 <div class="d-flex flex-wrap gap-2">
                     <?php if ($estado === 'PENDIENTE' || $estado === 'PROGRAMADO'): ?><button type="submit" class="btn btn-outline-danger btn-sm" name="estado" value="CANCELADO">Cancelar orden</button><?php endif; ?>
                     <?php if ($estado === 'PROGRAMADO'): ?><button type="submit" class="btn df-sv-btn btn-sm" name="estado" value="EN_PROCESO">Iniciar trabajo</button><?php endif; ?>

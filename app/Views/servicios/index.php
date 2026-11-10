@@ -36,9 +36,10 @@ $etiquetas = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROC
             </div>
             <div class="row g-2 mb-3">
                 <div class="col-lg-8">
+                    <label class="visually-hidden" for="buscarOrden">Buscar órdenes</label>
                     <div class="input-group"><span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span><input type="search" id="buscarOrden" class="form-control border-start-0" placeholder="Buscar por cliente, código, servicio o técnico"></div>
                 </div>
-                <div class="col-lg-4"><select id="filtrarEstado" class="form-select">
+                <div class="col-lg-4"><label class="visually-hidden" for="filtrarEstado">Filtrar por estado</label><select id="filtrarEstado" class="form-select">
                         <option value="TODOS">Todos los estados</option><?php foreach ($etiquetas as $codigo => $texto): ?><option value="<?= $codigo ?>"><?= esc($texto) ?></option><?php endforeach; ?>
                     </select></div>
             </div>
@@ -67,7 +68,7 @@ $etiquetas = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROC
                                 <td><?= $orden['idtecnico'] ? esc(trim($orden['tecnico'])) : '<span class="text-muted">Sin asignar</span>' ?></td>
                                 <td class="text-nowrap small"><?= $orden['fecha_inicio'] ? esc(date('d/m/Y H:i', strtotime($orden['fecha_inicio']))) : '<span class="text-muted">Sin programar</span>' ?></td>
                                 <td><span class="df-sv-status df-sv-status-<?= esc($estado, 'attr') ?>"><?= esc($etiquetas[$estado] ?? $estado) ?></span></td>
-                                <td class="text-end"><a href="<?= base_url('servicios/detalles/' . $orden['idorden']) ?>" class="btn btn-sm btn-outline-secondary" title="Ver detalle"><i class="bi bi-eye me-1"></i></td>
+                                <td class="text-end"><a href="<?= base_url('servicios/detalles/' . $orden['idorden']) ?>" class="btn btn-sm btn-outline-secondary text-nowrap" aria-label="Ver detalle de la orden OS-<?= (int) $orden['idorden'] ?>"><i class="bi bi-eye me-1"></i>Ver detalle</a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

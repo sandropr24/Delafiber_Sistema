@@ -20,6 +20,7 @@
         </div>
     </div>
     <form action="<?= base_url('servicios/guardar') ?>" method="post" id="formServicio" autocomplete="off">
+        <div id="errorServicio" class="alert alert-danger d-none" role="alert" aria-live="assertive"></div>
         <input type="hidden" name="idventa" value="<?= (int) ($ventaSeleccionada['idventa'] ?? 0) ?>">
         <?= csrf_field() ?>
         <div class="row g-4 align-items-start">
@@ -53,7 +54,8 @@
                             </select></div>
                         <div class="mb-3"><label class="form-label fw-semibold" for="fecha_inicio">Fecha y hora de inicio</label><input type="datetime-local" name="fecha_inicio" id="fecha_inicio" value="<?= esc(old('fecha_inicio') ?? '', 'attr') ?>" class="form-control"></div>
                         <div class="mb-3"><label class="form-label fw-semibold" for="fecha_fin">Fecha y hora de término</label><input type="datetime-local" name="fecha_fin" id="fecha_fin" value="<?= esc(old('fecha_fin') ?? '', 'attr') ?>" class="form-control"></div>
-                        <p class="small text-muted mb-0">El sistema comprobará que el técnico no tenga otra orden en ese horario.</p>
+                        <p class="small text-muted mb-2">Si asignas técnico, completa ambos horarios. La fecha de inicio debe ser futura y la de término posterior.</p>
+                        <p class="small text-muted mb-0">El sistema verificará que el técnico no tenga otro servicio en ese horario.</p>
                     </div>
                 </div>
                 <div class="df-sv-form-actions d-flex flex-wrap gap-2 justify-content-end mt-3"><a href="<?= base_url('servicios') ?>" class="btn btn-light border">Cancelar</a><button type="submit" class="btn df-sv-btn" id="btnGuardarServicio"><i class="bi bi-check-lg me-1"></i>Guardar orden</button></div>

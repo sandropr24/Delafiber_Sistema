@@ -42,24 +42,56 @@ document.addEventListener("DOMContentLoaded", () => {
   titulo?.addEventListener("input", () => {
     titulo.dataset.autogenerado = "no";
   });
-  form?.addEventListener("submit", (evento) => {
-    const asignado = tecnico.value || inicio.value || fin.value;
-    if (asignado && (!tecnico.value || !inicio.value || !fin.value)) {
+  const error = document.getElementById('errorServicio');
+  const mensajeError = (texto, campo) => {
+    if (error) {
+      error.textContent = texto;
+      error.classList.remove('d-none');
+      error.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    campo?.focus();
+  };
+
+  [tecnico, inicio, fin].forEach(campo => campo?.addEventListener('change', () => error?.classList.add('d-none')));
+
+  form?.addEventListener('submit', evento => {
+    error?.classList.add('d-none');
+    const programar = Boolean(tecnico.value || inicio.value || fin.value);
+    if (programar && !tecnico.value) {
       evento.preventDefault();
-      alert("Para programar una visita, completa técnico, inicio y fin.");
+      mensajeError('Selecciona al técnico responsable para programar la visita.', tecnico);
       return;
     }
-    if (
-      asignado &&
-      (new Date(inicio.value) >= new Date(fin.value) ||
-        new Date(inicio.value) < new Date())
-    ) {
+    if (programar && !inicio.value) {
       evento.preventDefault();
-      alert("Selecciona un horario futuro con fin posterior al inicio.");
+      mensajeError('Indica la fecha y hora de inicio del servicio.', inicio);
       return;
     }
+    if (programar && !fin.value) {
+      evento.preventDefault();
+      mensajeError('Indica la fecha y hora de término del servicio.', fin);
+      return;
+    }
+    if (programar) {
+      const fechaInicio = new Date(inicio.value);
+      const fechaFin = new Date(fin.value);
+      if (!Number.isFinite(fechaInicio.getTime()) || fechaInicio.getTime() <= Date.now()) {
+        evento.preventDefault();
+        mensajeError('La fecha y hora de inicio deben ser posteriores a la hora actual.', inicio);
+        return;
+      }
+      if (!Number.isFinite(fechaFin.getTime()) || fechaFin.getTime() <= fechaInicio.getTime()) {
+        evento.preventDefault();
+        mensajeError('La fecha y hora de término deben ser posteriores al inicio.', fin);
+        return;
+      }
+    }
+    if (form.dataset.enviando === 'si') {
+      evento.preventDefault();
+      return;
+    }
+    form.dataset.enviando = 'si';
     boton.disabled = true;
-    boton.innerHTML =
-      '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Guardando...';
+    boton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Guardando...';
   });
 });
