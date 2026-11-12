@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\OrdenServicioModel;
 use App\Models\HistorialOrdenServicioModel;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -28,7 +29,7 @@ class ServicioController extends BaseController
 
     private function denegar(): RedirectResponse
     {
-        return redirect()->to(base_url('dashboard'))->with('error', 'No tienes permiso para gestionar servicios técnicos.');
+        return redirect()->to(base_url('admin/dashboard'))->with('error', 'No tienes permiso para gestionar servicios técnicos.');
     }
 
     private function consultarOrdenes(bool $soloAgenda = false): array
@@ -102,10 +103,10 @@ class ServicioController extends BaseController
         if ($idVenta > 0) {
             $ventaSeleccionada = $db->table('ventas')->select('idventa, idcliente, serie, numero, fechaanulacion')->where('idventa', $idVenta)->get()->getRowArray();
             if (!$ventaSeleccionada || $ventaSeleccionada['fechaanulacion'] !== null) {
-                return redirect()->to(base_url('servicios/crear'))->with('error', 'La venta seleccionada no existe o está anulada.');
+                return redirect()->to(base_url('admin/servicios/crear'))->with('error', 'La venta seleccionada no existe o está anulada.');
             }
             $serviciosVenta = $this->serviciosDeVenta($idVenta);
-            if (!$serviciosVenta) return redirect()->to(base_url('servicios/crear'))->with('error', 'Esta venta no contiene servicios para programar.');
+            if (!$serviciosVenta) return redirect()->to(base_url('admin/servicios/crear'))->with('error', 'Esta venta no contiene servicios para programar.');
         }
         $idClienteVenta = (int) ($ventaSeleccionada['idcliente'] ?? 0);
         $clientes = $db->query(
@@ -191,27 +192,34 @@ class ServicioController extends BaseController
             }
             if ($asignada) $this->disponibilidad($datos['idtecnico'], $inicio, $fin);
             $id = $this->ordenes->insert([
-                'idcliente' => $datos['idcliente'], 'idventa' => $idVenta ?: null,
+                'idcliente' => $datos['idcliente'],
+                'idventa' => $idVenta ?: null,
                 'idservicio' => $datos['idservicio'] ?: null,
                 'idtecnico' => $datos['idtecnico'] ?: null,
-                'titulo' => $datos['titulo'], 'descripcion' => $datos['descripcion'] ?: null,
-                'direccion' => $datos['direccion'] ?: null, 'telefono' => $datos['telefono'] ?: null,
-                'fecha_inicio' => $inicio, 'fecha_fin' => $fin,
+                'titulo' => $datos['titulo'],
+                'descripcion' => $datos['descripcion'] ?: null,
+                'direccion' => $datos['direccion'] ?: null,
+                'telefono' => $datos['telefono'] ?: null,
+                'fecha_inicio' => $inicio,
+                'fecha_fin' => $fin,
                 'estado' => $asignada ? 'PROGRAMADO' : 'PENDIENTE',
                 'observaciones' => $datos['observaciones'] ?: null,
                 'idusuario_crea' => (int) session('idusuario')
             ], true);
             if (!$id) throw new RuntimeException('No se pudo registrar la orden de servicio.');
             if (!$this->historial->insert([
-                'idorden' => $id, 'tipoevento' => 'CREACION', 'estado_anterior' => null,
+                'idorden' => $id,
+                'tipoevento' => 'CREACION',
+                'estado_anterior' => null,
                 'estado_nuevo' => $asignada ? 'PROGRAMADO' : 'PENDIENTE',
                 'observacion' => $idVenta ? 'Orden creada desde la venta N.º ' . $idVenta . '.' : 'Registro inicial de la orden.',
-                'idusuario' => (int) session('idusuario'), 'fecha' => date('Y-m-d H:i:s')
+                'idusuario' => (int) session('idusuario'),
+                'fecha' => date('Y-m-d H:i:s')
             ])) throw new RuntimeException('No se pudo registrar el historial.');
             if ($db->transStatus() === false) throw new RuntimeException('No se pudieron guardar los cambios.');
             $db->transCommit();
             $transOpen = false;
-            return redirect()->to(base_url('servicios/detalles/' . $id))->with('mensaje', 'Orden de servicio registrada correctamente.');
+            return redirect()->to(base_url('admin/servicios/detalles/' . $id))->with('mensaje', 'Orden de servicio registrada correctamente.');
         } catch (Throwable $e) {
             if ($transOpen) $db->transRollback();
             log_message('error', '[Servicios] Error al registrar: ' . $e->getMessage());
@@ -224,7 +232,10 @@ class ServicioController extends BaseController
         if (!$this->autorizado()) return $this->denegar();
         $orden = null;
         foreach ($this->consultarOrdenes() as $item) {
-            if ((int) $item['idorden'] === $id) { $orden = $item; break; }
+            if ((int) $item['idorden'] === $id) {
+                $orden = $item;
+                break;
+            }
         }
         if (!$orden) {
             $db = db_connect();
@@ -234,7 +245,7 @@ class ServicioController extends BaseController
                 ->join('tecnicos t', 't.idtecnico = os.idtecnico', 'left')
                 ->join('productos pr', 'pr.idproducto = os.idservicio', 'left')->where('os.idorden', $id)->get()->getRowArray();
         }
-        if (!$orden) return redirect()->to(base_url('servicios'))->with('error', 'La orden solicitada no existe.');
+        if (!$orden) return redirect()->to(base_url('admin/servicios'))->with('error', 'La orden solicitada no existe.');
         $db = db_connect();
         $historial = $db->table('historial_orden_servicio h')->select('h.*, u.nombreusuario')->join('usuarios u', 'u.idusuario = h.idusuario')->where('h.idorden', $id)->orderBy('h.idhistorial', 'DESC')->get()->getResultArray();
         $tecnicos = $db->table('tecnicos')->select('idtecnico, nombres, apellidos')->where('estado', 'ACTIVO')->orderBy('nombres')->get()->getResultArray();
@@ -256,8 +267,11 @@ class ServicioController extends BaseController
             $materialesDisponibles[] = $fila;
         }
         return view('servicios/detalles', [
-            'titulo' => 'Orden de servicio', 'orden' => $orden, 'historial' => $historial,
-            'tecnicos' => $tecnicos, 'materiales' => $materiales,
+            'titulo' => 'Orden de servicio',
+            'orden' => $orden,
+            'historial' => $historial,
+            'tecnicos' => $tecnicos,
+            'materiales' => $materiales,
             'materialesDisponibles' => $materialesDisponibles,
             'tokenConsumo' => bin2hex(random_bytes(16))
         ]);
@@ -291,11 +305,11 @@ class ServicioController extends BaseController
             if ($db->transStatus() === false) throw new RuntimeException('No se pudieron guardar los cambios.');
             $db->transCommit();
             $transOpen = false;
-            return redirect()->to(base_url('servicios/detalles/' . $id))->with('mensaje', 'Programación actualizada correctamente.');
+            return redirect()->to(base_url('admin/servicios/detalles/' . $id))->with('mensaje', 'Programación actualizada correctamente.');
         } catch (Throwable $e) {
             if ($transOpen) $db->transRollback();
             log_message('error', '[Servicios] Error al reprogramar: ' . $e->getMessage());
-            return redirect()->to(base_url('servicios/detalles/' . $id))->with('error', $e instanceof RuntimeException ? $e->getMessage() : 'No se pudo reprogramar la orden.');
+            return redirect()->to(base_url('admin/servicios/detalles/' . $id))->with('error', $e instanceof RuntimeException ? $e->getMessage() : 'No se pudo reprogramar la orden.');
         }
     }
 
@@ -323,17 +337,20 @@ class ServicioController extends BaseController
                 throw new RuntimeException('El trabajo está programado para una fecha futura. Si va a iniciar antes, escribe el motivo (mínimo 10 caracteres).');
             }
             $datos = ['estado' => $nuevo];
-            if ($nuevo === 'FINALIZADO') { $datos['resultado'] = $nota; $datos['fecha_finalizacion'] = date('Y-m-d H:i:s'); }
+            if ($nuevo === 'FINALIZADO') {
+                $datos['resultado'] = $nota;
+                $datos['fecha_finalizacion'] = date('Y-m-d H:i:s');
+            }
             if (!$this->ordenes->update($id, $datos)) throw new RuntimeException('No se pudo modificar el estado.');
             if (!$this->historial->insert(['idorden' => $id, 'tipoevento' => 'CAMBIO_ESTADO', 'estado_anterior' => $orden['estado'], 'estado_nuevo' => $nuevo, 'observacion' => $nota ?: 'Actualización del estado de la orden.', 'idusuario' => (int) session('idusuario'), 'fecha' => date('Y-m-d H:i:s')])) throw new RuntimeException('No se pudo registrar el historial.');
             if ($db->transStatus() === false) throw new RuntimeException('No se pudieron guardar los cambios.');
             $db->transCommit();
             $transOpen = false;
-            return redirect()->to(base_url('servicios/detalles/' . $id))->with('mensaje', 'Estado actualizado correctamente.');
+            return redirect()->to(base_url('admin/servicios/detalles/' . $id))->with('mensaje', 'Estado actualizado correctamente.');
         } catch (Throwable $e) {
             if ($transOpen) $db->transRollback();
             log_message('error', '[Servicios] Error al cambiar estado: ' . $e->getMessage());
-            return redirect()->to(base_url('servicios/detalles/' . $id))->with('error', $e instanceof RuntimeException ? $e->getMessage() : 'No se pudo cambiar el estado.');
+            return redirect()->to(base_url('admin/servicios/detalles/' . $id))->with('error', $e instanceof RuntimeException ? $e->getMessage() : 'No se pudo cambiar el estado.');
         }
     }
 
@@ -352,7 +369,7 @@ class ServicioController extends BaseController
     public function registrarMaterial(int $id): RedirectResponse
     {
         if (!$this->autorizado()) return $this->denegar();
-        $destino = base_url('servicios/detalles/' . $id);
+        $destino = base_url('admin/servicios/detalles/' . $id);
         $idKardex = (int) $this->request->getPost('idkardex');
         $cantidadTexto = trim((string) $this->request->getPost('cantidad'));
         $nota = trim((string) $this->request->getPost('observacion'));
@@ -379,8 +396,10 @@ class ServicioController extends BaseController
             $kardex = $db->query("SELECT k.idkardex, k.idproducto, k.idlocal, k.stockactual, p.nombre,
                 p.tipo, p.controlastock, p.controlaserie, p.estado
                 FROM kardex k JOIN productos p ON p.idproducto = k.idproducto WHERE k.idkardex = ? FOR UPDATE", [$idKardex])->getRowArray();
-            if (!$kardex || $kardex['tipo'] !== 'PRODUCTO' || (int) $kardex['controlastock'] !== 1 ||
-                (int) $kardex['controlaserie'] !== 0 || (int) $kardex['estado'] !== 1) {
+            if (
+                !$kardex || $kardex['tipo'] !== 'PRODUCTO' || (int) $kardex['controlastock'] !== 1 ||
+                (int) $kardex['controlaserie'] !== 0 || (int) $kardex['estado'] !== 1
+            ) {
                 throw new RuntimeException('El material no está habilitado para consumo directo (los artículos con serie requieren otro procedimiento).');
             }
             if ($this->productoVendidoEnOrden((int) ($orden['idventa'] ?? 0), (int) $kardex['idproducto'])) {
@@ -404,22 +423,34 @@ class ServicioController extends BaseController
                 throw new RuntimeException('No se pudo actualizar el stock físico.');
             }
             if (!$db->table('movimientos')->insert([
-                'idkardex' => $idKardex, 'idusuario' => $idUsuario, 'tipo' => 'SALIDA',
-                'fecha' => $ahora, 'cantidad' => $cantidad, 'saldo' => $nuevoStock,
+                'idkardex' => $idKardex,
+                'idusuario' => $idUsuario,
+                'tipo' => 'SALIDA',
+                'fecha' => $ahora,
+                'cantidad' => $cantidad,
+                'saldo' => $nuevoStock,
                 'descripcion' => 'Material usado en orden OS-' . str_pad((string) $id, 5, '0', STR_PAD_LEFT),
                 'motivo' => 'Consumo servicio técnico'
             ])) throw new RuntimeException('No se pudo crear el movimiento de Kardex.');
             $idMovimiento = (int) $db->insertID();
             if (!$db->table('consumos_servicio')->insert([
-                'idorden' => $id, 'idkardex' => $idKardex, 'idmovimiento' => $idMovimiento,
-                'cantidad' => $cantidad, 'observacion' => $nota ?: null,
-                'token_operacion' => $token, 'idusuario' => $idUsuario, 'fecha' => $ahora
+                'idorden' => $id,
+                'idkardex' => $idKardex,
+                'idmovimiento' => $idMovimiento,
+                'cantidad' => $cantidad,
+                'observacion' => $nota ?: null,
+                'token_operacion' => $token,
+                'idusuario' => $idUsuario,
+                'fecha' => $ahora
             ])) throw new RuntimeException('No se pudo guardar el consumo del servicio.');
             if (!$this->historial->insert([
-                'idorden' => $id, 'tipoevento' => 'CONSUMO_MATERIAL',
-                'estado_anterior' => $orden['estado'], 'estado_nuevo' => $orden['estado'],
+                'idorden' => $id,
+                'tipoevento' => 'CONSUMO_MATERIAL',
+                'estado_anterior' => $orden['estado'],
+                'estado_nuevo' => $orden['estado'],
                 'observacion' => mb_substr('Material: ' . $kardex['nombre'] . ', cantidad ' . number_format($cantidad, 2) . '. ' . $nota, 0, 255),
-                'idusuario' => $idUsuario, 'fecha' => $ahora
+                'idusuario' => $idUsuario,
+                'fecha' => $ahora
             ])) throw new RuntimeException('No se pudo registrar el historial del consumo.');
             if ($db->transStatus() === false) throw new RuntimeException('No se completó la transacción.');
             $db->transCommit();

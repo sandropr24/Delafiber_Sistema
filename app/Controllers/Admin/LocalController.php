@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\LocalModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -54,29 +55,29 @@ class LocalController extends BaseController
         }
 
         $mensaje = !empty($id) ? 'Local actualizado correctamente.' : 'Local registrado correctamente.';
-        return redirect()->to(base_url('locales'))->with('mensaje', $mensaje);
+        return redirect()->to(base_url('admin/locales'))->with('mensaje', $mensaje);
     }
 
     public function eliminar($id = null): RedirectResponse
     {
         if (empty($id) || !$this->localModel->find($id)) {
-            return redirect()->to(base_url('locales'))->with('error', 'El local no existe.');
+            return redirect()->to(base_url('admin/locales'))->with('error', 'El local no existe.');
         }
 
         $db = $this->localModel->builder()->db();
 
         $enKardex = $db->table('kardex')->where('idlocal', $id)->countAllResults();
         if ($enKardex > 0) {
-            return redirect()->to(base_url('locales'))
+            return redirect()->to(base_url('admin/locales'))
                 ->with('error', 'No se puede eliminar: el local tiene movimientos de inventario registrados.');
         }
 
         try {
             $this->localModel->delete($id);
-            return redirect()->to(base_url('locales'))->with('mensaje', 'Local eliminado correctamente.');
+            return redirect()->to(base_url('admin/locales'))->with('mensaje', 'Local eliminado correctamente.');
         } catch (\Exception $e) {
             log_message('error', 'Error al eliminar local: ' . $e->getMessage());
-            return redirect()->to(base_url('locales'))->with('error', 'Ocurrió un error al intentar eliminar el local.');
+            return redirect()->to(base_url('admin/locales'))->with('error', 'Ocurrió un error al intentar eliminar el local.');
         }
     }
 }

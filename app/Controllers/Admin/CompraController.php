@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\CompraModel;
 use App\Models\DeCompraModel;
 use App\Models\KardexModel;
@@ -256,7 +257,7 @@ class CompraController extends BaseController
                 throw new \RuntimeException('Error de base de datos.');
             }
             $db->transCommit();
-            return redirect()->to(base_url('compras'))->with('mensaje', 'Compra registrada y Kardex actualizado.');
+            return redirect()->to(base_url('admin/compras'))->with('mensaje', 'Compra registrada y Kardex actualizado.');
         } catch (\Throwable $e) {
             $db->transRollback();
             log_message('error', 'Error al guardar compra: ' . $e->getMessage());
@@ -276,7 +277,7 @@ class CompraController extends BaseController
             ->first();
 
         if (!$compra) {
-            return redirect()->to(base_url('compras'))->with('error', 'La compra solicitada no existe.');
+            return redirect()->to(base_url('admin/compras'))->with('error', 'La compra solicitada no existe.');
         }
 
         $detalles = $detCompraModel->select('detcompra.*, productos.nombre as producto')

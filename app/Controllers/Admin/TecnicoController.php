@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\TecnicoModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -21,7 +22,7 @@ class TecnicoController extends BaseController
 
     public function index()
     {
-        if (!$this->autorizado()) return redirect()->to('dashboard')->with('error', 'Acceso no autorizado.');
+        if (!$this->autorizado()) return redirect()->to('admin/dashboard')->with('error', 'Acceso no autorizado.');
         return view('tecnicos/index', [
             'titulo' => 'Gestión de Técnicos',
             'tecnicos' => $this->tecnicos->orderBy('idtecnico', 'DESC')->findAll(),
@@ -30,11 +31,11 @@ class TecnicoController extends BaseController
 
     public function guardar(): RedirectResponse
     {
-        if (!$this->autorizado()) return redirect()->to('dashboard')->with('error', 'Acceso no autorizado.');
+        if (!$this->autorizado()) return redirect()->to('admin/dashboard')->with('error', 'Acceso no autorizado.');
 
         $id = (int) $this->request->getPost('idtecnico');
         $actual = $id ? $this->tecnicos->find($id) : null;
-        if ($id && !$actual) return redirect()->to('tecnicos')->with('error', 'El técnico no existe.');
+        if ($id && !$actual) return redirect()->to('admin/tecnicos')->with('error', 'El técnico no existe.');
 
         $datos = [
             'nombres' => trim((string) $this->request->getPost('nombres')),
@@ -52,24 +53,24 @@ class TecnicoController extends BaseController
             'especialidad' => 'permit_empty|max_length[100]',
         ];
         if (!$this->validateData($datos, $reglas)) {
-            return redirect()->to('tecnicos')->withInput()->with('errors', $this->validator->getErrors());
+            return redirect()->to('admin/tecnicos')->withInput()->with('errors', $this->validator->getErrors());
         }
         if ($id) $datos['idtecnico'] = $id;
         if (!$this->tecnicos->save($datos)) {
-            return redirect()->to('tecnicos')->withInput()->with('errors', $this->tecnicos->errors());
+            return redirect()->to('admin/tecnicos')->withInput()->with('errors', $this->tecnicos->errors());
         }
-        return redirect()->to('tecnicos')->with('mensaje', $id ? 'Técnico actualizado correctamente.' : 'Técnico registrado correctamente.');
+        return redirect()->to('admin/tecnicos')->with('mensaje', $id ? 'Técnico actualizado correctamente.' : 'Técnico registrado correctamente.');
     }
 
     public function cambiarEstado(int $id): RedirectResponse
     {
-        if (!$this->autorizado()) return redirect()->to('dashboard')->with('error', 'Acceso no autorizado.');
+        if (!$this->autorizado()) return redirect()->to('admin/dashboard')->with('error', 'Acceso no autorizado.');
         $tecnico = $this->tecnicos->find($id);
-        if (!$tecnico) return redirect()->to('tecnicos')->with('error', 'El técnico no existe.');
+        if (!$tecnico) return redirect()->to('admin/tecnicos')->with('error', 'El técnico no existe.');
         $nuevo = $tecnico['estado'] === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
         if (!$this->tecnicos->update($id, ['estado' => $nuevo])) {
-            return redirect()->to('tecnicos')->with('error', 'No se pudo actualizar el estado.');
+            return redirect()->to('admin/tecnicos')->with('error', 'No se pudo actualizar el estado.');
         }
-        return redirect()->to('tecnicos')->with('mensaje', 'Estado actualizado correctamente.');
+        return redirect()->to('admin/tecnicos')->with('mensaje', 'Estado actualizado correctamente.');
     }
 }

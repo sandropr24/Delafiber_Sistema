@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\PersonaModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -77,18 +78,18 @@ class ClienteController extends BaseController
         }
 
         $mensaje = !empty($idPersona) ? 'Cliente actualizado con éxito.' : 'Cliente registrado con éxito.';
-        return redirect()->to(base_url('clientes'))->with('mensaje', $mensaje);
+        return redirect()->to(base_url('admin/clientes'))->with('mensaje', $mensaje);
     }
 
     public function cambiarEstado($id = null): RedirectResponse
     {
         if (empty($id) || !$cliente = $this->personaModel->find($id)) {
-            return redirect()->to(base_url('clientes'))->with('error', 'El cliente no existe.');
+            return redirect()->to(base_url('admin/clientes'))->with('error', 'El cliente no existe.');
         }
 
         $nuevoEstado = ((int) ($cliente['estado'] ?? 1) === 1) ? 0 : 1;
         $this->personaModel->update($id, ['estado' => $nuevoEstado]);
 
-        return redirect()->to(base_url('clientes'))->with('mensaje', 'Estado del cliente actualizado correctamente.');
+        return redirect()->to(base_url('admin/clientes'))->with('mensaje', 'Estado del cliente actualizado correctamente.');
     }
 }

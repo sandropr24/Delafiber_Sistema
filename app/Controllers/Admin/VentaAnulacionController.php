@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
+
+use App\Controllers\BaseController;
 
 class VentaAnulacionController extends BaseController
 {
@@ -28,7 +30,7 @@ class VentaAnulacionController extends BaseController
 
         $db = \Config\Database::connect();
         if (!in_array($this->rolActual($db, $idUsuario), ['Administrador', 'Vendedor'], true)) {
-            return redirect()->to('ventas')->with('error', 'No tienes permiso para solicitar anulaciones.');
+            return redirect()->to('admin/ventas')->with('error', 'No tienes permiso para solicitar anulaciones.');
         }
 
         $db->transBegin();
@@ -87,7 +89,7 @@ class VentaAnulacionController extends BaseController
         $db = \Config\Database::connect();
 
         if ($idUsuario < 1 || $this->rolActual($db, $idUsuario) !== 'Administrador') {
-            return redirect()->to('ventas')->with('error', 'Solo un administrador puede revisar solicitudes.');
+            return redirect()->to('admin/ventas')->with('error', 'Solo un administrador puede revisar solicitudes.');
         }
 
         $decision = (string) $this->request->getPost('decision');
@@ -97,7 +99,7 @@ class VentaAnulacionController extends BaseController
             !in_array($decision, ['AUTORIZADA', 'RECHAZADA'], true)
             || mb_strlen($observacion) < 10 || mb_strlen($observacion) > 2000
         ) {
-            return redirect()->to('ventas')->with('error', 'Elige una decisión e indica una observación de 10 a 2000 caracteres.');
+            return redirect()->to('admin/ventas')->with('error', 'Elige una decisión e indica una observación de 10 a 2000 caracteres.');
         }
 
         $db->transBegin();
@@ -181,14 +183,14 @@ class VentaAnulacionController extends BaseController
         $db = \Config\Database::connect();
 
         if ($idUsuario <= 0 || $this->rolActual($db, $idUsuario) !== 'Administrador') {
-            return redirect()->to('ventas')->with('error', 'Solo un administrador puede ejecutar anulaciones.');
+            return redirect()->to('admin/ventas')->with('error', 'Solo un administrador puede ejecutar anulaciones.');
         }
 
         $confirmado = (string) $this->request->getPost('inventario_verificado');
         $observacion = trim((string) $this->request->getPost('observacion_inventario'));
 
         if ($confirmado !== '1' || mb_strlen($observacion) < 15 || mb_strlen($observacion) > 1000) {
-            return redirect()->to('ventas')->with('error', 'Confirma el control físico e indica una observación de 15 a 1000 caracteres.');
+            return redirect()->to('admin/ventas')->with('error', 'Confirma el control físico e indica una observación de 15 a 1000 caracteres.');
         }
 
         $destino = 'ventas';

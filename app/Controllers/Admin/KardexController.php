@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\KardexModel;
 use App\Models\MovimientoModel;
 use App\Models\LocalModel;
@@ -34,7 +35,7 @@ class KardexController extends BaseController
     public function buscar_tabla()
     {
         if (!$this->request->isAJAX()) {
-            return redirect()->to(base_url('kardex'));
+            return redirect()->to(base_url('admin/kardex'));
         }
 
         $q       = $this->request->getGet('q');
@@ -55,7 +56,7 @@ class KardexController extends BaseController
             ->first();
 
         if (!$kardexInfo) {
-            return redirect()->to(base_url('kardex'))->with('error', 'Registro de kardex no encontrado.');
+            return redirect()->to(base_url('admin/kardex'))->with('error', 'Registro de kardex no encontrado.');
         }
 
         $data = [

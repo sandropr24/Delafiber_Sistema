@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\VentaModel;
@@ -19,7 +19,7 @@ class NotaVentaPdfController extends BaseController
         }
 
         if (!class_exists(Dompdf::class)) {
-            return redirect()->to(base_url('ventas'))
+            return redirect()->to(base_url('admin/ventas'))
                 ->with('error', 'Falta instalar Dompdf. Ejecuta: composer require dompdf/dompdf');
         }
 
@@ -35,7 +35,7 @@ class NotaVentaPdfController extends BaseController
         }
 
         if (!empty($venta['fechaanulacion'])) {
-            return redirect()->to('ventas/detalles/' . $idventa)
+            return redirect()->to('admin/ventas/detalles/' . $idventa)
                 ->with('error', 'La nota de venta fue anulada. Consulta su historial comercial.');
         }
 

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\UsuarioModel;
 use App\Models\PersonaModel;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -39,7 +40,7 @@ class UsuarioController extends BaseController
             'tipodoc'       => 'required',
             'numerodoc'     => 'required|max_length[20]|is_unique[personas.numerodoc,idpersona,' . ($idPersona ?: 'NULL') . ']',
             'nombreusuario' => 'required|max_length[50]|is_unique[usuarios.nombreusuario,idusuario,' . ($idUsuario ?: 'NULL') . ']',
-            'idrol'         => 'required|integer', 
+            'idrol'         => 'required|integer',
             'email'         => 'permit_empty|valid_email|max_length[100]',
             'claveacceso'   => empty($idUsuario) ? 'required|min_length[4]' : 'permit_empty|min_length[4]',
         ];
@@ -105,22 +106,22 @@ class UsuarioController extends BaseController
         }
 
         $mensaje = !empty($idUsuario) ? 'Usuario actualizado con éxito.' : 'Usuario registrado con éxito.';
-        return redirect()->to(base_url('usuarios'))->with('mensaje', $mensaje);
+        return redirect()->to(base_url('admin/usuarios'))->with('mensaje', $mensaje);
     }
 
     public function cambiarEstado($id = null): RedirectResponse
     {
         if (empty($id) || !$usuario = $this->usuarioModel->find($id)) {
-            return redirect()->to(base_url('usuarios'))->with('error', 'El usuario no existe.');
+            return redirect()->to(base_url('admin/usuarios'))->with('error', 'El usuario no existe.');
         }
 
         if ((int) $usuario['idusuario'] === (int) session()->get('idusuario')) {
-            return redirect()->to(base_url('usuarios'))->with('error', 'No puedes desactivar tu propia cuenta activa.');
+            return redirect()->to(base_url('admin/usuarios'))->with('error', 'No puedes desactivar tu propia cuenta activa.');
         }
 
         $nuevoEstado = ((int) $usuario['estado'] === 1) ? 0 : 1;
         $this->usuarioModel->update($id, ['estado' => $nuevoEstado]);
 
-        return redirect()->to(base_url('usuarios'))->with('mensaje', 'Estado del usuario actualizado.');
+        return redirect()->to(base_url('admin/usuarios'))->with('mensaje', 'Estado del usuario actualizado.');
     }
 }

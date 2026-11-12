@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\ProveedorModel;
 
 class ProveedorController extends BaseController
@@ -53,12 +54,12 @@ class ProveedorController extends BaseController
             $mensaje = 'Proveedor actualizado correctamente.';
         }
 
-        return redirect()->to('/proveedores')->with('mensaje', $mensaje);
+        return redirect()->to('admin/proveedores')->with('mensaje', $mensaje);
     }
 
     public function eliminar($id)
     {
         $this->proveedorModel->delete($id);
-        return redirect()->to('/proveedores')->with('mensaje', 'Proveedor eliminado correctamente.');
+        return redirect()->to('admin/proveedores')->with('mensaje', 'Proveedor eliminado correctamente.');
     }
 }

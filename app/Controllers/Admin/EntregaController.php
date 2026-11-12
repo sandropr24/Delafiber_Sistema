@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\EntregaModel;
 use App\Models\TecnicoModel;
 
@@ -27,10 +28,22 @@ class EntregaController extends BaseController
         ]);
     }
 
+
+    public function token_csrf()
+    {
+        return $this->response
+            ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private')
+            ->setHeader('Pragma', 'no-cache')
+            ->setJSON([
+                'name' => csrf_token(),
+                'hash' => csrf_hash(),
+            ]);
+    }
+
     public function buscar_tabla()
     {
         if (!$this->request->isAJAX()) {
-            return redirect()->to(base_url('entregas'));
+            return redirect()->to(base_url('admin/entregas'));
         }
 
         $resultado = $this->entregaModel->obtenerEntregasFiltradas(

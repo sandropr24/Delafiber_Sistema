@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
+use App\Controllers\BaseController;
 use App\Models\CategoriaModel;
 use App\Models\MarcaModel;
 use App\Models\ProductoModel;
@@ -66,7 +67,7 @@ class ProductoController extends BaseController
     public function buscar_tabla()
     {
         if (!$this->request->isAJAX()) {
-            return redirect()->to(base_url('productos'));
+            return redirect()->to(base_url('admin/productos'));
         }
 
         $q         = trim((string) $this->request->getGet('q'));
@@ -101,7 +102,7 @@ class ProductoController extends BaseController
         $actual = $id ? $this->productoModel->find($id) : null;
 
         if ($id && !$actual) {
-            return redirect()->to(base_url('productos'))->with('error', 'El producto no existe.');
+            return redirect()->to(base_url('admin/productos'))->with('error', 'El producto no existe.');
         }
 
         $tipo        = strtoupper((string) $this->request->getPost('tipo'));
@@ -321,7 +322,7 @@ class ProductoController extends BaseController
         }
 
         $mensaje = $id ? 'Producto actualizado correctamente.' : 'Producto registrado correctamente.';
-        return redirect()->to(base_url('productos'))->with('mensaje', $mensaje);
+        return redirect()->to(base_url('admin/productos'))->with('mensaje', $mensaje);
     }
 
     public function cambiarEstado($id = null): RedirectResponse
@@ -329,20 +330,20 @@ class ProductoController extends BaseController
         $producto = $this->productoModel->find($id);
 
         if (!$producto) {
-            return redirect()->to(base_url('productos'))->with('error', 'El producto no existe.');
+            return redirect()->to(base_url('admin/productos'))->with('error', 'El producto no existe.');
         }
 
         $nuevoEstado = ((int) $producto['estado'] === 1) ? 0 : 1;
         $this->productoModel->update($id, ['estado' => $nuevoEstado]);
 
-        return redirect()->to(base_url('productos'))->with('mensaje', 'Estado del producto actualizado.');
+        return redirect()->to(base_url('admin/productos'))->with('mensaje', 'Estado del producto actualizado.');
     }
 
     private function volverConErrores(array $errores): RedirectResponse
     {
         $form = array_intersect_key($this->request->getPost(), array_flip(self::CAMPOS_FORM));
 
-        return redirect()->to(base_url('productos'))
+        return redirect()->to(base_url('admin/productos'))
             ->with('errors', $errores)
             ->with('form', $form);
     }

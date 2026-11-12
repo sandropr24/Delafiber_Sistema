@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\DetVentaModel;
@@ -21,11 +21,11 @@ class VentaController extends BaseController
         $puedeAutorizar = session()->get('rol') === 'Administrador';
         $solicitudesPendientes = $puedeAutorizar
             ? $db->table('solicitudes_anulacion s')
-                ->select('s.idsolicitud, s.idventa, s.motivo, s.fecha_solicitud, v.numero, v.serie')
-                ->join('ventas v', 'v.idventa = s.idventa')
-                ->where('s.estado', 'PENDIENTE')
-                ->orderBy('s.fecha_solicitud', 'ASC')
-                ->get()->getResultArray()
+            ->select('s.idsolicitud, s.idventa, s.motivo, s.fecha_solicitud, v.numero, v.serie')
+            ->join('ventas v', 'v.idventa = s.idventa')
+            ->where('s.estado', 'PENDIENTE')
+            ->orderBy('s.fecha_solicitud', 'ASC')
+            ->get()->getResultArray()
             : [];
         $data = [
             'titulo' => 'Historial de Ventas',
@@ -172,7 +172,7 @@ class VentaController extends BaseController
         $resultado = $ventaModel->registrarVenta($dataVenta, $detalles, $pagos, $entrega);
 
         if ($resultado) {
-            return redirect()->to('/ventas')->with('success', 'Venta registrada exitosamente.');
+            return redirect()->to('admin/ventas')->with('success', 'Venta registrada exitosamente.');
         } else {
             $errorMsg = session()->getFlashdata('error') ?? 'No se pudo registrar la venta. Inténtelo nuevamente.';
             return redirect()->back()->with('error', $errorMsg)->withInput();
@@ -195,7 +195,7 @@ class VentaController extends BaseController
             ->first();
 
         if (!$venta) {
-            return redirect()->to(base_url('ventas'))->with('error', 'La venta solicitada no existe.');
+            return redirect()->to(base_url('admin/ventas'))->with('error', 'La venta solicitada no existe.');
         }
 
         $detalles = $detVentaModel->select('detventa.*, productos.nombre as producto')
