@@ -15,5 +15,6 @@ class MainSeeder extends Seeder
         $this->call('CategoriaSeeder');
         $this->call('MarcaSeeder');
         $this->call('UnidadMedidaSeeder');
+        $this->call('CatalogoSeeder');
     }
 }

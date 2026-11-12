@@ -31,7 +31,7 @@
                                 <td><span class="badge <?= $tecnico['estado'] === 'ACTIVO' ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= esc($tecnico['estado']) ?></span></td>
                                 <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-outline-secondary btnEditarTecnico" data-tecnico="<?= esc(json_encode($tecnico, JSON_UNESCAPED_UNICODE), 'attr') ?>" data-bs-toggle="modal" data-bs-target="#modalTecnico" aria-label="Editar técnico"><i class="bi bi-pencil-square"></i></button>
-                                    <form action="<?= base_url('tecnicos/cambiar-estado/' . $tecnico['idtecnico']) ?>" method="post" class="d-inline formEstadoTecnico" data-nombre="<?= esc($tecnico['nombres'] . ' ' . $tecnico['apellidos'], 'attr') ?>" data-accion="<?= $tecnico['estado'] === 'ACTIVO' ? 'desactivar' : 'activar' ?>">
+                                    <form action="<?= base_url('admin/tecnicos/cambiar-estado/' . $tecnico['idtecnico']) ?>" method="post" class="d-inline formEstadoTecnico" data-nombre="<?= esc($tecnico['nombres'] . ' ' . $tecnico['apellidos'], 'attr') ?>" data-accion="<?= $tecnico['estado'] === 'ACTIVO' ? 'desactivar' : 'activar' ?>">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm <?= $tecnico['estado'] === 'ACTIVO' ? 'btn-outline-danger' : 'btn-outline-success' ?>" title="Cambiar estado"><i class="bi <?= $tecnico['estado'] === 'ACTIVO' ? 'bi-person-dash' : 'bi-person-check' ?>"></i></button>
                                     </form>
@@ -49,7 +49,7 @@
 <div class="modal fade" id="modalTecnico" tabindex="-1" aria-labelledby="tituloModalTecnico" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content df-modal-tecnico">
         <div class="modal-header"><h5 class="modal-title fw-bold" id="tituloModalTecnico">Nuevo técnico</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-        <form action="<?= base_url('tecnicos/guardar') ?>" method="post" id="formTecnico">
+        <form action="<?= base_url('admin/tecnicos/guardar') ?>" method="post" id="formTecnico">
             <?= csrf_field() ?>
             <input type="hidden" name="idtecnico" id="idtecnico">
             <div class="modal-body"><div class="row g-3">

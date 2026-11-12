@@ -76,7 +76,7 @@
                                     </td>
                                     <td class="small text-secondary"><?= esc($u['telefono'] ?? '-') ?></td>
                                     <td class="text-center">
-                                        <a href="<?= base_url('usuarios/cambiarestado/' . $u['idusuario']) ?>"
+                                        <a href="<?= base_url('admin/usuarios/cambiarestado/' . $u['idusuario']) ?>"
                                             class="badge <?= $u['estado'] == 1 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?> text-decoration-none px-2 py-1 fw-semibold"
                                             title="Clic para alternar estado">
                                             <?= $u['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
@@ -107,7 +107,7 @@
 <div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
-            <form action="<?= base_url('usuarios/guardar') ?>" method="POST">
+            <form action="<?= base_url('admin/usuarios/guardar') ?>" method="POST">
                 <?= csrf_field() ?>
                 <input type="hidden" name="idusuario" id="idusuario">
                 <input type="hidden" name="idpersona" id="idpersona">

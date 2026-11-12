@@ -10,11 +10,11 @@ class MarcaModel extends Model
     protected  $primaryKey = 'idmarca';
     protected  $useAutoIncrement = true;
     protected  $returnType = 'array';
-    protected  $allowedFields = ['marca' , 'estado'];
+    protected  $allowedFields = ['marca', 'estado'];
 
     protected $validationRules = [
         'idmarca' => 'permit_empty|numeric',
-        'marca'   => 'required|min_length[2]|max_length[100]|is_unique[marcas.marca,idmarca.{idmarca}]',
+        'marca'   => 'required|min_length[2]|max_length[50]|is_unique[marcas.marca,idmarca.{idmarca}]',
     ];
 
 
@@ -22,7 +22,7 @@ class MarcaModel extends Model
         'marca' => [
             'required'   => 'El nombre de la marca es obligatorio.',
             'min_length' => 'Debe tener al menos 2 caracteres.',
-            'max_length' => 'No puede superar los 100 caracteres.',
+            'max_length' => 'No puede superar los 50 caracteres.',
             'is_unique'  => 'Esta marca ya está registrada.',
         ],
     ];

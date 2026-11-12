@@ -8,18 +8,18 @@
             <p class="df-sv-eyebrow mb-1">Servicios / Nueva orden</p>
             <h1 class="h3 fw-bold mb-1">Registrar orden de servicio</h1>
             <p class="text-muted small mb-0">Completa la solicitud y programa al técnico si ya tienes una fecha.</p>
-        </div><a href="<?= base_url('servicios') ?>" class="btn btn-light border"><i class="bi bi-arrow-left me-2"></i>Volver</a>
+        </div><a href="<?= base_url('admin/servicios') ?>" class="btn btn-light border"><i class="bi bi-arrow-left me-2"></i>Volver</a>
     </div>
     <div class="card df-sv-card mb-4">
         <div class="card-header df-sv-section-title"><i class="bi bi-receipt me-2"></i>Origen comercial</div>
         <div class="card-body p-3 p-lg-4"><label for="ventaOrigen" class="form-label fw-semibold">Vincular a una venta con servicio</label>
-            <select id="ventaOrigen" class="form-select" data-url="<?= base_url('servicios/crear') ?>">
+            <select id="ventaOrigen" class="form-select" data-url="<?= base_url('admin/servicios/crear') ?>">
                 <option value="">Servicio independiente (sin venta vinculada)</option><?php foreach ($ventasDisponibles as $v): ?><option value="<?= (int) $v['idventa'] ?>" <?= (int) ($ventaSeleccionada['idventa'] ?? 0) === (int) $v['idventa'] ? 'selected' : '' ?>>Venta N.º <?= (int) $v['idventa'] ?> · <?= esc($v['serie'] . '-' . $v['numero']) ?></option><?php endforeach; ?>
             </select>
             <p class="small text-muted mb-0 mt-2"><?= $ventaSeleccionada ? 'La orden quedará asociada a esta venta. Cliente y servicios disponibles se obtienen de lo vendido.' : 'Puedes registrar órdenes independientes, pero este formulario no genera ventas ni cobros.' ?></p>
         </div>
     </div>
-    <form action="<?= base_url('servicios/guardar') ?>" method="post" id="formServicio" autocomplete="off">
+    <form action="<?= base_url('admin/servicios/guardar') ?>" method="post" id="formServicio" autocomplete="off">
         <div id="errorServicio" class="alert alert-danger d-none" role="alert" aria-live="assertive"></div>
         <input type="hidden" name="idventa" value="<?= (int) ($ventaSeleccionada['idventa'] ?? 0) ?>">
         <?= csrf_field() ?>
@@ -58,7 +58,7 @@
                         <p class="small text-muted mb-0">El sistema verificará que el técnico no tenga otro servicio en ese horario.</p>
                     </div>
                 </div>
-                <div class="df-sv-form-actions d-flex flex-wrap gap-2 justify-content-end mt-3"><a href="<?= base_url('servicios') ?>" class="btn btn-light border">Cancelar</a><button type="submit" class="btn df-sv-btn" id="btnGuardarServicio"><i class="bi bi-check-lg me-1"></i>Guardar orden</button></div>
+                <div class="df-sv-form-actions d-flex flex-wrap gap-2 justify-content-end mt-3"><a href="<?= base_url('admin/servicios') ?>" class="btn btn-light border">Cancelar</a><button type="submit" class="btn df-sv-btn" id="btnGuardarServicio"><i class="bi bi-check-lg me-1"></i>Guardar orden</button></div>
             </div>
         </div>
     </form>

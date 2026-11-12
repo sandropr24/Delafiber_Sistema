@@ -15,7 +15,7 @@ $etiquetas = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROC
             <h1 class="h3 fw-bold mb-1">Servicios Técnicos</h1>
             <p class="text-muted small mb-0">Organiza órdenes, técnicos y visitas programadas.</p>
         </div>
-        <div class="d-flex gap-2 flex-wrap"><a href="<?= base_url('servicios/agenda') ?>" class="btn btn-light border"><i class="bi bi-calendar3 me-2"></i>Agenda</a><a href="<?= base_url('servicios/crear') ?>" class="btn df-sv-btn"><i class="bi bi-plus-lg me-2"></i>Nueva orden</a></div>
+        <div class="d-flex gap-2 flex-wrap"><a href="<?= base_url('admin/servicios/agenda') ?>" class="btn btn-light border"><i class="bi bi-calendar3 me-2"></i>Agenda</a><a href="<?= base_url('admin/servicios/crear') ?>" class="btn df-sv-btn"><i class="bi bi-plus-lg me-2"></i>Nueva orden</a></div>
     </div>
     <div class="row g-3 mb-4">
         <?php foreach ([['PENDIENTE', 'Pendientes', 'bi-inbox', 'warning'], ['PROGRAMADO', 'Programados', 'bi-calendar-check', 'primary'], ['EN_PROCESO', 'En proceso', 'bi-tools', 'info'], ['FINALIZADO', 'Finalizados', 'bi-check2-circle', 'success']] as $dato): ?>
@@ -68,7 +68,7 @@ $etiquetas = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROC
                                 <td><?= $orden['idtecnico'] ? esc(trim($orden['tecnico'])) : '<span class="text-muted">Sin asignar</span>' ?></td>
                                 <td class="text-nowrap small"><?= $orden['fecha_inicio'] ? esc(date('d/m/Y H:i', strtotime($orden['fecha_inicio']))) : '<span class="text-muted">Sin programar</span>' ?></td>
                                 <td><span class="df-sv-status df-sv-status-<?= esc($estado, 'attr') ?>"><?= esc($etiquetas[$estado] ?? $estado) ?></span></td>
-                                <td class="text-end"><a href="<?= base_url('servicios/detalles/' . $orden['idorden']) ?>" class="btn btn-sm btn-outline-secondary text-nowrap" aria-label="Ver detalle de la orden OS-<?= (int) $orden['idorden'] ?>"><i class="bi bi-eye me-1"></i>Ver detalle</a></td>
+                                <td class="text-end"><a href="<?= base_url('admin/servicios/detalles/' . $orden['idorden']) ?>" class="btn btn-sm btn-outline-secondary text-nowrap" aria-label="Ver detalle de la orden OS-<?= (int) $orden['idorden'] ?>"><i class="bi bi-eye me-1"></i>Ver detalle</a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

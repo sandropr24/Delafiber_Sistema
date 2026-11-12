@@ -97,74 +97,77 @@ class CategoriaModel extends Model
         string $busqueda = '',
         string $estado = 'todos'
     ): array {
-        $porPagina = max(1, $porPagina);
+        $porPagina = min(100, max(1, $porPagina));
         $busqueda = trim($busqueda);
+        $estadoFiltro = $estado === 'activo' ? 1 : ($estado === 'inactivo' ? 0 : null);
 
-        $filtrarPadres = static function ($query) use ($busqueda, $estado) {
+        $filtrar = static function ($query) use ($busqueda, $estadoFiltro) {
             $query->where('categorias.idcategoriapadre', null);
-
+            if ($busqueda === '' && $estadoFiltro === null) {
+                return $query;
+            }
+            $query->groupStart()->groupStart();
             if ($busqueda !== '') {
-                $query->groupStart()
-                    ->like('categorias.categoria', $busqueda)
-                    ->orWhereIn('categorias.idcategoria', static function ($sub) use ($busqueda) {
-                        return $sub->select('idcategoriapadre')
-                            ->from('categorias')
-                            ->where('idcategoriapadre IS NOT NULL', null, false)
-                            ->like('categoria', $busqueda);
-                    })
-                    ->groupEnd();
+                $query->like('categorias.categoria', $busqueda);
             }
-
-            if ($estado === 'activo' || $estado === 'inactivo') {
-                $query->where('categorias.estado', $estado === 'activo' ? 1 : 0);
+            if ($estadoFiltro !== null) {
+                $query->where('categorias.estado', $estadoFiltro);
             }
-
+            $query->groupEnd()->orWhereIn('categorias.idcategoria', static function ($sub) use ($busqueda, $estadoFiltro) {
+                $sub->select('idcategoriapadre')->from('categorias')
+                    ->where('idcategoriapadre IS NOT NULL', null, false);
+                if ($busqueda !== '') {
+                    $sub->like('categoria', $busqueda);
+                }
+                if ($estadoFiltro !== null) {
+                    $sub->where('estado', $estadoFiltro);
+                }
+                return $sub;
+            })->groupEnd();
             return $query;
         };
 
-        $totalPrincipales = $filtrarPadres(new self())->countAllResults();
-        $totalPaginas = max(1, (int) ceil($totalPrincipales / $porPagina));
+        $total = $filtrar(new self())->countAllResults();
+        $totalPaginas = max(1, (int) ceil($total / $porPagina));
         $pagina = min(max(1, $pagina), $totalPaginas);
-
         $productos = '(SELECT COUNT(*) FROM productos pr WHERE pr.idcategoria = categorias.idcategoria) AS total_productos';
-
-        $principales = $filtrarPadres(new self())
+        $padres = $filtrar(new self())
             ->select("categorias.*, NULL AS categoriapadre, {$productos}", false)
             ->orderBy('categorias.idcategoria', 'ASC')
             ->findAll($porPagina, ($pagina - 1) * $porPagina);
 
         $hijosPorPadre = [];
-
-        if ($principales) {
-            $consultaHijos = (new self())
+        if ($padres) {
+            $hijos = (new self())
                 ->select("categorias.*, p.categoria AS categoriapadre, {$productos}", false)
                 ->join('categorias p', 'p.idcategoria = categorias.idcategoriapadre', 'left')
-                ->whereIn('categorias.idcategoriapadre', array_column($principales, 'idcategoria'));
-
-            if ($estado === 'activo' || $estado === 'inactivo') {
-                $consultaHijos->where('categorias.estado', $estado === 'activo' ? 1 : 0);
-            }
-
-            $hijos = $consultaHijos
+                ->whereIn('categorias.idcategoriapadre', array_column($padres, 'idcategoria'))
                 ->orderBy('categorias.idcategoria', 'ASC')
                 ->findAll();
-
             foreach ($hijos as $hijo) {
                 $hijosPorPadre[$hijo['idcategoriapadre']][] = $hijo;
             }
         }
 
         $filas = [];
-
-        foreach ($principales as $padre) {
-            $lista = $hijosPorPadre[$padre['idcategoria']] ?? [];
-
+        foreach ($padres as $padre) {
+            $padreCoincide = ($estadoFiltro === null || (int) $padre['estado'] === $estadoFiltro)
+                && ($busqueda === '' || mb_stripos($padre['categoria'], $busqueda) !== false);
+            $todosHijos = $hijosPorPadre[$padre['idcategoria']] ?? [];
+            $visibles = [];
+            foreach ($todosHijos as $hijo) {
+                $coincideEstado = $estadoFiltro === null || (int) $hijo['estado'] === $estadoFiltro;
+                $coincideBusqueda = $busqueda === '' || mb_stripos($hijo['categoria'], $busqueda) !== false;
+                if ($coincideEstado && ($padreCoincide || $coincideBusqueda)) {
+                    $visibles[] = $hijo;
+                }
+            }
             $padre['nivel'] = 0;
-            $padre['total_hijos'] = count($lista);
-            $padre['productos_hijos'] = array_sum(array_column($lista, 'total_productos'));
+            $padre['contexto'] = !$padreCoincide;
+            $padre['total_hijos'] = count($visibles);
+            $padre['productos_hijos'] = array_sum(array_column($visibles, 'total_productos'));
             $filas[] = $padre;
-
-            foreach ($lista as $hijo) {
+            foreach ($visibles as $hijo) {
                 $hijo['nivel'] = 1;
                 $hijo['total_hijos'] = 0;
                 $hijo['productos_hijos'] = 0;
@@ -173,10 +176,10 @@ class CategoriaModel extends Model
         }
 
         return [
-            'filas'          => $filas,
-            'pagina'         => $pagina,
-            'totalPaginas'   => $totalPaginas,
-            'totalRegistros' => $totalPrincipales,
+            'filas' => $filas,
+            'pagina' => $pagina,
+            'totalPaginas' => $totalPaginas,
+            'totalRegistros' => $total,
         ];
     }
 

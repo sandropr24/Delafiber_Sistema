@@ -44,7 +44,7 @@
             </div>
           <?php endif; ?>
 
-          <form action="<?= site_url('login') ?>" method="post" autocomplete="off">
+          <form action="<?= site_url('admin/login') ?>" method="post" autocomplete="off">
             <?= csrf_field() ?>
 
             <div class="mb-3">

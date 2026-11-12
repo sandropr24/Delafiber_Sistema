@@ -9,7 +9,7 @@
             <p class="text-muted small mb-0">Gestión de ingresos de mercadería y control de compras del sistema.</p>
         </div>
         <div>
-            <a href="<?= base_url('compras/nuevo') ?>" class="btn btn-primary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
+            <a href="<?= base_url('admin/compras/nuevo') ?>" class="btn btn-primary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
                 <i class="bi bi-plus-lg"></i>
                 <span class="fw-medium">Nueva Compra</span>
             </a>
@@ -73,7 +73,7 @@
                                         <?= ($c['moneda'] === 'USD' ? 'US$' : 'S/') ?> <?= number_format($c['total'], 2) ?>
                                     </td>
                                     <td class="pe-4 text-center">
-                                        <a href="<?= base_url('compras/detalles/' . $c['idcompra']) ?>"
+                                        <a href="<?= base_url('admin/compras/detalles/' . $c['idcompra']) ?>"
                                             class="btn btn-sm btn-light border text-secondary hover-primary shadow-sm rounded-circle p-2 d-inline-flex align-items-center justify-content-center"
                                             style="width: 32px; height: 32px;"
                                             data-bs-toggle="tooltip"

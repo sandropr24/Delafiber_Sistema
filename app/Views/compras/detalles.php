@@ -9,7 +9,7 @@
             <p class="text-muted small mb-0">Información detallada del comprobante e ítems ingresados al inventario.</p>
         </div>
         <div>
-            <a href="<?= base_url('compras') ?>" class="btn btn-light border text-secondary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
+            <a href="<?= base_url('admin/compras') ?>" class="btn btn-light border text-secondary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
                 <i class="bi bi-arrow-left"></i>
                 <span class="fw-medium">Volver a Compras</span>
             </a>

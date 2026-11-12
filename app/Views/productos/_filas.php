@@ -129,7 +129,7 @@ $clasesTipo = [
             <td class="text-center">
 
                 <form
-                    action="<?= base_url('productos/cambiarestado/' . (int) $p['idproducto']) ?>"
+                    action="<?= base_url('admin/productos/cambiarestado/' . (int) $p['idproducto']) ?>"
                     method="POST"
                     class="d-inline">
 

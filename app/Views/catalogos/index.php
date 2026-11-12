@@ -46,7 +46,9 @@
                         <input type="search" id="buscarCategoriasInput" class="form-control" placeholder="Buscar categoría o subcategoría..." aria-label="Buscar categorías">
                     </div>
                     <select id="estadoCategoriasFiltro" class="form-select catalogo-estado" aria-label="Filtrar categorías por estado">
-                        <option value="todos">Todos los estados</option><option value="activo">Activas</option><option value="inactivo">Inactivas</option>
+                        <option value="todos">Todos los estados</option>
+                        <option value="activo">Activas</option>
+                        <option value="inactivo">Inactivas</option>
                     </select>
                     <button type="button" id="limpiarCategoriasFiltro" class="btn btn-outline-secondary catalogo-limpiar"><i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar</button>
                 </div>
@@ -84,7 +86,9 @@
                         <input type="search" id="buscarMarcasInput" class="form-control" placeholder="Buscar marca..." aria-label="Buscar marcas">
                     </div>
                     <select id="estadoMarcasFiltro" class="form-select catalogo-estado" aria-label="Filtrar marcas por estado">
-                        <option value="todos">Todos los estados</option><option value="activo">Activas</option><option value="inactivo">Inactivas</option>
+                        <option value="todos">Todos los estados</option>
+                        <option value="activo">Activas</option>
+                        <option value="inactivo">Inactivas</option>
                     </select>
                     <button type="button" id="limpiarMarcasFiltro" class="btn btn-outline-secondary catalogo-limpiar"><i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar</button>
                 </div>
@@ -116,7 +120,7 @@
 
 <div class="modal fade" id="modalNuevaCategoria" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form action="<?= base_url('catalogos/guardar-categoria') ?>" method="POST" class="modal-content border-0 shadow">
+        <form action="<?= base_url('admin/catalogos/guardar-categoria') ?>" method="POST" class="modal-content border-0 shadow">
             <?= csrf_field() ?>
             <input type="hidden" name="idcategoria" id="edit_idcategoria">
 
@@ -155,7 +159,7 @@
 
 <div class="modal fade" id="modalNuevaMarca" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <form action="<?= base_url('catalogos/guardar-marca') ?>" method="POST" class="modal-content border-0 shadow">
+        <form action="<?= base_url('admin/catalogos/guardar-marca') ?>" method="POST" class="modal-content border-0 shadow">
             <?= csrf_field() ?>
             <input type="hidden" name="idmarca" id="edit_idmarca">
 

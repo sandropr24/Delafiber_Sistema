@@ -9,7 +9,7 @@
             <p class="text-muted small mb-0">Registrar ingreso de mercadería y actualizar automáticamente el Kardex.</p>
         </div>
         <div>
-            <a href="<?= base_url('compras') ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm">
+            <a href="<?= base_url('admin/compras') ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm">
                 <i class="fas fa-arrow-left me-1"></i> Volver a Compras
             </a>
         </div>
@@ -22,7 +22,7 @@
         </div>
     <?php endif; ?>
 
-    <form action="<?= base_url('compras/guardar') ?>" method="POST" id="formCompra">
+    <form action="<?= base_url('admin/compras/guardar') ?>" method="POST" id="formCompra">
         <?= csrf_field() ?>
 
         <div class="row">

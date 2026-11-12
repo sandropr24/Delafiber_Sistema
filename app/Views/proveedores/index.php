@@ -88,7 +88,7 @@
                                                 title="Editar proveedor">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
-                                            <a href="<?= base_url('proveedores/eliminar/' . $prov['idproveedor']) ?>"
+                                            <a href="<?= base_url('admin/proveedores/eliminar/' . $prov['idproveedor']) ?>"
                                                 class="btn btn-sm btn-light border text-danger hover-danger shadow-sm rounded-circle p-2 d-inline-flex align-items-center justify-content-center"
                                                 style="width: 32px; height: 32px;"
                                                 onclick="return confirm('¿Estás seguro de eliminar este proveedor?')"
@@ -121,7 +121,7 @@
 <div class="modal fade" id="modalProveedor" tabindex="-1" aria-labelledby="modalProveedorLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
-            <form action="<?= base_url('proveedores/guardar') ?>" method="post">
+            <form action="<?= base_url('admin/proveedores/guardar') ?>" method="post">
                 <?= csrf_field() ?>
                 <input type="hidden" name="idproveedor" id="idproveedor">
 

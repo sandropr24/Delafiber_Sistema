@@ -9,7 +9,7 @@
             <p class="text-muted small mb-0">Historial y gestión de comprobantes de venta emitidos en el sistema.</p>
         </div>
         <div>
-            <a href="<?= base_url('ventas/crear') ?>" class="btn btn-primary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
+            <a href="<?= base_url('admin/ventas/crear') ?>" class="btn btn-primary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
                 <i class="bi bi-plus-lg"></i>
                 <span class="fw-medium">Nueva Venta</span>
             </a>
@@ -69,14 +69,14 @@
                                         S/ <?= number_format($venta['total'], 2) ?>
                                     </td>
                                     <td class="pe-4 text-center">
-                                        <a href="<?= base_url('ventas/detalles/' . $venta['idventa']) ?>"
+                                        <a href="<?= base_url('admin/ventas/detalles/' . $venta['idventa']) ?>"
                                             class="btn btn-sm btn-light border text-secondary hover-primary shadow-sm rounded-circle p-2 d-inline-flex align-items-center justify-content-center"
                                             style="width: 32px; height: 32px;"
                                             data-bs-toggle="tooltip"
                                             title="Ver detalles">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="<?= base_url('ventas/nota-pdf/' . $venta['idventa']) ?>"
+                                        <a href="<?= base_url('admin/ventas/nota-pdf/' . $venta['idventa']) ?>"
                                             class="btn btn-sm btn-light border shadow-sm rounded-circle p-2 d-inline-flex align-items-center justify-content-center ms-1 js-nota-pdf"
                                             style="width: 32px; height: 32px; color: #FF2B50;"
                                             data-bs-toggle="modal" data-bs-target="#modalNotaVentaPdf"
@@ -120,7 +120,7 @@
                         <td class="ps-4"><?= esc(trim(($sol['serie'] ?? '') . '-' . ($sol['numero'] ?? ''))) ?></td>
                         <td><?= esc($sol['fecha_solicitud']) ?></td>
                         <td><?= esc($sol['motivo']) ?></td>
-                        <td class="pe-4 text-end"><a class="btn btn-sm btn-outline-primary" href="<?= site_url('ventas/detalles/' . $sol['idventa']) ?>">Evaluar</a></td>
+                        <td class="pe-4 text-end"><a class="btn btn-sm btn-outline-primary" href="<?= site_url('admin/ventas/detalles/' . $sol['idventa']) ?>">Evaluar</a></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>

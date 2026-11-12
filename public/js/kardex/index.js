@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const critico = stock <= minimo;
       const clase = critico ? "danger" : "success";
       const id = encodeURIComponent(String(item.idkardex));
-      const urlHistorial = `${String(baseUrl).replace(/\/+$/, "")}/kardex/historial/${id}`;
+      const urlHistorial = `${String(baseUrl).replace(/\/+$/, "")}/admin/kardex/historial/${id}`;
 
       const fila = document.createElement("tr");
       fila.style.borderBottom = "1px solid #f0f0f0";

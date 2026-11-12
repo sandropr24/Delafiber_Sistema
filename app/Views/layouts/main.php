@@ -29,7 +29,7 @@
 
             <div class="py-2">
                 <div class="nav-section-title">Principal</div>
-                <a href="<?= base_url('dashboard') ?>" class="sidebar-link <?= url_is('dashboard*') ? 'active' : '' ?>">
+                <a href="<?= base_url('admin/dashboard') ?>" class="sidebar-link <?= url_is('admin/dashboard*') ? 'active' : '' ?>">
                     <i class="bi bi-grid-1x2-fill"></i>
                     <span>Dashboard</span>
                 </a>
@@ -37,32 +37,32 @@
                 <?php if (in_array($userRol, ['Administrador', 'Operador', 'Vendedor'], true)): ?>
                     <div class="nav-section-title">Operaciones & Stock</div>
                     <?php if ($userRol === 'Administrador'): ?>
-                        <a href="<?= base_url('locales') ?>" class="sidebar-link <?= url_is('locales*') ? 'active' : '' ?>">
+                        <a href="<?= base_url('admin/locales') ?>" class="sidebar-link <?= url_is('admin/locales*') ? 'active' : '' ?>">
                             <i class="bi bi-building"></i>
                             <span>Almacenes</span>
                         </a>
                     <?php endif; ?>
 
-                    <a href="<?= base_url('catalogos') ?>" class="sidebar-link <?= url_is('catalogos*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/catalogos') ?>" class="sidebar-link <?= url_is('admin/catalogos*') ? 'active' : '' ?>">
                         <i class="bi bi-tags"></i>
                         <span>Catálogos</span>
                     </a>
 
-                    <a href="<?= base_url('productos') ?>" class="sidebar-link <?= url_is('productos*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/productos') ?>" class="sidebar-link <?= url_is('admin/productos*') ? 'active' : '' ?>">
                         <i class="bi bi-box-seam"></i>
                         <span>Productos</span>
                     </a>
-                    <a href="<?= base_url('kardex') ?>" class="sidebar-link <?= url_is('kardex*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/kardex') ?>" class="sidebar-link <?= url_is('admin/kardex*') ? 'active' : '' ?>">
                         <i class="bi bi-journal-text"></i>
                         <span>Kardex & Stock</span>
                     </a>
-                    <a href="<?= base_url('entregas') ?>" class="sidebar-link <?= url_is('entregas*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/entregas') ?>" class="sidebar-link <?= url_is('admin/entregas*') ? 'active' : '' ?>">
                         <i class="bi bi-send"></i>
                         <span>Entregas</span>
                     </a>
 
                     <?php if (in_array($userRol, ['Administrador', 'Operador'], true)): ?>
-                        <a href="<?= base_url('servicios') ?>" class="sidebar-link <?= url_is('servicios*') ? 'active' : '' ?>">
+                        <a href="<?= base_url('admin/servicios') ?>" class="sidebar-link <?= url_is('admin/servicios*') ? 'active' : '' ?>">
                             <i class="bi bi-tools"></i>
                             <span>Servicios Técnicos</span>
                         </a>
@@ -71,43 +71,43 @@
 
                 <?php if (in_array($userRol, ['Administrador', 'Vendedor'], true)): ?>
                     <div class="nav-section-title">Comercial</div>
-                    <a href="<?= base_url('clientes') ?>" class="sidebar-link <?= url_is('personas*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/clientes') ?>" class="sidebar-link <?= url_is('admin/personas*') ? 'active' : '' ?>">
                         <i class="bi bi-people"></i>
                         <span>Clientes</span>
                     </a>
-                    <a href="<?= base_url('ventas') ?>" class="sidebar-link <?= url_is('ventas*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/ventas') ?>" class="sidebar-link <?= url_is('admin/ventas*') ? 'active' : '' ?>">
                         <i class="bi bi-percent"></i>
                         <span>Ventas</span>
                     </a>
-                    <a href="<?= base_url('pedidos') ?>" class="sidebar-link <?= url_is('pedidos*') ? 'active' : '' ?>">
-                        <i class="bi bi-box-seam"></i>
+                    <a href="<?= base_url('admin/pedidos') ?>" class="sidebar-link <?= url_is('admin/pedidos*') ? 'active' : '' ?>">
+                        <i class="bi bi-bag-check"></i>
                         <span>Pedidos</span>
                     </a>
                 <?php endif; ?>
 
                 <?php if (in_array($userRol, ['Administrador', 'Operador'], true)): ?>
                     <div class="nav-section-title">Compras</div>
-                    <a href="<?= base_url('proveedores') ?>" class="sidebar-link <?= url_is('proveedores*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/proveedores') ?>" class="sidebar-link <?= url_is('admin/proveedores*') ? 'active' : '' ?>">
                         <i class="bi bi-truck"></i>
                         <span>Proveedores</span>
                     </a>
-                    <a href="<?= base_url('cotizaciones') ?>" class="sidebar-link <?= url_is('cotizaciones*') ? 'active' : '' ?>">
-                        <i class="bi bi-clipboard-check"></i>
-                        <span>Cotizaciones</span>
-                    </a>
-                    <a href="<?= base_url('compras') ?>" class="sidebar-link <?= url_is('compras*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/compras') ?>" class="sidebar-link <?= url_is('admin/compras*') ? 'active' : '' ?>">
                         <i class="bi bi-cart-check"></i>
                         <span>Compras</span>
+                    </a>
+                    <a href="<?= base_url('admin/cotizaciones') ?>" class="sidebar-link <?= url_is('admin/cotizaciones*') ? 'active' : '' ?>">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span>Cotizaciones</span>
                     </a>
                 <?php endif; ?>
 
                 <?php if ($userRol === 'Administrador'): ?>
                     <div class="nav-section-title">Seguridad</div>
-                    <a href="<?= base_url('tecnicos') ?>" class="sidebar-link <?= url_is('tecnicos*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/tecnicos') ?>" class="sidebar-link <?= url_is('admin/tecnicos*') ? 'active' : '' ?>">
                         <i class="bi bi-person-workspace"></i>
                         <span>Técnicos</span>
                     </a>
-                    <a href="<?= base_url('usuarios') ?>" class="sidebar-link <?= url_is('usuarios*') ? 'active' : '' ?>">
+                    <a href="<?= base_url('admin/usuarios') ?>" class="sidebar-link <?= url_is('admin/usuarios*') ? 'active' : '' ?>">
                         <i class="bi bi-person-fill"></i>
                         <span>Usuarios</span>
                     </a>
@@ -142,7 +142,7 @@
                                     <span class="text-muted small text-truncate d-block" style="font-size: 0.8rem;"><?= esc($userEmail) ?></span>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item py-2 px-3 text-danger d-flex align-items-center gap-2" href="<?= base_url('logout') ?>">
+                                    <a class="dropdown-item py-2 px-3 text-danger d-flex align-items-center gap-2" href="<?= base_url('admin/logout') ?>">
                                         <i class="bi bi-box-arrow-right fs-5"></i>
                                         <span class="fw-semibold small">Cerrar Sesión</span>
                                     </a>

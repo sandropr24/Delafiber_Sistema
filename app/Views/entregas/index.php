@@ -33,7 +33,7 @@ foreach ($entregas as $entrega) {
     }
 }
 ?>
-<div class="container-fluid px-4 py-4" id="viewEntregas" data-url-buscar="<?= base_url('entregas/buscar_tabla') ?>" data-url-estado="<?= base_url('entregas/cambiar_estado') ?>" data-url-incidencia="<?= base_url('entregas/registrar-incidencia') ?>" data-url-historial="<?= base_url('entregas/historial-incidencias') ?>" data-url-cancelar="<?= base_url('entregas/cancelar-definitivamente') ?>">
+<div class="container-fluid px-4 py-4" id="viewEntregas" data-url-buscar="<?= base_url('admin/entregas/buscar_tabla') ?>" data-url-estado="<?= base_url('admin/entregas/cambiar_estado') ?>" data-url-incidencia="<?= base_url('admin/entregas/registrar-incidencia') ?>" data-url-historial="<?= base_url('admin/entregas/historial-incidencias') ?>" data-url-cancelar="<?= base_url('admin/entregas/cancelar-definitivamente') ?>" data-url-csrf="<?= base_url('admin/entregas/token-csrf') ?>">
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>

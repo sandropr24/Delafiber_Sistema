@@ -7,13 +7,13 @@
 <?= $this->section('contenido') ?>
 
 <?php
-    $indicadores = [
-        ['Ventas de hoy', 'S/ ' . number_format((float) ($totalVentasHoy ?? 0), 2), 'bi-cash-stack'],
-        ['Alertas de stock', (string) ($stockCritico ?? 0), 'bi-exclamation-triangle'],
-        ['Productos activos', (string) ($totalProductos ?? 0), 'bi-box-seam'],
-        ['Cotizaciones pendientes', (string) ($cotizacionesPendientes ?? 0), 'bi-file-earmark-text'],
-        ['Entregas pendientes', (string) ($entregasPendientes ?? 0), 'bi-truck']
-    ];
+$indicadores = [
+    ['Ventas de hoy', 'S/ ' . number_format((float) ($totalVentasHoy ?? 0), 2), 'bi-cash-stack'],
+    ['Alertas de stock', (string) ($stockCritico ?? 0), 'bi-exclamation-triangle'],
+    ['Productos activos', (string) ($totalProductos ?? 0), 'bi-box-seam'],
+    ['Cotizaciones pendientes', (string) ($cotizacionesPendientes ?? 0), 'bi-file-earmark-text'],
+    ['Entregas pendientes', (string) ($entregasPendientes ?? 0), 'bi-truck']
+];
 ?>
 
 <div class="container-fluid px-3 px-lg-4 py-3 df-dashboard">
@@ -97,17 +97,16 @@
     <div class="df-card p-3 mb-3">
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <span class="fw-bold small me-2">Accesos rápidos</span>
-            <a href="<?= base_url('ventas') ?>" class="df-action"><i class="bi bi-cart-plus me-1"></i> Ventas</a>
-            <a href="<?= base_url('cotizaciones') ?>" class="df-action"><i class="bi bi-file-earmark-plus me-1"></i> Cotizaciones</a>
-            <a href="<?= base_url('productos') ?>" class="df-action"><i class="bi bi-box-seam me-1"></i> Productos</a>
-            <a href="<?= base_url('entregas') ?>" class="df-action"><i class="bi bi-truck me-1"></i> Entregas</a>
+            <a href="<?= base_url('admin/ventas') ?>" class="df-action"><i class="bi bi-cart-plus me-1"></i> Ventas</a>
+            <a href="<?= base_url('admin/productos') ?>" class="df-action"><i class="bi bi-box-seam me-1"></i> Productos</a>
+            <a href="<?= base_url('admin/entregas') ?>" class="df-action"><i class="bi bi-truck me-1"></i> Entregas</a>
         </div>
     </div>
 
     <div class="df-card overflow-hidden mb-3">
         <div class="p-3 d-flex justify-content-between align-items-center">
             <h5 class="df-heading">Últimas ventas registradas</h5>
-            <a href="<?= base_url('ventas') ?>" class="df-link">Ver todas <i class="bi bi-arrow-right"></i></a>
+            <a href="<?= base_url('admin/ventas') ?>" class="df-link">Ver todas <i class="bi bi-arrow-right"></i></a>
         </div>
 
         <div class="table-responsive">
@@ -129,11 +128,11 @@
                     <?php else: ?>
                         <?php foreach ($ultimasVentas as $venta): ?>
                             <?php
-                                $comprobante = ($venta['tipodocumento'] ?? '') . ' ' . ($venta['serie'] ?? '') . '-' . ($venta['numero'] ?? '');
-                                $cliente = trim(($venta['nombres'] ?? '') . ' ' . ($venta['apellidos'] ?? ''));
-                                if ($cliente === '') {
-                                    $cliente = $venta['razonsocial'] ?? 'Sin nombre';
-                                }
+                            $comprobante = ($venta['tipodocumento'] ?? '') . ' ' . ($venta['serie'] ?? '') . '-' . ($venta['numero'] ?? '');
+                            $cliente = trim(($venta['nombres'] ?? '') . ' ' . ($venta['apellidos'] ?? ''));
+                            if ($cliente === '') {
+                                $cliente = $venta['razonsocial'] ?? 'Sin nombre';
+                            }
                             ?>
                             <tr>
                                 <td class="ps-3 fw-semibold"><?= esc($comprobante) ?></td>
@@ -159,7 +158,7 @@
 <?= $this->section('scripts') ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const canvas = document.getElementById('dfVentasChart');
 
         if (!canvas || typeof Chart === 'undefined') {
@@ -173,27 +172,27 @@
             type: 'line',
             data: {
                 labels: dias,
-                datasets: [
-                    {
-                        label: 'Ventas (S/)',
-                        data: montos,
-                        borderColor: '#ff254b',
-                        backgroundColor: 'rgba(255, 37, 75, 0.09)',
-                        fill: true,
-                        tension: 0.35,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#ff254b'
-                    }
-                ]
+                datasets: [{
+                    label: 'Ventas (S/)',
+                    data: montos,
+                    borderColor: '#ff254b',
+                    backgroundColor: 'rgba(255, 37, 75, 0.09)',
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ff254b'
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
+                    legend: {
+                        display: false
+                    },
                     tooltip: {
                         callbacks: {
-                            label: function (contexto) {
+                            label: function(contexto) {
                                 return 'S/ ' + Number(contexto.parsed.y).toFixed(2);
                             }
                         }
@@ -202,10 +201,14 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#f0edf2' }
+                        grid: {
+                            color: '#f0edf2'
+                        }
                     },
                     x: {
-                        grid: { display: false }
+                        grid: {
+                            display: false
+                        }
                     }
                 }
             }

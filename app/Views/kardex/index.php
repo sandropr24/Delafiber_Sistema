@@ -17,7 +17,7 @@ $formatearCantidad = static function ($valor, $unidad) {
 ?>
 
 
-<div class="container-fluid px-4 py-4" id="viewKardex" data-url-buscar="<?= base_url('kardex/buscar_tabla') ?>">
+<div class="container-fluid px-4 py-4" id="viewKardex" data-url-buscar="<?= base_url('admin/kardex/buscar_tabla') ?>">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1"><?= esc($titulo) ?></h1>
@@ -138,7 +138,7 @@ $formatearCantidad = static function ($valor, $unidad) {
                                         </span>
                                     </td>
                                     <td class="text-center px-4 align-middle">
-                                        <a href="<?= base_url('kardex/historial/' . $item['idkardex']) ?>" class="btn btn-sm btn-light text-primary border-0 shadow-sm" title="Ver Historial de Movimientos en Kardex">
+                                        <a href="<?= base_url('admin/kardex/historial/' . $item['idkardex']) ?>" class="btn btn-sm btn-light text-primary border-0 shadow-sm" title="Ver Historial de Movimientos en Kardex">
                                             <i class="bi bi-eye fs-5"></i>
                                         </a>
                                     </td>

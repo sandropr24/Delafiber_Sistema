@@ -22,7 +22,7 @@ $formatearCantidad = static function ($valor, $unidad) {
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="<?= base_url('kardex') ?>" class="text-decoration-none">Kardex</a></li>
+                    <li class="breadcrumb-item"><a href="<?= base_url('admin/kardex') ?>" class="text-decoration-none">Kardex</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Historial Detallado</li>
                 </ol>
             </nav>
@@ -33,7 +33,7 @@ $formatearCantidad = static function ($valor, $unidad) {
             </p>
         </div>
         <div>
-            <a href="<?= base_url('kardex') ?>" class="btn btn-outline-secondary btn-sm shadow-sm px-3">
+            <a href="<?= base_url('admin/kardex') ?>" class="btn btn-outline-secondary btn-sm shadow-sm px-3">
                 <i class="fas fa-arrow-left me-1"></i> Volver
             </a>
         </div>

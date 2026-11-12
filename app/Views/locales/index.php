@@ -60,7 +60,7 @@
                                     title="Editar">
                                     <i class="bi bi-pencil-square fs-5"></i>
                                 </button>
-                                <a href="<?= base_url('locales/eliminar/' . $l['idlocal']) ?>"
+                                <a href="<?= base_url('admin/locales/eliminar/' . $l['idlocal']) ?>"
                                     class="btn btn-sm btn-light text-danger border-0"
                                     onclick="return confirm('¿Seguro que deseas eliminar <?= esc($l['nombrelocal']) ?>?')"
                                     title="Eliminar">
@@ -79,7 +79,7 @@
 <div class="modal fade" id="modalLocal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <form action="<?= base_url('locales/guardar') ?>" method="POST">
+            <form action="<?= base_url('admin/locales/guardar') ?>" method="POST">
                 <?= csrf_field() ?>
                 <input type="hidden" name="idlocal" id="idlocal">
 

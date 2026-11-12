@@ -16,21 +16,28 @@ foreach ($ordenes as $orden) $grupos[substr($orden['fecha_inicio'], 0, 10)][] = 
             <h1 class="h3 fw-bold mb-1">Agenda de Servicios</h1>
             <p class="text-muted small mb-0">Trabajos programados y en proceso, ordenados por fecha.</p>
         </div>
-        <div class="d-flex gap-2"><a href="<?= base_url('servicios') ?>" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i>Órdenes</a><a href="<?= base_url('servicios/crear') ?>" class="btn df-sv-btn"><i class="bi bi-plus-lg me-1"></i>Nueva orden</a></div>
+        <div class="d-flex gap-2"><a href="<?= base_url('admin/servicios') ?>" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i>Órdenes</a><a href="<?= base_url('admin/servicios/crear') ?>" class="btn df-sv-btn"><i class="bi bi-plus-lg me-1"></i>Nueva orden</a></div>
     </div>
     <?php if ($grupos): ?>
-        <div class="card df-sv-card mb-4"><div class="card-body p-3">
-            <div class="row g-2">
-                <div class="col-md-5"><label for="agendaTecnico" class="form-label fw-semibold">Filtrar por técnico</label>
-                    <select id="agendaTecnico" class="form-select"><option value="">Todos los técnicos</option>
-                        <?php $listaTecnicos = []; foreach ($ordenes as $o) { if (!empty($o['idtecnico'])) $listaTecnicos[(int) $o['idtecnico']] = trim((string) ($o['tecnico'] ?? '')); } asort($listaTecnicos); ?>
-                        <?php foreach ($listaTecnicos as $id => $nombre): ?><option value="<?= (int) $id ?>"><?= esc($nombre) ?></option><?php endforeach; ?>
-                    </select>
+        <div class="card df-sv-card mb-4">
+            <div class="card-body p-3">
+                <div class="row g-2">
+                    <div class="col-md-5"><label for="agendaTecnico" class="form-label fw-semibold">Filtrar por técnico</label>
+                        <select id="agendaTecnico" class="form-select">
+                            <option value="">Todos los técnicos</option>
+                            <?php $listaTecnicos = [];
+                            foreach ($ordenes as $o) {
+                                if (!empty($o['idtecnico'])) $listaTecnicos[(int) $o['idtecnico']] = trim((string) ($o['tecnico'] ?? ''));
+                            }
+                            asort($listaTecnicos); ?>
+                            <?php foreach ($listaTecnicos as $id => $nombre): ?><option value="<?= (int) $id ?>"><?= esc($nombre) ?></option><?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-5"><label for="agendaFecha" class="form-label fw-semibold">Filtrar por fecha</label><input id="agendaFecha" type="date" class="form-control"></div>
+                    <div class="col-md-2 d-flex align-items-end"><button id="limpiarAgenda" type="button" class="btn btn-outline-secondary w-100">Limpiar filtros</button></div>
                 </div>
-                <div class="col-md-5"><label for="agendaFecha" class="form-label fw-semibold">Filtrar por fecha</label><input id="agendaFecha" type="date" class="form-control"></div>
-                <div class="col-md-2 d-flex align-items-end"><button id="limpiarAgenda" type="button" class="btn btn-outline-secondary w-100">Limpiar filtros</button></div>
             </div>
-        </div></div>
+        </div>
         <div id="agendaSinResultados" class="alert alert-light border d-none">No hay trabajos que coincidan con los filtros.</div>
     <?php endif; ?>
     <?php if (!$grupos): ?><div class="card df-sv-card">
@@ -48,7 +55,7 @@ foreach ($ordenes as $orden) $grupos[substr($orden['fecha_inicio'], 0, 10)][] = 
                                 <div class="fw-semibold mb-1"><?= esc($item['titulo']) ?></div>
                                 <div class="small text-muted mb-2"><?= esc($item['cliente']) ?></div>
                                 <div class="small mb-1"><i class="bi bi-person-gear me-2"></i><?= esc(trim($item['tecnico'] ?? '')) ?></div>
-                                <div class="small text-muted mb-3"><i class="bi bi-geo-alt me-2"></i><?= esc($item['direccion'] ?: 'Dirección no registrada') ?></div><a class="btn btn-sm btn-outline-secondary" href="<?= base_url('servicios/detalles/' . $item['idorden']) ?>">Ver orden OS-<?= str_pad((string) $item['idorden'], 5, '0', STR_PAD_LEFT) ?></a>
+                                <div class="small text-muted mb-3"><i class="bi bi-geo-alt me-2"></i><?= esc($item['direccion'] ?: 'Dirección no registrada') ?></div><a class="btn btn-sm btn-outline-secondary" href="<?= base_url('admin/servicios/detalles/' . $item['idorden']) ?>">Ver orden OS-<?= str_pad((string) $item['idorden'], 5, '0', STR_PAD_LEFT) ?></a>
                             </div>
                         </div>
                     </div>

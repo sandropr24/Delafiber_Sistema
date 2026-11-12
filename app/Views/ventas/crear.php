@@ -10,14 +10,14 @@
             <p class="text-muted small mb-0">Busca artículos, prepara el carrito y confirma la venta en pocos pasos.</p>
         </div>
         <div>
-            <a href="<?= base_url('ventas') ?>" class="btn btn-light border text-secondary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
+            <a href="<?= base_url('admin/ventas') ?>" class="btn btn-light border text-secondary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
                 <i class="bi bi-arrow-left"></i>
                 <span class="fw-medium">Volver al listado</span>
             </a>
         </div>
     </div>
 
-    <form action="<?= base_url('ventas/guardar') ?>" method="POST" autocomplete="off" id="formVenta">
+    <form action="<?= base_url('admin/ventas/guardar') ?>" method="POST" autocomplete="off" id="formVenta">
         <?= csrf_field() ?>
         <div class="row g-3 align-items-start df-venta-grid">
             <div class="col-12 col-xl-7">
@@ -31,31 +31,31 @@
                     <div class="card-body p-4">
                         <div class="row g-2 mb-2">
                             <div class="col-12 col-md-5">
-                            <label class="form-label small fw-bold text-secondary text-uppercase">Local / Sucursal <span class="text-danger">*</span></label>
-                            <select name="idlocal" id="selectLocal" class="form-select" required>
-                                <option value="">Seleccione local...</option>
-                                <?php foreach ($locales ?? [] as $loc): ?>
-                                    <option value="<?= $loc['idlocal'] ?>"><?= esc($loc['nombrelocal']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                            <div class="col-12 col-md-7">
-                            <label class="form-label small fw-bold text-secondary text-uppercase">Cliente <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <select name="idcliente" id="selectCliente" class="form-select" required>
-                                    <option value="">Seleccione cliente...</option>
-                                    <?php foreach ($clientes ?? [] as $cli): ?>
-                                        <option value="<?= $cli['idpersona'] ?>">
-                                            <?= trim(esc($cli['nombres'] ?? '') . ' ' . esc($cli['apellidos'] ?? '')) ?: esc($cli['razonsocial'] ?? 'Sin Nombre') ?>
-                                        </option>
+                                <label class="form-label small fw-bold text-secondary text-uppercase">Local / Sucursal <span class="text-danger">*</span></label>
+                                <select name="idlocal" id="selectLocal" class="form-select" required>
+                                    <option value="">Seleccione local...</option>
+                                    <?php foreach ($locales ?? [] as $loc): ?>
+                                        <option value="<?= $loc['idlocal'] ?>"><?= esc($loc['nombrelocal']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalClienteExpress" title="Cliente rápido">
-                                    <i class="bi bi-plus-lg"></i>
-                                </button>
                             </div>
-                        </div>
+
+                            <div class="col-12 col-md-7">
+                                <label class="form-label small fw-bold text-secondary text-uppercase">Cliente <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select name="idcliente" id="selectCliente" class="form-select" required>
+                                        <option value="">Seleccione cliente...</option>
+                                        <?php foreach ($clientes ?? [] as $cli): ?>
+                                            <option value="<?= $cli['idpersona'] ?>">
+                                                <?= trim(esc($cli['nombres'] ?? '') . ' ' . esc($cli['apellidos'] ?? '')) ?: esc($cli['razonsocial'] ?? 'Sin Nombre') ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalClienteExpress" title="Cliente rápido">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
 
                         </div>
                         <div class="row g-2 mb-2">
@@ -90,11 +90,11 @@
 
                         <div class="row g-2">
                             <div class="col-12 col-md-6">
-                            <label class="form-label small fw-bold text-secondary text-uppercase">Tipo de Documento <span class="text-danger">*</span></label>
-                            <select name="tipodocumento" class="form-select" required>
-                                <option value="NOTA_VENTA">Nota de venta</option>
-                            </select>
-                        </div>
+                                <label class="form-label small fw-bold text-secondary text-uppercase">Tipo de Documento <span class="text-danger">*</span></label>
+                                <select name="tipodocumento" class="form-select" required>
+                                    <option value="NOTA_VENTA">Nota de venta</option>
+                                </select>
+                            </div>
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label small fw-bold text-secondary text-uppercase">Número <span class="text-danger">*</span></label>
@@ -227,7 +227,9 @@
             </div>
             <div class="col-12 col-xl-5">
                 <div class="card df-carrito-card mb-3">
-                    <div class="card-header"><h6 class="m-0 fw-bold"><i class="bi bi-cart3 text-primary me-2"></i>Carrito de venta</h6></div>
+                    <div class="card-header">
+                        <h6 class="m-0 fw-bold"><i class="bi bi-cart3 text-primary me-2"></i>Carrito de venta</h6>
+                    </div>
                     <div class="card-body p-3">
                         <div class="table-responsive border rounded-2">
                             <table class="table table-hover align-middle mb-0" id="tablaDetalle">
@@ -252,6 +254,44 @@
                         </div>
                     </div>
                 </div>
+                <?php if (!empty($puedeAplicarDescuento)): ?>
+                    <div class="card border shadow-sm rounded-3 mb-3">
+                        <div class="card-header">
+                            <h6 class="m-0 fw-bold"><i class="bi bi-tag me-2 text-primary"></i>Descuento de la venta</h6>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-2">
+                                <div class="col-md-5">
+                                    <label for="tipoDescuento" class="form-label">Tipo</label>
+                                    <select name="tipo_descuento" id="tipoDescuento" class="form-select">
+                                        <option value="NINGUNO">Sin descuento</option>
+                                        <option value="PORCENTAJE">Porcentaje (%)</option>
+                                        <option value="MONTO">Monto fijo (S/)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-7" id="campoValorDescuento" hidden>
+                                    <label for="valorDescuento" class="form-label">Valor del descuento</label>
+                                    <input type="number" name="valor_descuento" id="valorDescuento" class="form-control" min="0" step="0.01" value="0.00" disabled>
+                                </div>
+                                <div class="col-12" id="campoMotivoDescuento" hidden>
+                                    <label for="motivoDescuento" class="form-label">Motivo</label>
+                                    <input type="text" name="motivo_descuento" id="motivoDescuento" class="form-control" maxlength="300" minlength="5" placeholder="Ej. Compra por volumen" list="motivosVenta" disabled>
+                                    <datalist id="motivosVenta">
+                                        <option value="Compra por volumen">
+                                        <option value="Promoción">
+                                        <option value="Negociación comercial">
+                                        <option value="Cliente frecuente">
+                                        <option value="Cortesía comercial">
+                                    </datalist>
+                                </div>
+                            </div>
+                            <div class="text-danger small mt-2 d-none" id="errorDescuento" role="alert"></div>
+                        </div>
+                    </div>
+
+
+                <?php endif; ?>
+
                 <div class="card border shadow-sm rounded-3 mb-3">
                     <div class="card-header bg-light py-3 px-4 border-bottom">
                         <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
@@ -306,40 +346,7 @@
                     </div>
                 </div>
 
-                <?php if (!empty($puedeAplicarDescuento)): ?>
-                <div class="card border shadow-sm rounded-3 mb-3">
-                    <div class="card-header"><h6 class="m-0 fw-bold"><i class="bi bi-tag me-2 text-primary"></i>Descuento de la venta</h6></div>
-                    <div class="card-body p-3">
-                        <div class="row g-2">
-                            <div class="col-md-5">
-                                <label for="tipoDescuento" class="form-label">Tipo</label>
-                                <select name="tipo_descuento" id="tipoDescuento" class="form-select">
-                                    <option value="NINGUNO">Sin descuento</option>
-                                    <option value="PORCENTAJE">Porcentaje (%)</option>
-                                    <option value="MONTO">Monto fijo (S/)</option>
-                                </select>
-                            </div>
-                            <div class="col-md-7" id="campoValorDescuento" hidden>
-                                <label for="valorDescuento" class="form-label">Valor del descuento</label>
-                                <input type="number" name="valor_descuento" id="valorDescuento" class="form-control" min="0" step="0.01" value="0.00" disabled>
-                            </div>
-                            <div class="col-12" id="campoMotivoDescuento" hidden>
-                                <label for="motivoDescuento" class="form-label">Motivo</label>
-                                <input type="text" name="motivo_descuento" id="motivoDescuento" class="form-control" maxlength="300" minlength="5" placeholder="Ej. Compra por volumen" list="motivosVenta" disabled>
-                                <datalist id="motivosVenta">
-                                    <option value="Compra por volumen">
-                                    <option value="Promoción">
-                                    <option value="Negociación comercial">
-                                    <option value="Cliente frecuente">
-                                    <option value="Cortesía comercial">
-                                </datalist>
-                            </div>
-                        </div>
-                        <div class="text-danger small mt-2 d-none" id="errorDescuento" role="alert"></div>
-                    </div>
-                </div>
 
-                <?php endif; ?>
 
                 <div class="card border shadow-sm rounded-3 resumen-venta">
                     <div class="card-body p-4">
@@ -377,7 +384,7 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="formClienteExpress" data-url-express="<?= base_url('clientes/guardar-express') ?>">
+            <form id="formClienteExpress" data-url-express="<?= base_url('admin/clientes/guardar-express') ?>">
                 <?= csrf_field() ?>
                 <div class="modal-body p-4">
                     <div class="mb-3">

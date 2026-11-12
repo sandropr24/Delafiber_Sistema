@@ -5,7 +5,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('contenido') ?>
-<div class="container-fluid px-4 py-4" id="viewProductos" data-url-buscar="<?= site_url('productos/buscar_tabla') ?>">
+<div class="container-fluid px-4 py-4" id="viewProductos" data-url-buscar="<?= site_url('admin/productos/buscar_tabla') ?>">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="fw-bold mb-1">Catálogo de Productos</h4>
@@ -93,7 +93,7 @@
 <div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable producto-modal">
         <div class="modal-content border-0 shadow">
-            <form action="<?= base_url('productos/guardar') ?>" method="POST" enctype="multipart/form-data">
+            <form action="<?= base_url('admin/productos/guardar') ?>" method="POST" enctype="multipart/form-data">
                 <?= csrf_field() ?>
                 <input type="hidden" name="idproducto" id="idproducto">
 

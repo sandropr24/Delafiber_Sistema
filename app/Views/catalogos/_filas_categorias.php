@@ -36,7 +36,7 @@
                 <?php endif; ?>
             </td>
             <td class="text-center">
-                <form action="<?= base_url('catalogos/cambiar-estado-categoria/' . $cat['idcategoria']) ?>" method="POST" class="d-inline form-cambiar-estado" data-elemento="categoría" data-nombre="<?= esc($cat['categoria'], 'attr') ?>" data-accion="<?= $activa ? 'desactivar' : 'activar' ?>">
+                <form action="<?= base_url('admin/catalogos/cambiar-estado-categoria/' . $cat['idcategoria']) ?>" method="POST" class="d-inline form-cambiar-estado" data-elemento="categoría" data-nombre="<?= esc($cat['categoria'], 'attr') ?>" data-accion="<?= $activa ? 'desactivar' : 'activar' ?>">
                     <?= csrf_field() ?>
                     <button type="submit" title="<?= $activa ? 'Desactivar' : 'Activar' ?> categoría"
                         class="badge border <?= $activa ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' ?> px-2 py-1 fw-semibold">

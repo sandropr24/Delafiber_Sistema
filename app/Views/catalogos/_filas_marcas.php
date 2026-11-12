@@ -9,7 +9,7 @@
             </td>
             <td class="text-center">
                 <?php if (array_key_exists('estado', $mar)): ?>
-                    <form action="<?= base_url('catalogos/cambiar-estado-marca/' . $mar['idmarca']) ?>" method="POST" class="d-inline form-cambiar-estado" data-elemento="marca" data-nombre="<?= esc($mar['marca'], 'attr') ?>" data-accion="<?= $marcaActiva ? 'desactivar' : 'activar' ?>">
+                    <form action="<?= base_url('admin/catalogos/cambiar-estado-marca/' . $mar['idmarca']) ?>" method="POST" class="d-inline form-cambiar-estado" data-elemento="marca" data-nombre="<?= esc($mar['marca'], 'attr') ?>" data-accion="<?= $marcaActiva ? 'desactivar' : 'activar' ?>">
                         <?= csrf_field() ?>
                         <button type="submit" title="<?= $marcaActiva ? 'Desactivar' : 'Activar' ?> marca"
                             class="badge border <?= $marcaActiva ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' ?> px-2 py-1 fw-semibold">

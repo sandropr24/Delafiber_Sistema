@@ -51,7 +51,7 @@
                                 <?= esc($c['direccion'] ?? '-') ?>
                             </td>
                             <td class="text-center">
-                                <a href="<?= base_url('clientes/cambiarestado/' . $c['idpersona']) ?>"
+                                <a href="<?= base_url('admin/clientes/cambiarestado/' . $c['idpersona']) ?>"
                                     class="badge <?= (($c['estado'] ?? 1) == 1) ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?> text-decoration-none px-2 py-1 fw-semibold"
                                     title="Clic para alternar estado">
                                     <?= (($c['estado'] ?? 1) == 1) ? 'Activo' : 'Inactivo' ?>
@@ -77,7 +77,7 @@
 <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">
-            <form action="<?= base_url('clientes/guardar') ?>" method="POST" autocomplete="off">
+            <form action="<?= base_url('admin/clientes/guardar') ?>" method="POST" autocomplete="off">
                 <?= csrf_field() ?>
                 <input type="hidden" name="idpersona" id="idpersona">
 

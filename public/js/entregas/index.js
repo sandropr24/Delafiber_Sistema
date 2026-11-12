@@ -20,6 +20,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtroEstado = document.getElementById('selectEstadoEntrega');
     const filtroTecnico = document.getElementById('selectTecnicoEntrega');
 
+    async function datosConCsrf(form) {
+        const respuesta = await fetch(vista.dataset.urlCsrf, {
+            method: 'GET',
+            credentials: 'same-origin',
+            cache: 'no-store',
+            headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
+        });
+        if (!respuesta.ok) {
+            throw new Error('No se pudo actualizar el token de seguridad. Recarga la página e inicia sesión nuevamente si es necesario.');
+        }
+
+        const token = await respuesta.json();
+        if (!token || typeof token.name !== 'string' || typeof token.hash !== 'string' || !token.name || !token.hash) {
+            throw new Error('El servidor devolvió un token de seguridad inválido.');
+        }
+
+        document.querySelectorAll('#formEstadoEntrega input[name], #formIncidenciaEntrega input[name], #formCancelarEntrega input[name]').forEach(input => {
+            if (input.type === 'hidden' && input.name.startsWith('csrf_')) {
+                input.name = token.name;
+                input.value = token.hash;
+            }
+        });
+        const datos = new FormData(form);
+        datos.set(token.name, token.hash);
+        return datos;
+    }
+
+    function verificarCsrf(respuesta) {
+        if (respuesta.status === 403) {
+            throw new Error('La validación de seguridad expiró o no coincide. Recarga la página e inténtalo nuevamente. No se guardó el cambio.');
+        }
+    }
+
     let estadoInicial = '';
     let procesando = false;
     let regresarAGestion = false;
@@ -133,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         limpiarError();
 
         try {
-            const datos = new FormData(formulario);
+            const datos = await datosConCsrf(formulario);
             datos.set('identrega', idEntrega.value);
             datos.set('estado', estado.value);
             datos.set('idtecnico', tecnico.value);
@@ -145,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
 
+            verificarCsrf(respuesta);
             const contenido = await respuesta.text();
             let resultado;
 
@@ -262,9 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
             incidenciaError.classList.add('d-none');
             try {
                 const response = await fetch(vista.dataset.urlIncidencia, {
-                    method: 'POST', body: new FormData(incidenciaForm), credentials: 'same-origin',
+                    method: 'POST', body: await datosConCsrf(incidenciaForm), credentials: 'same-origin',
                     headers: {'X-Requested-With': 'XMLHttpRequest'}
                 });
+                verificarCsrf(response);
                 const data = await response.json();
                 if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo registrar la incidencia.');
                 window.location.reload();
@@ -298,9 +333,10 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelarError.classList.add('d-none');
             try {
                 const response = await fetch(vista.dataset.urlCancelar, {
-                    method: 'POST', body: new FormData(cancelarForm), credentials: 'same-origin',
+                    method: 'POST', body: await datosConCsrf(cancelarForm), credentials: 'same-origin',
                     headers: {'X-Requested-With': 'XMLHttpRequest'}
                 });
+                verificarCsrf(response);
                 const data = await response.json();
                 if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo cancelar la entrega.');
                 window.location.reload();
