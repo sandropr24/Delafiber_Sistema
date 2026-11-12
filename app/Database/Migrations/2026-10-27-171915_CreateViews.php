@@ -41,17 +41,8 @@ class CreateViews extends Migration
             WHERE ci.estado = 'PENDIENTE'
         ");
 
-        $this->db->query("
-            CREATE VIEW vw_entregas_pendientes_tecnico AS
-            SELECT e.idtecnico, CONCAT(pe.apellidos,' ',pe.nombres) AS tecnico,
-                   e.identrega, e.idventa, v.serie, v.numero, e.direccion, e.referencia,
-                   e.telefono, e.estado, e.cobrocontraentrega
-            FROM entregas e
-            JOIN ventas v    ON v.idventa = e.idventa
-            JOIN usuarios u  ON u.idusuario = e.idtecnico
-            JOIN personas pe ON pe.idpersona = u.idpersona
-            WHERE e.tipoentrega = 'DOMICILIO' AND e.estado <> 'ENTREGADO'
-        ");
+        git add app/Database/Migrations/2026-10-27-170000_CreateTableTecnicos.php
+
 
         $this->db->query("
             CREATE VIEW vw_series_vendidas AS
@@ -68,19 +59,25 @@ class CreateViews extends Migration
         ");
 
         $this->db->query("
-            CREATE VIEW vw_reporte_ventas AS
-            SELECT v.idventa, DATE(v.fecha) AS fecha, l.nombre AS linea, c.canal,
-                   v.idvendedor, e.idtecnico, dv.idproducto, pr.nombre AS producto,
-                   dv.cantidad, ROUND(dv.cantidad * dv.precioventa, 2) AS importe,
-                   ROUND(dv.cantidad * dv.costounitario, 2) AS costo
-            FROM ventas v
-            JOIN estadoventa ev ON ev.idestado = v.idestado AND ev.estado = 'Emitida'
-            JOIN lineas l       ON l.idlinea = v.idlinea
-            JOIN canalesventa c ON c.idcanal = v.idcanal
-            JOIN detventa dv    ON dv.idventa = v.idventa
-            JOIN productos pr   ON pr.idproducto = dv.idproducto
-            LEFT JOIN entregas e ON e.idventa = v.idventa
-        ");
+    CREATE VIEW vw_entregas_pendientes_tecnico AS
+    SELECT
+        e.idtecnico,
+        CONCAT(t.apellidos, ' ', t.nombres) AS tecnico,
+        e.identrega,
+        e.idventa,
+        v.serie,
+        v.numero,
+        e.direccion,
+        e.referencia,
+        e.telefono,
+        e.estado,
+        e.cobrocontraentrega
+    FROM entregas e
+    JOIN ventas v ON v.idventa = e.idventa
+    JOIN tecnicos t ON t.idtecnico = e.idtecnico
+    WHERE e.tipoentrega = 'DOMICILIO'
+      AND e.estado <> 'ENTREGADO'
+");
 
         $this->db->query("
             CREATE VIEW vw_arqueo_esperado AS

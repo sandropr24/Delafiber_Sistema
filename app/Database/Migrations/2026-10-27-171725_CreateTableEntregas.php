@@ -9,31 +9,34 @@ class CreateTableEntregas extends Migration
     public function up()
     {
         $this->forge->addField([
-            'identrega'   => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
-            'idventa'     => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'unique' => true],
+            'identrega' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
+            'idventa' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'unique' => true],
             'tipoentrega' => [
-                'type'       => 'ENUM',
+                'type' => 'ENUM',
                 'constraint' => ['RECOJO_TIENDA', 'DOMICILIO'],
             ],
-            'direccion'          => ['type' => 'VARCHAR', 'constraint' => 150, 'null' => true],
-            'referencia'         => ['type' => 'VARCHAR', 'constraint' => 150, 'null' => true],
-            'telefono'           => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
-            'idtecnico'          => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
-            'estado'             => [
-                'type'       => 'ENUM',
+            'direccion' => ['type' => 'VARCHAR', 'constraint' => 150, 'null' => true],
+            'referencia' => ['type' => 'VARCHAR', 'constraint' => 150, 'null' => true],
+            'telefono' => ['type' => 'VARCHAR', 'constraint' => 20, 'null' => true],
+            'idtecnico' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+            'estado' => [
+                'type' => 'ENUM',
                 'constraint' => ['PENDIENTE', 'EN_CAMINO', 'ENTREGADO'],
-                'default'    => 'PENDIENTE',
+                'default' => 'PENDIENTE',
             ],
-            'fechaencamino'      => ['type' => 'DATETIME', 'null' => true],
-            'fechaentrega'       => ['type' => 'DATETIME', 'null' => true],
+            'fechaencamino' => ['type' => 'DATETIME', 'null' => true],
+            'fechaentrega' => ['type' => 'DATETIME', 'null' => true],
             'cobrocontraentrega' => ['type' => 'TINYINT', 'constraint' => 1, 'default' => 0],
-            'idpagoventa'        => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+            'idpagoventa' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
         ]);
+
         $this->forge->addKey('identrega', true);
-        $this->forge->addForeignKey('idventa', 'ventas', 'idventa', 'CASCADE', 'RESTRICT');
-        $this->forge->addForeignKey('idtecnico', 'usuarios', 'idusuario', 'SET NULL', 'RESTRICT');
-        $this->forge->addForeignKey('idpagoventa', 'pagoventa', 'idpagoventa', 'SET NULL', 'RESTRICT');
-        $this->forge->createTable('entregas');  
+
+        $this->forge->addForeignKey('idventa', 'ventas', 'idventa', 'RESTRICT', 'CASCADE');
+        $this->forge->addForeignKey('idtecnico', 'tecnicos', 'idtecnico', 'RESTRICT', 'SET NULL');
+        $this->forge->addForeignKey('idpagoventa', 'pagoventa', 'idpagoventa', 'RESTRICT', 'SET NULL');
+
+        $this->forge->createTable('entregas');
     }
 
     public function down()
