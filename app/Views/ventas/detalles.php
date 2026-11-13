@@ -41,6 +41,11 @@ if ($descuentoAplicado === null && $subtotal !== null) {
     $descuentoAplicado = max(0, (float) $subtotal - $total);
 }
 $estadoEntrega = (string) ($entregaComercial['estado'] ?? 'Sin registro');
+$ventaAnulada = !empty($venta['fechaanulacion']) || !empty($anulacionComercial);
+$entregaCancelada = $estadoEntrega === 'CANCELADO';
+$puedeSolicitarAnulacion = !empty($puedeSolicitar) && !$ventaAnulada && $entregaCancelada && !$solicitudActiva;
+$esAdministradorAnulacion = !empty($puedeAutorizar);
+
 ?>
 <div class="container-fluid px-3 px-lg-4 py-4">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
@@ -156,7 +161,11 @@ $estadoEntrega = (string) ($entregaComercial['estado'] ?? 'Sin registro');
                                     </tr>
                                     <?php else: foreach ($pagos as $pago): ?>
                                         <tr>
-                                            <td class="ps-3"><?= esc($pago['tipopago'] ?? 'No especificado') ?></td>
+                                            <td class="ps-3"><?= esc($pago['tipopago'] ?? 'No especificado') ?>
+                                                <?php if ((float) ($pago['vuelto'] ?? 0) > 0): ?>
+                                                    <small class="d-block text-muted">Recibido: <?= esc($moneda($pago['montorecibido'])) ?> · Vuelto: <?= esc($moneda($pago['vuelto'])) ?></small>
+                                                <?php endif; ?>
+                                            </td>
                                             <td class="text-end pe-3"><?= esc($moneda($valor($pago, ['monto', 'importe', 'cantidad'], 0))) ?></td>
                                         </tr>
                                 <?php endforeach;
@@ -224,7 +233,74 @@ $estadoEntrega = (string) ($entregaComercial['estado'] ?? 'Sin registro');
                     </table>
                 </div>
             <?php endif; ?>
-            <div class="text-muted small mt-3">Las solicitudes y autorizaciones de anulación se gestionan con las acciones existentes del módulo Ventas.</div>
+            <?php if ($ventaAnulada): ?>
+                <div class="alert alert-success small mt-3 mb-0">La anulación comercial ya fue ejecutada. No se permiten nuevas solicitudes.</div>
+            <?php elseif (!$entregaCancelada): ?>
+                <div class="alert alert-secondary small mt-3 mb-0">
+                    Para solicitar la anulación, primero debe cancelarse la entrega desde el módulo Entregas.
+                    Una entrega confirmada como ENTREGADO requiere un procedimiento de devolución, no esta anulación.
+                </div>
+            <?php endif; ?>
+
+            <?php if ($puedeSolicitarAnulacion): ?>
+                <div class="card border mt-3">
+                    <div class="card-header bg-light fw-semibold">Solicitar anulación de la venta</div>
+                    <div class="card-body">
+                        <form action="<?= base_url('admin/ventas/solicitar-anulacion/' . $idVenta) ?>" method="post">
+                            <?= csrf_field() ?>
+                            <label for="motivoAnulacion" class="form-label">Motivo de la anulación</label>
+                            <textarea id="motivoAnulacion" name="motivo" class="form-control mb-2" rows="3" minlength="15" maxlength="2000" required placeholder="Explica por qué se solicita anular la venta."></textarea>
+                            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('¿Registrar esta solicitud de anulación? La venta todavía no será anulada.');">
+                                <i class="bi bi-file-earmark-x me-1"></i> Solicitar anulación
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($esAdministradorAnulacion && !$ventaAnulada && !empty($solicitudesAnulacion)): ?>
+                <?php foreach ($solicitudesAnulacion as $solicitud): ?>
+                    <?php if (($solicitud['estado'] ?? '') === 'PENDIENTE'): ?>
+                        <div class="card border mt-3">
+                            <div class="card-header bg-light fw-semibold">Revisar solicitud N.º <?= (int) $solicitud['idsolicitud'] ?></div>
+                            <div class="card-body">
+                                <p class="small text-muted mb-2">Motivo: <?= esc($solicitud['motivo'] ?? '') ?></p>
+                                <form action="<?= base_url('admin/ventas/revisar-anulacion/' . (int) $solicitud['idsolicitud']) ?>" method="post">
+                                    <?= csrf_field() ?>
+                                    <label class="form-label" for="observacionRevision<?= (int) $solicitud['idsolicitud'] ?>">Observación de la revisión</label>
+                                    <textarea id="observacionRevision<?= (int) $solicitud['idsolicitud'] ?>" name="observacion" class="form-control mb-2" minlength="10" maxlength="2000" rows="2" required></textarea>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button type="submit" name="decision" value="AUTORIZADA" class="btn btn-outline-success" onclick="return confirm('¿Autorizar el trámite? Esto aún NO anula la venta.');">Autorizar</button>
+                                        <button type="submit" name="decision" value="RECHAZADA" class="btn btn-outline-danger" onclick="return confirm('¿Rechazar esta solicitud?');">Rechazar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    <?php elseif (($solicitud['estado'] ?? '') === 'AUTORIZADA' && $entregaCancelada): ?>
+                        <div class="card border-danger mt-3">
+                            <div class="card-header bg-light fw-semibold">Ejecutar anulación autorizada N.º <?= (int) $solicitud['idsolicitud'] ?></div>
+                            <div class="card-body">
+                                <div class="alert alert-warning small">
+                                    Esta operación libera reservas, cambia el estado comercial de la venta y genera un registro de anulación.
+                                    No realiza automáticamente ningún reembolso de dinero.
+                                </div>
+                                <form action="<?= base_url('admin/ventas/ejecutar-anulacion/' . (int) $solicitud['idsolicitud']) ?>" method="post">
+                                    <?= csrf_field() ?>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="inventarioVerificado<?= (int) $solicitud['idsolicitud'] ?>" name="inventario_verificado" value="1" required>
+                                        <label class="form-check-label" for="inventarioVerificado<?= (int) $solicitud['idsolicitud'] ?>">Verifiqué físicamente que los artículos no fueron entregados y que el inventario corresponde a la reserva.</label>
+                                    </div>
+                                    <label for="observacionInventario<?= (int) $solicitud['idsolicitud'] ?>" class="form-label">Observación del control de inventario</label>
+                                    <textarea id="observacionInventario<?= (int) $solicitud['idsolicitud'] ?>" name="observacion_inventario" class="form-control mb-3" minlength="15" maxlength="1000" rows="3" required placeholder="Describe el resultado de la verificación física."></textarea>
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('ATENCIÓN: ¿Ejecutar definitivamente la anulación de esta venta? Esta acción no puede deshacerse desde esta pantalla.');">
+                                        <i class="bi bi-exclamation-triangle me-1"></i> Ejecutar anulación
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 </div>

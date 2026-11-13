@@ -1,6 +1,15 @@
 <?= $this->extend('layouts/main') ?>
 
 <?= $this->section('contenido') ?>
+<?php if (session()->getFlashdata('ventaRegistrada') && !session()->getFlashdata('pedidoVendido') && !session()->getFlashdata('cotizacionVendida')): ?>
+<script>try { sessionStorage.removeItem('venta-borrador-<?= (int) session()->get('idusuario') ?>'); } catch (error) { console.warn(error); }</script>
+<?php endif; ?>
+<?php if ($cotizacionVendida = session()->getFlashdata('cotizacionVendida')): ?>
+<script>try { sessionStorage.removeItem('venta-borrador-<?= (int) session('idusuario') ?>-cotizacion-<?= (int) $cotizacionVendida ?>'); } catch (error) { console.warn(error); }</script>
+<?php endif; ?>
+<?php if ($pedidoVendido = session()->getFlashdata('pedidoVendido')): ?>
+<script>try { sessionStorage.removeItem('venta-borrador-<?= (int) session('idusuario') ?>-pedido-<?= (int) $pedidoVendido ?>'); } catch (error) { console.warn(error); }</script>
+<?php endif; ?>
 
 <div class="container-fluid px-4 py-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
@@ -16,6 +25,16 @@
         </div>
     </div>
 
+    <form method="get" class="card card-body border-0 shadow-sm mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3"><label class="form-label small" for="filtroVenta">Cliente, documento o comprobante</label><input id="filtroVenta" name="q" value="<?= esc($filtros['q'] ?? '', 'attr') ?>" class="form-control" placeholder="Buscar venta"></div>
+            <div class="col-md-2"><label class="form-label small" for="desdeVenta">Desde</label><input id="desdeVenta" type="date" name="desde" value="<?= esc($filtros['desde'] ?? '', 'attr') ?>" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label small" for="hastaVenta">Hasta</label><input id="hastaVenta" type="date" name="hasta" value="<?= esc($filtros['hasta'] ?? '', 'attr') ?>" class="form-control"></div>
+            <div class="col-md-2"><label class="form-label small" for="estadoVenta">Venta</label><select id="estadoVenta" name="estado" class="form-select"><option value="">Todas</option><?php foreach (['ACTIVA' => 'Activas', 'ANULADA' => 'Anuladas'] as $valor => $texto): ?><option value="<?= $valor ?>" <?= ($filtros['estado'] ?? '') === $valor ? 'selected' : '' ?>><?= $texto ?></option><?php endforeach; ?></select></div>
+            <div class="col-md-3"><label class="form-label small" for="vendedorVenta">Vendedor</label><select id="vendedorVenta" name="vendedor" class="form-select"><option value="">Todos</option><?php foreach ($vendedores as $vendedor): ?><option value="<?= (int) $vendedor['idusuario'] ?>" <?= (string) ($filtros['vendedor'] ?? '') === (string) $vendedor['idusuario'] ? 'selected' : '' ?>><?= esc($vendedor['nombreusuario']) ?></option><?php endforeach; ?></select></div>
+            <div class="col-12 d-flex gap-2"><button class="btn btn-primary" type="submit">Filtrar ventas</button><a class="btn btn-light border" href="<?= base_url('admin/ventas') ?>">Limpiar filtros</a></div>
+        </div>
+    </form>
     <div class="card border shadow-sm rounded-3" style="border-color: #e5e7eb !important;">
         <div class="card-header bg-light py-3 px-4 border-bottom d-flex align-items-center justify-content-between" style="border-color: #e5e7eb !important;">
             <h6 class="m-0 font-weight-bold text-dark d-flex align-items-center gap-2">
@@ -58,6 +77,8 @@
                                     </td>
                                     <td class="text-secondary">
                                         <?= esc($venta['local']) ?>
+                                        <small class="d-block text-muted">Vendedor: <?= esc($venta['vendedor'] ?? '') ?></small>
+                                        <span class="badge bg-light text-dark border">Entrega: <?= esc($venta['estadoentrega'] ?? 'Sin entrega') ?></span>
                                     </td>
                                     <td class="text-center text-secondary small font-monospace">
                                         <div class="d-inline-flex align-items-center gap-1">

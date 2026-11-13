@@ -1,125 +1,1058 @@
-.df-venta {
-    --venta-acento: var(--brand-fuchsia, #ff2b50);
-    --venta-morado: var(--brand-purple, #32005a);
-    --venta-borde: #e8eaf0;
-    --venta-texto: #293042;
+.content-area:has(.df-venta) {
+  box-sizing: border-box;
+  min-width: 0;
 }
 
-.df-venta .df-venta-grid > div { min-width: 0; }
+.df-venta {
+  --venta-acento: #ff2b50;
+  --venta-tinta: #252038;
+  --venta-muted: #7c798c;
+  --venta-borde: #e9e7ee;
+
+  width: 100%;
+  max-width: 1600px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 8px 12px 24px !important;
+  color: var(--venta-tinta);
+}
+
+.df-venta *,
+.df-venta *::before,
+.df-venta *::after {
+  box-sizing: border-box;
+}
+
+.df-venta [hidden],
+.df-venta .d-none {
+  display: none !important;
+}
+
+/* CABECERA DE LA VISTA */
+.df-venta .venta-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 4px 0 12px;
+  margin-bottom: 0 !important;
+}
+
+.df-venta .venta-eyebrow {
+  display: none;
+  color: var(--venta-muted);
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  margin-bottom: 8px;
+}
+
+.df-venta h1 {
+  font-size: 1.5rem;
+  letter-spacing: -.05em;
+  font-weight: 750;
+  margin: 0 !important;
+}
+
+.df-venta .venta-cabecera p {
+  font-size: .75rem;
+  color: var(--venta-muted);
+  margin: 4px 0 0 !important;
+}
+
+.df-venta .venta-cabecera > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.df-venta #descartarBorrador {
+  background: transparent;
+  border-color: transparent !important;
+  color: var(--venta-muted);
+  font-size: .77rem;
+}
+
+/* 
+   3. ALERTAS Y NOTIFICACIONES
+*/
+.df-venta #mensajeVenta {
+  background: #fff9eb;
+  color: #916a22;
+  border: 1px solid #f3e4c1;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  font-size: .8rem;
+}
+
+.df-venta .venta-aviso-borrador {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: #fff9eb;
+  border: 1px solid #f3e4c1;
+  border-radius: 10px;
+  color: #916a22;
+  font-size: .76rem;
+}
+
+.df-venta .venta-aviso-borrador > div {
+  flex: 1;
+  min-width: 180px;
+}
+
+.df-venta .venta-aviso-borrador strong,
+.df-venta .venta-aviso-borrador span {
+  display: block;
+}
+
+.df-venta .venta-aviso-borrador .btn {
+  padding: 5px 9px;
+  font-size: .7rem;
+}
+
+/* ==========================================================================
+   4. GRID PRINCIPAL Y TARJETAS (CARDS)
+   ========================================================================== */
+.df-venta .df-venta-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 370px;
+  gap: 22px;
+  margin: 0;
+  align-items: start;
+}
+
+.df-venta .df-venta-grid > div {
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.df-venta .venta-principal,
+.df-venta .venta-cobro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
 .df-venta .card {
-    border: 1px solid var(--venta-borde) !important;
-    border-radius: 12px !important;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(25, 20, 45, .035);
-    overflow: hidden;
+  border: 1px solid var(--venta-borde) !important;
+  border-radius: 16px !important;
+  background: #fff;
+  box-shadow: 0 3px 14px #251b3b04 !important;
+  margin: 0 !important;
+  overflow: hidden;
 }
 
 .df-venta .card-header {
-    background: #fff !important;
-    border-bottom: 1px solid var(--venta-borde) !important;
-    padding: 14px 18px !important;
+  padding: 18px 22px !important;
+  background: #fff !important;
+  border-bottom: 1px solid #f1eff5 !important;
 }
 
 .df-venta .card-header h6 {
-    color: var(--venta-texto);
-    font-size: .92rem;
-    font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .87rem;
+  font-weight: 700;
+  color: var(--venta-tinta) !important;
+  margin: 0;
 }
 
-.df-venta .card-body { padding: 18px !important; }
+.df-venta .card-header h6 > i {
+  color: #8d809e !important;
+  font-size: 1rem;
+}
 
+.df-venta .card-body {
+  padding: 20px 22px !important;
+}
+
+/* 
+   FORMULARIOS, INPUTS Y BOTONES GENERALES
+ */
 .df-venta .form-label {
-    font-size: .76rem;
-    font-weight: 600;
-    color: #596274;
-    margin-bottom: 6px;
+  display: block;
+  font-size: .73rem;
+  color: #706a80 !important;
+  font-weight: 600;
+  margin-bottom: 7px;
+  text-transform: none !important;
+  letter-spacing: 0;
 }
 
 .df-venta .form-control,
 .df-venta .form-select {
-    border: 1px solid #dce1e9;
-    border-radius: 8px;
-    min-height: 38px;
-    font-size: .85rem;
+  min-height: 41px;
+  border: 1px solid #e4e0ea;
+  background-color: #fff;
+  border-radius: 9px;
+  font-size: .81rem;
+  color: #373044;
+  padding: 9px 11px;
+  width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.df-venta .form-select {
+  padding-right: 2.25rem !important;
+  background-position: right .65rem center;
+}
+
+.df-venta .form-control::placeholder {
+  color: #a4a0af;
+  font-size: .77rem;
 }
 
 .df-venta .form-control:focus,
 .df-venta .form-select:focus {
-    border-color: var(--venta-acento);
-    box-shadow: 0 0 0 .18rem rgba(255, 43, 80, .12);
+  border-color: #b9a8c9;
+  box-shadow: 0 0 0 3px #6d3e9310;
+  outline: none;
 }
 
-.df-venta .articulo-grupo { min-width: 0; }
-.df-venta .articulo-grupo .form-select { min-width: 0; }
+.df-venta .form-control[readonly] {
+  background: #f8f7fa !important;
+  color: #8c8498;
+}
+
+.df-venta .input-group {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.df-venta .input-group .form-select,
+.df-venta .input-group .form-control {
+  min-width: 0;
+  flex: 1;
+}
+
+.df-venta .input-group-text {
+  color: #8e849b;
+  border-color: #e4e0ea;
+  padding: 10px 12px;
+}
+
+.df-venta .btn {
+  border-radius: 9px;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 10px 13px;
+  box-shadow: none !important;
+  text-decoration: none;
+}
+
+.df-venta .btn-primary {
+  background: var(--venta-acento);
+  border: 1px solid var(--venta-acento);
+  color: #fff;
+}
+
+.df-venta .btn-primary:hover {
+  background: #e92246;
+  border-color: #e92246;
+}
+
+.df-venta .btn-primary:disabled {
+  opacity: .42;
+}
+
+.df-venta .btn-light,
+.df-venta .btn-outline-secondary {
+  background: #fff;
+  border: 1px solid #e4e0ea;
+  color: #716980;
+}
+
+.df-venta .btn-outline-primary {
+  border: 1px solid #e8dfee;
+  color: #6a4783;
+  background: #f8f5fb;
+}
+
+.df-venta .venta-atajo {
+  display: inline-block;
+  padding: 2px 5px;
+  border: 1px solid #b9a8c955;
+  border-radius: 4px;
+  background: #89769318;
+  color: inherit;
+  font: 600 .65rem monospace;
+}
+
+/* 
+SECCIÓN: CLIENTE Y AUTOCOMPLETADO
+*/
+.df-venta .venta-cliente,
+.df-venta .venta-catalogo {
+  overflow: visible;
+}
+
+.df-venta .venta-cliente .card-header {
+  padding: 9px 16px !important;
+  border-radius: 16px 16px 0 0;
+}
+
+.df-venta .venta-cliente .card-body {
+  padding: 10px 16px !important;
+}
+
+.df-venta .venta-cliente .row {
+  display: grid;
+  gap: 9px 12px;
+  margin: 0 0 6px !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.df-venta .venta-cliente .row:first-child {
+  grid-template-columns: 2fr 3fr;
+  align-items: start;
+}
+
+.df-venta .venta-cliente .row:last-child {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 0 !important;
+}
+
+.df-venta .venta-cliente .row > div {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.df-venta .venta-cliente .form-label {
+  margin-bottom: 4px;
+  font-size: .69rem;
+}
+
+.df-venta .venta-cliente .form-control,
+.df-venta .venta-cliente .form-select,
+.df-venta #buscarClienteVenta {
+  min-height: 32px;
+  padding: 5px 9px;
+}
+
+.df-venta #buscarClienteVenta {
+  background: #fff;
+  margin: 0 !important;
+}
+
+.df-venta .venta-cliente-busqueda > .btn {
+  min-height: 34px;
+  padding: 6px 11px;
+  margin-left: 6px;
+}
+
+.df-venta .venta-publico-general {
+  margin-top: 5px;
+  padding: 3px 8px;
+  font-size: .67rem;
+}
+
+.df-venta .venta-comprobante {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: #94899f;
+  font-size: .64rem;
+  padding-top: 4px;
+}
+
+/* Autocompletado de búsqueda */
+.df-venta .venta-autocomplete {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.df-venta .venta-resultados {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid #dfd8e8;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 10px 30px #281d3b22;
+  padding: 4px;
+}
+
+.df-venta .venta-resultados button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: #fff;
+  color: #3a3048;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: .79rem;
+  line-height: 1.4;
+}
+
+.df-venta .venta-resultados button:hover,
+.df-venta .venta-resultados button[aria-selected="true"] {
+  background: #f2edf8;
+  color: #492968;
+}
+
+.df-venta .venta-sin-resultados {
+  color: #807489;
+  font-size: .76rem;
+  padding: 12px;
+}
+
+/* 
+   SECCIÓN: CATÁLOGO Y BÚSQUEDA DE ARTÍCULOS
+ */
+.df-venta .venta-catalogo .card-header {
+  padding: 9px 16px !important;
+  border-radius: 16px 16px 0 0;
+}
+
+.df-venta .venta-catalogo .card-body {
+  padding: 10px 16px !important;
+}
+
+.df-venta .venta-catalogo .card-body > .mb-3 {
+  margin-bottom: 7px !important;
+}
+
+.df-venta .venta-catalogo > .card-body > .p-2 {
+  padding: 16px !important;
+  background: #faf9fc !important;
+  border-color: #efecf3 !important;
+  border-radius: 12px !important;
+}
+
+.df-venta .venta-catalogo label[for="buscarArticulo"],
+.df-venta #resultadoBusqueda {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.df-venta #buscarArticulo {
+  min-height: 39px;
+  font-size: .88rem;
+}
+
+.df-venta #filtrosArticulos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px !important;
+  margin: 5px 0 !important;
+}
 
 .df-venta #filtrosArticulos .btn {
-    border-radius: 8px;
-    padding: 5px 11px;
-    font-size: .76rem;
+  padding: 4px 10px;
+  border-radius: 7px;
+  font-size: .67rem;
+}
+
+.df-venta #disponibilidadArticulo {
+  background: #f2f8f5;
+  color: #35755c !important;
+  border: 1px solid #e6f1eb;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: .69rem;
+  margin-top: 4px !important;
+}
+
+.df-venta .venta-catalogo .p-2 > .row {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 14px 10px;
+  margin: 0;
+  align-items: end;
+}
+
+.df-venta .venta-catalogo .p-2 > .row > div {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.df-venta .articulo-grupo {
+  grid-column: span 4;
+}
+
+.df-venta .venta-catalogo .p-2 > .row > .col-md-3 {
+  grid-column: span 3;
+}
+
+.df-venta .venta-catalogo .p-2 > .row > .col-md-6 {
+  grid-column: span 6;
+}
+
+.df-venta #btnAgregarItem {
+  width: 100%;
+  min-height: 42px;
+}
+
+/* Ingreso manual de ítem */
+.df-venta .venta-manual {
+  border-top: 1px solid #efebf4;
+  padding-top: 7px;
+}
+
+.df-venta .venta-manual > summary {
+  color: #897693;
+  font-size: .7rem;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.df-venta .venta-manual[open] > summary {
+  margin-bottom: 8px;
+}
+
+.df-venta .venta-manual .p-2 {
+  padding: 8px !important;
+  margin-bottom: 0 !important;
+}
+
+.df-venta .venta-manual .row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  align-items: end;
+}
+
+.df-venta .venta-manual .row > div {
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  grid-column: span 2;
+}
+
+.df-venta .venta-manual .form-select,
+.df-venta .venta-manual .form-control {
+  min-height: 33px;
+  padding: 5px 8px;
+  font-size: .73rem;
+}
+
+.df-venta .venta-manual .form-label {
+  font-size: .66rem;
+  margin-bottom: 3px;
+}
+
+.df-venta .venta-manual #btnAgregarItem {
+  min-height: 33px;
+  padding: 7px;
+  font-size: .7rem;
+}
+
+/* 
+   SECCIÓN: CARRITO / TABLA DE DETALLE
+ */
+.df-venta .df-carrito-card {
+  border-top: 3px solid #bca9ce !important;
+  min-height: 0;
+}
+
+.df-venta .df-carrito-card .card-header {
+  padding: 12px 16px !important;
+}
+
+.df-venta .df-carrito-card .card-body {
+  padding: 0 !important;
 }
 
 .df-venta .table-responsive {
-    border-color: var(--venta-borde) !important;
-    border-radius: 9px !important;
+  overflow-x: auto;
+  border: 0 !important;
+  border-radius: 0 !important;
+  min-height: 0;
 }
 
-.df-venta .table { font-size: .78rem; }
+.df-venta .table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .8rem;
+  margin: 0;
+}
+
 .df-venta .table th {
-    background: #f8fafc;
-    color: #6d7482;
-    font-size: .67rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    white-space: nowrap;
+  background: #faf9fc;
+  color: #958b9e;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  white-space: nowrap;
+  padding: 12px 14px !important;
+  border-bottom: 1px solid #eeebf2;
 }
-.df-venta .table td { vertical-align: middle; }
 
-.df-venta #tablaDetalle { min-width: 480px; }
-.df-venta #tablaDetalle .input-cantidad { min-width: 58px; }
-.df-venta #tablaDetalle .series-seleccionadas { max-width: 100%; }
-.df-venta #tablaDetalle .series-seleccionadas select { max-width: 100%; }
+.df-venta .table td {
+  padding: 15px 14px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1eef5;
+}
 
-.df-venta #tablaPagos .input-monto-pago { min-width: 85px; }
+.df-venta .table tr:last-child td {
+  border-bottom: 0;
+}
+
+.df-venta #tablaDetalle {
+  min-width: 560px;
+}
+
+.df-venta #tablaDetalle .nombre-producto {
+  display: block;
+  max-width: 260px;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.df-venta #tablaDetalle .input-cantidad {
+  min-width: 72px;
+  max-width: 96px;
+  min-height: 35px;
+  margin: auto;
+  padding: 6px;
+}
+
+.df-venta #tablaDetalle .input-precio {
+  min-width: 88px;
+  max-width: 105px;
+  min-height: 35px;
+  padding: 6px;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.df-venta #tablaDetalle .badge {
+  font-size: .61rem;
+  font-weight: 500;
+  background: #f7f5fa !important;
+  border-color: #eae5f0 !important;
+  color: #8d7d9b !important;
+}
+
+.df-venta #tablaDetalle .selector-serie {
+  min-width: 140px;
+}
+
+.df-venta #tablaDetalle .btn-eliminar-fila {
+  color: #bda6ae;
+  background: transparent;
+  padding: 5px;
+}
+
+.df-venta #filaVacia td {
+  padding: 12px 16px !important;
+  color: #9a90a4;
+}
+
+.df-venta #filaVacia i {
+  font-size: 1.2rem !important;
+  color: #c7bdd2 !important;
+  margin-bottom: 4px !important;
+}
+
+/* 
+   9. SECCIÓN: PAGO Y RESUMEN DE VENTA (COLUMNA DERECHA)
+ */
+.df-venta .venta-pago,
+.df-venta .resumen-venta {
+  background: #32005a !important;
+  border-color: #32005a !important;
+  color: #f6effb;
+}
 
 .df-venta .resumen-venta {
-    position: static;
-    z-index: auto;
-    background: #fff !important;
-    border-top: 3px solid var(--venta-acento) !important;
+  box-shadow: 0 8px 26px #2c173919 !important;
+}
+
+.df-venta .venta-pago .card-header,
+.df-venta .resumen-venta .card-header {
+  background: transparent !important;
+  border-color: #ffffff20 !important;
+}
+
+.df-venta .venta-pago .card-header h6,
+.df-venta .venta-pago .card-header h6 > i {
+  color: #f6effb !important;
+}
+
+.df-venta .resumen-venta .card-header h6 {
+  color: #e8dff0 !important;
+  font-size: .77rem;
+}
+
+.df-venta .venta-pago .form-label,
+.df-venta .venta-pago .text-secondary,
+.df-venta .venta-pago .text-muted {
+  color: #dbcae8 !important;
+}
+
+/* Formulario de pagos */
+.df-venta .venta-cobro .row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+  align-items: end;
+}
+
+.df-venta .venta-cobro .row > div {
+  width: auto !important;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.df-venta .venta-cobro .row > .col-md-3,
+.df-venta .venta-cobro .row > .col-12:not(.col-md-5),
+.df-venta .venta-cobro #campoReferenciaPago,
+.df-venta .venta-cobro #campoRecibidoPago {
+  grid-column: 1 / -1;
+}
+
+.df-venta .venta-cobro .row > .col-12.col-md-5 {
+  grid-column: auto;
+}
+
+.df-venta #selectTipoPago {
+  font-size: .75rem;
+  text-overflow: ellipsis;
+}
+
+.df-venta #btnAgregarPago {
+  width: 100%;
+  background: #ffffff0c;
+  border-color: #ffffff40;
+  color: #fff;
+}
+
+.df-venta .venta-pagos-rapidos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.df-venta .venta-pagos-rapidos .btn {
+  padding: 7px 9px;
+  font-size: .71rem;
+  background: #ffffff0c;
+  border-color: #ffffff40;
+  color: #fff;
+}
+
+.df-venta #previewVuelto {
+  background: #eef8f1;
+  color: #34815b !important;
+  padding: 11px;
+  border-radius: 8px;
+  font-size: .74rem;
+}
+
+.df-venta #btnCompletarPago {
+  font-size: .7rem;
+  padding: 7px 10px;
+  border-style: solid !important;
+}
+
+.df-venta .venta-cobro #lblFaltanteVuelto {
+  font-size: .72rem;
+}
+
+/* Tabla de pagos registrados */
+.df-venta .venta-pago .table {
+  color: #f6effb;
+  --bs-table-bg: transparent;
+  --bs-table-color: #f6effb;
+  --bs-table-hover-bg: #ffffff0c;
+  --bs-table-hover-color: #fff;
+  --bs-table-border-color: #ffffff20;
+}
+
+.df-venta .venta-pago .table thead {
+  background: #ffffff0c !important;
+}
+
+.df-venta .venta-pago .nombre-metodo {
+  color: #fff !important;
+}
+
+.df-venta .venta-pago .text-success,
+.df-venta .venta-pago .text-info {
+  color: #a7edc2 !important;
+}
+
+.df-venta .venta-pago .text-danger {
+  color: #ffb0c0 !important;
+}
+
+.df-venta #tablaPagos .input-monto-pago {
+  min-width: 85px;
+  min-height: 35px;
+  padding: 6px;
+}
+
+.df-venta #tablaPagos td {
+  padding: 10px 7px;
+}
+
+.df-venta #tablaPagos th {
+  padding: 9px 7px !important;
+}
+
+/* Totales y descuentos en Resumen */
+.df-venta #contadorArticulos {
+  margin-left: auto;
+  float: none !important;
+  background: #ffffff12 !important;
+  color: #c0afcf !important;
+  font-weight: 500;
+  padding: 5px 8px;
+  font-size: .6rem;
+  border-radius: 5px;
+}
+
+.df-venta .venta-descuento {
+  border-bottom: 1px solid #ffffff18;
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+}
+
+.df-venta .venta-descuento > summary {
+  color: #dccbe8;
+  font-size: .75rem;
+  cursor: pointer;
+}
+
+.df-venta .venta-descuento[open] > summary {
+  margin-bottom: 12px;
+}
+
+.df-venta .venta-descuento .form-label {
+  color: #d8c9e2 !important;
+}
+
+.df-venta .venta-descuento #errorDescuento {
+  color: #ffc4cf !important;
+}
+
+.df-venta .venta-descuento .row {
+  margin-bottom: 0;
+}
+
+.df-venta .resumen-venta .card-body > .d-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.df-venta .resumen-venta .text-secondary {
+  color: #bbacc8 !important;
+}
+
+.df-venta .resumen-venta .small {
+  font-size: .77rem;
+}
+
+.df-venta .resumen-venta #lblSubtotal {
+  color: #f4edf9;
+  font-variant-numeric: tabular-nums;
+}
+
+.df-venta .resumen-venta #lblDescuento {
+  color: #f6a6b6 !important;
 }
 
 .df-venta .resumen-venta #lblTotal {
-    color: var(--venta-morado) !important;
-    font-size: 1.65rem;
+  color: #fff !important;
+  font-size: 2.15rem;
+  letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
 }
 
-.df-venta #btnAgregarItem { white-space: normal; }
-.df-venta .btn { transition: background-color .2s, border-color .2s; }
-
-@media (max-width: 1199.98px) {
-    .df-venta .card-body { padding: 16px !important; }
+.df-venta .resumen-venta .venta-vuelto {
+  background: #ffffff0a !important;
+  border: 1px solid #ffffff10;
+  border-radius: 10px !important;
+  padding: 12px !important;
+  color: #d5c7df;
+  font-size: .76rem;
 }
 
-@media (max-width: 575.98px) {
-    .df-venta .card-header { padding: 12px 14px !important; }
-    .df-venta .card-body { padding: 14px !important; }
-    .df-venta #tablaDetalle { min-width: 520px; }
+.df-venta .resumen-venta #lblVuelto {
+  color: #a7edc2 !important;
+  font-size: 1.1rem !important;
 }
 
-/* Vista de ventas compacta: estilos aislados */
-.df-venta .card-header { padding: 10px 15px !important; }
-.df-venta .card-body { padding: 13px 15px !important; }
-.df-venta .card { margin-bottom: 12px !important; }
-.df-venta .form-label { margin-bottom: 3px; font-size: .72rem; }
-.df-venta .form-control, .df-venta .form-select { min-height: 34px; padding-top: 5px; padding-bottom: 5px; }
-.df-venta .form-control-sm, .df-venta .form-select-sm { min-height: 32px; }
-.df-venta .card-body > .mb-3, .df-venta .card-body > .row.mb-3 { margin-bottom: 10px !important; }
-.df-venta #filtrosArticulos { margin-top: 6px !important; gap: 5px !important; }
-.df-venta #filtrosArticulos .btn { padding: 3px 9px; }
-.df-venta #resultadoBusqueda { margin-top: 4px; font-size: .71rem; }
-.df-venta .df-carrito-card #filaVacia td { padding: 13px 8px !important; }
-.df-venta .df-carrito-card #filaVacia i { margin-bottom: 3px !important; }
-.df-venta #tablaDetalle th, .df-venta #tablaPagos th { padding-top: 8px !important; padding-bottom: 8px !important; }
-.df-venta .resumen-venta .card-body { padding: 14px 15px !important; }
-@media (max-width: 575.98px) { .df-venta .card-body { padding: 12px !important; } }
+.df-venta #estadoCobro {
+  color: #ac9abb !important;
+  font-size: .7rem;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+/* 
+   10. ESTADOS DE BOTONES DE ACCIÓN PRINCIPAL
+*/
+.df-venta #btnConfirmarVenta {
+  width: 100%;
+  min-height: 48px;
+  font-size: .83rem;
+  border-radius: 10px;
+}
+
+.df-venta #btnConfirmarVenta:not(:disabled),
+.df-venta #btnCompletarPago,
+.df-venta #filtrosArticulos .btn-primary {
+  background: #ff2b50 !important;
+  border-color: #ff2b50 !important;
+  color: #fff !important;
+}
+
+.df-venta #btnConfirmarVenta:not(:disabled):hover,
+.df-venta #btnCompletarPago:hover,
+.df-venta #filtrosArticulos .btn-primary:hover {
+  background: #e51f43 !important;
+  border-color: #e51f43 !important;
+}
+
+.df-venta #btnConfirmarVenta:disabled {
+  background: #40384b !important;
+  border-color: #605569 !important;
+  color: #e0dbe6 !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+
+.df-venta #btnConfirmarVenta:disabled * {
+  color: inherit !important;
+}
+
+/* 
+    MEDIA QUERIES Y ACCESIBILIDAD
+ */
+@media (max-width: 1250px) {
+  .df-venta .df-venta-grid {
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 16px;
+  }
+
+  .df-venta .card-body,
+  .df-venta .card-header {
+    padding: 17px !important;
+  }
+}
+
+@media (max-width: 1180px) {
+  .df-venta .df-venta-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .df-venta .venta-cobro {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .df-venta .resumen-venta {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1180px) {
+  .df-venta .venta-cobro {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .df-venta {
+    padding: 10px !important;
+  }
+
+  .df-venta h1 {
+    font-size: 1.6rem;
+  }
+
+  .df-venta .venta-cabecera {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px !important;
+  }
+
+  .df-venta .venta-cabecera > div:last-child {
+    gap: 4px;
+  }
+
+  .df-venta .venta-cliente .row,
+  .df-venta .venta-cliente .row:first-child {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .df-venta .articulo-grupo,
+  .df-venta .venta-catalogo .p-2 > .row > .col-md-6,
+  .df-venta .venta-manual .row > .articulo-grupo {
+    grid-column: 1 / -1;
+  }
+
+  .df-venta .venta-catalogo .p-2 > .row > .col-md-3 {
+    grid-column: span 6;
+  }
+
+  .df-venta .venta-manual .row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .df-venta .venta-manual .row > div {
+    grid-column: span 1;
+  }
+
+  .df-venta .venta-cobro {
+    display: flex;
+  }
+
+  .df-venta .card-body,
+  .df-venta .card-header {
+    padding: 16px !important;
+  }
+
+  .df-venta .df-carrito-card .card-body {
+    padding: 0 !important;
+  }
+
+  .df-venta .venta-catalogo > .card-body > .p-2 {
+    padding: 12px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .df-venta * {
+    transition: none !important;
+  }
+}

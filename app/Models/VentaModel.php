@@ -41,12 +41,78 @@ class VentaModel extends Model
         $db->transBegin();
 
         try {
+            $token = (string) ($dataVenta['request_token'] ?? '');
+            if (!preg_match('/^[a-f0-9]{64}$/D', $token)) {
+                throw new \InvalidArgumentException('Recargue la página para iniciar una nueva venta.');
+            }
+            $db->query('SELECT idusuario FROM usuarios WHERE idusuario = ? FOR UPDATE', [(int) $dataVenta['idvendedor']]);
+            if (!empty($dataVenta['idpedido'])) {
+                if (!ctype_digit((string) $dataVenta['idpedido'])) throw new \InvalidArgumentException('El pedido de origen no es válido.');
+                $cotizacionPedido = $db->table('pedido')->where('idpedido', (int) $dataVenta['idpedido'])->get()->getRow('idcotizacion');
+                if (!empty($dataVenta['idcotizacion']) && (int) $dataVenta['idcotizacion'] !== (int) $cotizacionPedido) throw new \InvalidArgumentException('La cotización no corresponde al pedido.');
+                $dataVenta['idcotizacion'] = $cotizacionPedido ?: null;
+            } else $dataVenta['idcotizacion'] = $dataVenta['idcotizacion'] ?? null;
+            $anterior = $db->table('ventas')->where('request_token', $token)->get()->getRowArray();
+            if ($anterior) {
+                if ((int) ($anterior['idcotizacion'] ?? 0) !== (int) ($dataVenta['idcotizacion'] ?? 0)) throw new \InvalidArgumentException('Esta solicitud pertenece a otra cotización.');
+                if ((int) ($anterior['idpedido'] ?? 0) !== (int) ($dataVenta['idpedido'] ?? 0)) {
+                    throw new \InvalidArgumentException('Esta solicitud ya pertenece a otra venta u otro pedido.');
+                }
+                if ((int) $anterior['idvendedor'] !== (int) $dataVenta['idvendedor']) {
+                    throw new \InvalidArgumentException('La solicitud de venta no pertenece a este usuario.');
+                }
+                $db->transRollback();
+                return true;
+            }
+            $cliente = $db->table('personas')->where('idpersona', $dataVenta['idcliente'])->where('estado', 1)->get()->getRowArray();
+            if (!$cliente) throw new \InvalidArgumentException('Seleccione un cliente activo.');
+            foreach (['idlocal' => ['locales', 'idlocal'], 'idlinea' => ['lineas', 'idlinea'], 'idcanal' => ['canalesventa', 'idcanal'], 'idestado' => ['estadoventa', 'idestado']] as $campo => [$tabla, $clave]) {
+                if (!$db->table($tabla)->where($clave, (int) ($dataVenta[$campo] ?? 0))->countAllResults()) {
+                    throw new \InvalidArgumentException('Revise el local, línea, canal y estado seleccionados.');
+                }
+            }
+            if (($dataVenta['tipodocumento'] ?? '') !== 'NOTA_VENTA') throw new \InvalidArgumentException('Seleccione nota de venta.');
+            $rolVendedor = $db->table('usuarios u')->select('r.rol')->join('roles r', 'r.idrol = u.idrol')->where('u.idusuario', (int) $dataVenta['idvendedor'])->get()->getRow('rol');
+            foreach ($detalles as &$detalleSeguro) {
+                if (!is_array($detalleSeguro)) throw new \InvalidArgumentException('Detalle de venta inválido.');
+                $articulo = $db->table('productos p')->select('p.*, um.abreviatura AS unidad')
+                    ->join('unidadesmedida um', 'um.idunidad = p.idunidad', 'left')
+                    ->where('p.idproducto', (int) ($detalleSeguro['idproducto'] ?? 0))->get()->getRowArray();
+                if (!$articulo || (int) $articulo['estado'] !== 1) {
+                    throw new \InvalidArgumentException('Un artículo ya no está activo. Retírelo del carrito.');
+                }
+                $cantidad = $detalleSeguro['cantidad'] ?? '';
+                if (!is_scalar($cantidad) || !preg_match('/^\d{1,8}(?:\.\d{1,2})?$/D', (string) $cantidad) || (float) $cantidad <= 0) {
+                    throw new \InvalidArgumentException('Ingrese una cantidad positiva con hasta dos decimales.');
+                }
+                if ((strtoupper($articulo['unidad'] ?? '') !== 'M' || $articulo['tipo'] !== 'PRODUCTO' || !empty($articulo['controlaserie'])) && floor((float) $cantidad) != (float) $cantidad) {
+                    throw new \InvalidArgumentException($articulo['nombre'] . ' requiere unidades enteras.');
+                }
+                $precioSolicitado = $detalleSeguro['precioventa'] ?? $articulo['precioventa'];
+                $precioCentimos = \App\Libraries\CobroVenta::centimos($precioSolicitado);
+                if ($precioCentimos <= 0) throw new \InvalidArgumentException('El precio debe ser mayor que cero.');
+                if ($precioCentimos < \App\Libraries\CobroVenta::centimos($articulo['precioventa']) && $rolVendedor !== 'Administrador') {
+                    throw new \InvalidArgumentException('Solo un administrador puede reducir el precio de catálogo.');
+                }
+                $detalleSeguro['precioventa'] = number_format($precioCentimos / 100, 2, '.', '');
+            }
+            unset($detalleSeguro);
             $detVentaModel  = model(DetVentaModel::class);
             $productoModel  = model(ProductoModel::class);
             $pagoVentaModel = model(PagoVentaModel::class);
 
             if (empty($dataVenta['idpedido'])) {
                 $dataVenta['idpedido'] = null;
+            }
+            $pedidoOrigen = null;
+            if ($dataVenta['idpedido'] !== null) {
+                if (!ctype_digit((string) $dataVenta['idpedido']) || (int) $dataVenta['idpedido'] < 1) throw new \InvalidArgumentException('El pedido de origen no es válido.');
+                $pedidoOrigen = model(PedidoModel::class)->validarConversion($dataVenta, $detalles);
+            }
+            $cotizacionOrigen = null;
+            if ($dataVenta['idcotizacion'] !== null) {
+                if (!ctype_digit((string) $dataVenta['idcotizacion']) || (int) $dataVenta['idcotizacion'] < 1) throw new \InvalidArgumentException('La cotización de origen no es válida.');
+                $cotizacionOrigen = model(CotizacionModel::class)->validarParaVenta($dataVenta, $pedidoOrigen);
             }
 
             if (empty($pagos)) {
@@ -69,6 +135,7 @@ class VentaModel extends Model
             );
 
             $dataVenta = array_merge($dataVenta, $importes);
+            if ($cotizacionOrigen) $dataVenta = array_merge($dataVenta, \App\Libraries\ImportesCotizacion::desglosar($importes['total'], $cotizacionOrigen['porcentajeigv']), ['porcentajeigv' => $cotizacionOrigen['porcentajeigv'], 'tipocambio' => $cotizacionOrigen['tipocambio']]);
 
             if ($importes['tipodescuento'] !== 'NINGUNO') {
                 $rol = $db->table('usuarios u')
@@ -119,17 +186,23 @@ class VentaModel extends Model
 
                     foreach ($filas as $fila) {
                         $idComponente = (int) $fila['idproducto'];
-                        $componente = $productoModel->find($idComponente);
+                        $componente = $db->table('productos p')->select('p.*, um.abreviatura AS unidad')
+                            ->join('unidadesmedida um', 'um.idunidad = p.idunidad', 'left')
+                            ->where('p.idproducto', $idComponente)->get()->getRowArray();
 
-                        if (!$componente || $componente['tipo'] === 'COMBO') {
-                            throw new \RuntimeException(
-                                'El combo contiene un componente inexistente o un combo anidado.'
+                        if (!$componente || (int) $componente['estado'] !== 1 || $componente['tipo'] === 'COMBO') {
+                            throw new \InvalidArgumentException(
+                                'El combo contiene un componente inactivo, inexistente o un combo anidado. Revise su configuración.'
                             );
                         }
 
+                        $cantidadComponente = round($cantidad * (float) $fila['cantidad'], 2);
+                        if (strtoupper($componente['unidad'] ?? '') !== 'M' && floor($cantidadComponente) != $cantidadComponente) {
+                            throw new \InvalidArgumentException($componente['nombre'] . ' requiere unidades enteras dentro del combo.');
+                        }
                         $componentes[] = [
                             'producto' => $componente,
-                            'cantidad' => round($cantidad * (float) $fila['cantidad'], 2)
+                            'cantidad' => $cantidadComponente
                         ];
                     }
                 } else {
@@ -271,8 +344,9 @@ class VentaModel extends Model
                 );
 
                 if ($disponible + 0.00001 < $cantidad) {
-                    throw new \RuntimeException(
-                        "Stock disponible insuficiente para producto {$idproducto}. " .
+                    $nombreArticulo = $productoModel->find($idproducto)['nombre'] ?? (string) $idproducto;
+                    throw new \InvalidArgumentException(
+                        "Stock disponible insuficiente para {$nombreArticulo}. " .
                         "Disponible: {$disponible}; solicitado: {$cantidad}."
                     );
                 }
@@ -283,6 +357,14 @@ class VentaModel extends Model
                 ];
             }
 
+            // Numeración única y correlativa bajo bloqueo, sin depender del formulario.
+            $db->query("INSERT INTO correlativos (tipodocumento, prefijo, anio, ultimonumero) VALUES ('NOTA_VENTA', 'NV01', 0, 0) ON DUPLICATE KEY UPDATE idcorrelativo = idcorrelativo");
+            $correlativo = $db->query("SELECT * FROM correlativos WHERE tipodocumento = 'NOTA_VENTA' AND prefijo = 'NV01' AND anio = 0 FOR UPDATE")->getRowArray();
+            $maximo = $db->query("SELECT MAX(CAST(numero AS UNSIGNED)) AS maximo FROM ventas WHERE tipodocumento = 'NOTA_VENTA' AND serie = 'NV01'")->getRow('maximo');
+            $siguiente = max((int) $correlativo['ultimonumero'], (int) $maximo) + 1;
+            $db->table('correlativos')->where('idcorrelativo', $correlativo['idcorrelativo'])->update(['ultimonumero' => $siguiente]);
+            $dataVenta['serie'] = 'NV01';
+            $dataVenta['numero'] = str_pad((string) $siguiente, 8, '0', STR_PAD_LEFT);
             $insertado = $db->table('ventas')->insert($dataVenta);
 
             if (!$insertado) {
@@ -298,8 +380,12 @@ class VentaModel extends Model
             $totalPagado = 0;
 
             foreach ($pagos as $pago) {
+                if (!is_array($pago)) throw new \InvalidArgumentException('Pago inválido.');
+                $metodo = $db->table('tipospago')->where('idtipopago', (int) ($pago['idtipopago'] ?? 0))->get()->getRow('tipopago');
+                if (!$metodo) throw new \InvalidArgumentException('Seleccione un método de pago válido.');
+                $pago = array_merge($pago, \App\Libraries\CobroVenta::normalizar($pago, $metodo));
                 $montoPagado = (float) $pago['monto'];
-                $totalPagado += $montoPagado;
+                $totalPagado += \App\Libraries\CobroVenta::centimos($pago['monto']);
 
                 if ($montoPagado <= 0) {
                     throw new \RuntimeException(
@@ -323,8 +409,8 @@ class VentaModel extends Model
                 }
             }
 
-            if (round($totalPagado, 2) !== round((float) $dataVenta['total'], 2)) {
-                throw new \RuntimeException(
+            if ($totalPagado !== \App\Libraries\CobroVenta::centimos($dataVenta['total'])) {
+                throw new \InvalidArgumentException(
                     'En una venta de contado, los pagos deben coincidir con el total de la venta.'
                 );
             }
@@ -405,6 +491,9 @@ class VentaModel extends Model
                 }
 
                 if ($tipo === 'DOMICILIO') {
+                    if (!preg_match('/^[0-9]{9}$/D', (string) ($entrega['telefono'] ?? ''))) {
+                        throw new \InvalidArgumentException('El teléfono de entrega debe tener 9 dígitos.');
+                    }
                     if (
                         empty(trim((string) ($entrega['direccion'] ?? ''))) ||
                         empty(trim((string) ($entrega['telefono'] ?? '')))
@@ -439,6 +528,10 @@ class VentaModel extends Model
                 }
             }
 
+            if ($pedidoOrigen) {
+                model(PedidoModel::class)->marcarConvertido((int) $pedidoOrigen['idpedido'], (int) $idventa, (int) $dataVenta['idvendedor']);
+            }
+            if ($cotizacionOrigen) model(CotizacionModel::class)->marcarVenta((int) $cotizacionOrigen['idcotizacion'], (int) $idventa, (int) $dataVenta['idvendedor']);
             if ($db->transStatus() === false || !$db->transCommit()) {
                 throw new \RuntimeException(
                     'La transacción no pudo confirmarse.'

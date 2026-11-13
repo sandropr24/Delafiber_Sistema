@@ -19,6 +19,18 @@ class VentaController extends BaseController
         $ventaModel = model(VentaModel::class);
         $db = \Config\Database::connect();
         $puedeAutorizar = session()->get('rol') === 'Administrador';
+        $filtros = array_map(static fn($valor) => is_scalar($valor) ? trim((string) $valor) : '', $this->request->getGet(['q', 'desde', 'hasta', 'estado', 'vendedor']));
+        foreach (['desde', 'hasta'] as $fecha) {
+            if ($filtros[$fecha] !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/D', $filtros[$fecha])) $filtros[$fecha] = '';
+        }
+        if ($filtros['q'] !== '') {
+            $ventaModel->groupStart()->like('personas.nombres', $filtros['q'])->orLike('personas.apellidos', $filtros['q'])->orLike('personas.razonsocial', $filtros['q'])->orLike('personas.numerodoc', $filtros['q'])->orLike('ventas.numero', $filtros['q'])->groupEnd();
+        }
+        if ($filtros['desde'] !== '') $ventaModel->where('ventas.fecha >=', $filtros['desde'] . ' 00:00:00');
+        if ($filtros['hasta'] !== '') $ventaModel->where('ventas.fecha <=', $filtros['hasta'] . ' 23:59:59');
+        if ($filtros['estado'] === 'ACTIVA') $ventaModel->where('ventas.fechaanulacion', null);
+        if ($filtros['estado'] === 'ANULADA') $ventaModel->where('ventas.fechaanulacion IS NOT NULL', null, false);
+        if (ctype_digit($filtros['vendedor'])) $ventaModel->where('ventas.idvendedor', (int) $filtros['vendedor']);
         $solicitudesPendientes = $puedeAutorizar
             ? $db->table('solicitudes_anulacion s')
             ->select('s.idsolicitud, s.idventa, s.motivo, s.fecha_solicitud, v.numero, v.serie')
@@ -29,9 +41,12 @@ class VentaController extends BaseController
             : [];
         $data = [
             'titulo' => 'Historial de Ventas',
-            'ventas' => $ventaModel->select('ventas.*, IF(personas.tipopersona = "NATURAL", TRIM(CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, ""))), COALESCE(personas.razonsocial, "")) as cliente, locales.nombrelocal as local')
+            'filtros' => $filtros,
+            'vendedores' => $db->table('usuarios')->select('idusuario, nombreusuario')->orderBy('nombreusuario')->get()->getResultArray(),
+            'ventas' => $ventaModel->select('ventas.*, IF(personas.tipopersona = "NATURAL", TRIM(CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, ""))), COALESCE(personas.razonsocial, "")) as cliente, locales.nombrelocal as local, vendedor.nombreusuario AS vendedor, (SELECT e.estado FROM entregas e WHERE e.idventa = ventas.idventa ORDER BY e.identrega DESC LIMIT 1) AS estadoentrega')
                 ->join('personas', 'personas.idpersona = ventas.idcliente', 'left')
                 ->join('locales', 'locales.idlocal = ventas.idlocal', 'left')
+                ->join('usuarios vendedor', 'vendedor.idusuario = ventas.idvendedor', 'left')
                 ->orderBy('ventas.fecha', 'DESC')
                 ->findAll(),
             'solicitudesPendientes' => $solicitudesPendientes,
@@ -50,6 +65,7 @@ class VentaController extends BaseController
         $db = \Config\Database::connect();
 
         $clientes = $personaModel->builder()
+            ->where('estado', 1)
             ->whereNotIn('idpersona', static function ($builder) {
                 return $builder->select('idpersona')->from('usuarios');
             })
@@ -88,19 +104,101 @@ class VentaController extends BaseController
             ->where('u.estado', 1)
             ->get()->getRow('rol');
 
+        $locales = $localModel->findAll();
+        $localUsuario = (int) session()->get('idlocal');
+        if ($db->fieldExists('idlocal', 'usuarios')) {
+            $localUsuario = (int) ($db->table('usuarios')->where('idusuario', $idUsuario)->get()->getRow('idlocal') ?: $localUsuario);
+        }
+        // Si no hay asignación, recordar el último local utilizado por este vendedor.
+        if (!$localUsuario) $localUsuario = (int) $db->table('ventas')->where('idvendedor', $idUsuario)->orderBy('idventa', 'DESC')->get(1)->getRow('idlocal');
+        $idsLocales = array_map('intval', array_column($locales, 'idlocal'));
+        if (!in_array($localUsuario, $idsLocales, true)) $localUsuario = count($locales) === 1 ? (int) $locales[0]['idlocal'] : 0;
+        $estados = $db->table('estadoventa')->get()->getResultArray();
+        $estadoInicial = 0;
+        foreach ($estados as $estado) {
+            if (mb_strtolower(trim($estado['estado'])) === 'pendiente') $estadoInicial = (int) $estado['idestado'];
+        }
+        if (!$estadoInicial && count($estados) === 1) $estadoInicial = (int) $estados[0]['idestado'];
+        $clienteInicial = 0;
+        foreach ($clientes as $cliente) {
+            $nombre = mb_strtolower(trim(($cliente['razonsocial'] ?? '') . ' ' . ($cliente['nombres'] ?? '') . ' ' . ($cliente['apellidos'] ?? '')));
+            if (in_array($nombre, ['cliente general', 'consumidor final', 'público general', 'publico general'], true)) {
+                $clienteInicial = (int) $cliente['idpersona'];
+                break;
+            }
+        }
+
+        $pedidoSeleccionado = null;
+        $datosPedido = [];
+        $idPedido = (int) $this->request->getGet('pedido');
+        if ($idPedido > 0) {
+            $pedidos = model(\App\Models\PedidoModel::class);
+            $pedidoSeleccionado = $pedidos->obtener($idPedido);
+            if (!$pedidoSeleccionado || $pedidoSeleccionado['estado_codigo'] !== 'CONFIRMADO' || $pedidoSeleccionado['idventa']) {
+                return redirect()->to(base_url('admin/pedidos'))->with('error', 'El pedido no está confirmado o ya fue convertido.');
+            }
+            $clienteInicial = (int) $pedidoSeleccionado['idpersona'];
+            $localUsuario = (int) $pedidoSeleccionado['idlocal'];
+            $datosPedido = [
+                'idcliente' => $clienteInicial, 'idlocal' => $localUsuario,
+                'tipo_descuento' => $pedidoSeleccionado['tipodescuento'], 'valor_descuento' => $pedidoSeleccionado['valordescuento'], 'motivo_descuento' => $pedidoSeleccionado['motivodescuento'],
+                'detalles' => array_map(static fn($d) => ['idproducto' => $d['idproducto'], 'cantidad' => $d['cantidad'], 'precioventa' => $d['preciounitario']], $pedidos->detalles($idPedido)),
+            ];
+            $avisosPedido = [];
+            foreach ($datosPedido['detalles'] as $lineaPedido) {
+                $articuloPedido = $db->table('productos')->where('idproducto', $lineaPedido['idproducto'])->get()->getRowArray();
+                if (!$articuloPedido || !(int) $articuloPedido['estado']) $avisosPedido[] = 'Hay artículos del pedido que ya no están activos. Puedes sustituirlos antes de cobrar.';
+                elseif ($rolActual !== 'Administrador' && \App\Libraries\CobroVenta::centimos($lineaPedido['precioventa']) < \App\Libraries\CobroVenta::centimos($articuloPedido['precioventa'])) $avisosPedido[] = 'Revisa los precios: solo un administrador puede vender por debajo del catálogo vigente.';
+            }
+            if (!in_array($clienteInicial, array_map('intval', array_column($clientes, 'idpersona')), true)) $avisosPedido[] = 'Selecciona un cliente activo para la venta.';
+            if ($pedidoSeleccionado['tipodescuento'] !== 'NINGUNO' && $rolActual !== 'Administrador') {
+                $datosPedido['tipo_descuento'] = 'NINGUNO';
+                $datosPedido['valor_descuento'] = '0';
+                $datosPedido['motivo_descuento'] = '';
+                $avisosPedido[] = 'El pedido incluía un descuento que solo un administrador puede aplicar. Revisa el total sin descuento antes de cobrar.';
+            }
+
+        }
+
+        $cotizacionSeleccionada = null;
+        $idCotizacion = (int) $this->request->getGet('cotizacion');
+        if ($pedidoSeleccionado) {
+            if ($idCotizacion && $idCotizacion !== (int) ($pedidoSeleccionado['idcotizacion'] ?? 0)) return redirect()->to(base_url('admin/pedidos'))->with('error', 'La cotización no corresponde al pedido.');
+            $idCotizacion = (int) ($pedidoSeleccionado['idcotizacion'] ?? 0);
+        }
+        if ($idCotizacion > 0) {
+            $cotizaciones = model(\App\Models\CotizacionModel::class);
+            $cotizacionSeleccionada = $cotizaciones->obtener($idCotizacion);
+            if (!$cotizacionSeleccionada || (!$pedidoSeleccionado && ($cotizacionSeleccionada['vencida'] || !in_array($cotizacionSeleccionada['estado_codigo'], ['EMITIDA', 'ACEPTADA'], true) || $cotizacionSeleccionada['idpedido'] || $cotizacionSeleccionada['idventa']))) return redirect()->to(base_url('admin/cotizaciones'))->with('error', 'La cotización venció, no está emitida o ya fue convertida.');
+            if (!$pedidoSeleccionado) {
+                $clienteInicial = (int) $cotizacionSeleccionada['idpersona']; $localUsuario = (int) $cotizacionSeleccionada['idlocal'];
+                $datosPedido = ['idcliente' => $clienteInicial, 'idlocal' => $localUsuario, 'tipo_descuento' => 'NINGUNO', 'valor_descuento' => '0', 'motivo_descuento' => '', 'detalles' => array_map(static fn($d) => ['idproducto' => $d['idproducto'], 'cantidad' => $d['cantidad'], 'precioventa' => $d['preciounitario']], $cotizaciones->detalles($idCotizacion))];
+            }
+            $datosPedido['idlinea'] = (int) $cotizacionSeleccionada['idlinea'];
+        }
+
         $data = [
+            'pedidoSeleccionado' => $pedidoSeleccionado,
+            'cotizacionSeleccionada' => $cotizacionSeleccionada,
+            'datosPedido' => $datosPedido,
+            'iniciarPedido' => ($idPedido > 0 && $this->request->getGet('desde_pedido') === '1') || ($idCotizacion > 0 && $this->request->getGet('desde_cotizacion') === '1'),
+            'avisosPedido' => array_values(array_unique($avisosPedido ?? [])),
+            'localInicial' => $localUsuario,
+            'estadoInicial' => $estadoInicial,
+            'clienteInicial' => $clienteInicial,
+            'requestToken' => bin2hex(random_bytes(32)),
             'puedeAplicarDescuento' => $rolActual === 'Administrador',
             'titulo'        => 'Registrar Nueva Venta',
             'clientes'      => $clientes,
-            'locales'       => $localModel->findAll(),
-            'productos'     => $productoModel->where('tipo', 'PRODUCTO')->findAll(),
-            'servicios'     => $productoModel->where('tipo', 'SERVICIO')->findAll(),
-            'combos'        => $productoModel->where('tipo', 'COMBO')->findAll(),
+            'locales'       => $locales,
+            'productos'     => $productoModel->select('productos.*, um.abreviatura AS unidad')->join('unidadesmedida um', 'um.idunidad = productos.idunidad', 'left')->where('productos.estado', 1)->where('tipo', 'PRODUCTO')->findAll(),
+            'servicios'     => $productoModel->select('productos.*, um.abreviatura AS unidad')->join('unidadesmedida um', 'um.idunidad = productos.idunidad', 'left')->where('productos.estado', 1)->where('tipo', 'SERVICIO')->findAll(),
+            'combos'        => $productoModel->select('productos.*, um.abreviatura AS unidad')->join('unidadesmedida um', 'um.idunidad = productos.idunidad', 'left')->where('productos.estado', 1)->where('tipo', 'COMBO')->findAll(),
             'comboComponentes' => $db->query("SELECT cd.idcombo, cd.idproducto, cd.cantidad, p.nombre, p.tipo, p.controlastock, p.controlaserie FROM combo_detalle cd JOIN productos p ON p.idproducto = cd.idproducto")->getResultArray(),
             'tipospago'     => $tipoPagoModel->findAll(),
             'lineas'        => $db->table('lineas')->get()->getResultArray(),
             'canales'       => $db->table('canalesventa')->get()->getResultArray(),
-            'estadosVenta'  => $db->table('estadoventa')->get()->getResultArray(),
+            'estadosVenta'  => $estados,
             'stockPorLocal' => json_encode($stockPorLocal),
             'seriesDisponibles' => json_encode($seriesDisponibles),
             'tecnicosEntrega' => model(\App\Models\TecnicoModel::class)->activos()
@@ -111,44 +209,49 @@ class VentaController extends BaseController
 
     public function guardar()
     {
-        $ventaModel = model(VentaModel::class);
+        $ventaModel    = model(VentaModel::class);
 
         $idCliente = $this->request->getPost('idcliente');
-
         if (empty($idCliente) || $idCliente === 'false' || $idCliente === false) {
             return redirect()->back()->with('error', 'Por favor, seleccione un cliente válido antes de procesar la venta.')->withInput();
         }
 
-        $dataVenta = [
-            'idcliente'     => $idCliente,
-            'idlocal'       => $this->request->getPost('idlocal'),
-            'idpedido'      => $this->request->getPost('idpedido') ?: null,
-            'idlinea'       => $this->request->getPost('idlinea'),
-            'idcanal'       => $this->request->getPost('idcanal'),
-            'idvendedor'    => session()->get('idusuario'),
-            'idestado'      => $this->request->getPost('idestado'),
-            'formapago'     => 'CONTADO',
-            'idcajero'      => session()->get('idusuario'),
-            'tipodocumento' => $this->request->getPost('tipodocumento'),
-            'cdr'           => null,
-            'numero'        => $this->request->getPost('numero'),
-            'estafacturado' => 0,
-            'fecha'         => date('Y-m-d H:i:s'),
-            'tipodescuento' => $this->request->getPost('tipo_descuento') ?: 'NINGUNO',
-            'valordescuento' => $this->request->getPost('valor_descuento') ?: '0',
-            'motivodescuento' => trim((string) $this->request->getPost('motivo_descuento'))
-        ];
+        $detallesPost = $this->request->getPost('detalles');
+        $pagos        = $this->request->getPost('pagos');
 
-        $detalles = $this->request->getPost('detalles');
-        $pagos    = $this->request->getPost('pagos');
-
-        if (empty($detalles)) {
+        if (empty($detallesPost) || !is_array($detallesPost)) {
             return redirect()->back()->with('error', 'Debes agregar al menos un producto a la venta.')->withInput();
         }
 
-        if (empty($pagos)) {
+        if (empty($pagos) || !is_array($pagos)) {
             return redirect()->back()->with('error', 'Debes registrar al menos una forma de pago.')->withInput();
         }
+
+        // El modelo valida precios, cantidades, descuentos y cobros.
+        $detallesSeguros = $detallesPost;
+        $tipoDescuento = $this->request->getPost('tipo_descuento') ?: 'NINGUNO';
+        $valorDescuento = $this->request->getPost('valor_descuento') ?: '0';
+
+        $dataVenta = [
+            'idcliente'       => $idCliente,
+            'idlocal'         => $this->request->getPost('idlocal'),
+            'idpedido'        => $this->request->getPost('idpedido') ?: null,
+            'idcotizacion'    => $this->request->getPost('idcotizacion') ?: null,
+            'idlinea'         => $this->request->getPost('idlinea'),
+            'idcanal'         => $this->request->getPost('idcanal'),
+            'idvendedor'      => session()->get('idusuario'),
+            'idestado'        => $this->request->getPost('idestado'),
+            'formapago'       => 'CONTADO',
+            'idcajero'        => session()->get('idusuario'),
+            'tipodocumento'   => $this->request->getPost('tipodocumento'),
+            'cdr'             => null,
+            'estafacturado'   => 0,
+            'fecha'           => date('Y-m-d H:i:s'),
+            'tipodescuento'   => $tipoDescuento,
+            'valordescuento'  => $valorDescuento,
+            'motivodescuento' => trim((string) $this->request->getPost('motivo_descuento')),
+            'request_token' => $this->request->getPost('request_token')
+        ];
 
         if (empty($dataVenta['idcajero']) || empty($dataVenta['idlinea']) || empty($dataVenta['idcanal']) || empty($dataVenta['idestado'])) {
             return redirect()->back()->with('error', 'Faltan datos obligatorios: usuario, línea, canal o estado de venta.')->withInput();
@@ -164,20 +267,29 @@ class VentaController extends BaseController
 
         $entrega = [
             'tipoentrega' => $this->request->getPost('tipoentrega') ?: 'RECOJO_TIENDA',
-            'direccion' => trim((string) $this->request->getPost('direccion_entrega')),
-            'referencia' => trim((string) $this->request->getPost('referencia_entrega')),
-            'telefono' => trim((string) $this->request->getPost('telefono_entrega')),
-            'idtecnico' => $idTecnicoEntrega ?: null,
+            'direccion'   => trim((string) $this->request->getPost('direccion_entrega')),
+            'referencia'  => trim((string) $this->request->getPost('referencia_entrega')),
+            'telefono'    => trim((string) $this->request->getPost('telefono_entrega')),
+            'idtecnico'   => $idTecnicoEntrega ?: null,
         ];
-        $resultado = $ventaModel->registrarVenta($dataVenta, $detalles, $pagos, $entrega);
+
+        $resultado = $ventaModel->registrarVenta($dataVenta, $detallesSeguros, $pagos, $entrega);
 
         if ($resultado) {
+            session()->set('idlocal', (int) $dataVenta['idlocal']);
+            session()->setFlashdata('ventaRegistrada', true);
+            if (!empty($dataVenta['idpedido'])) session()->setFlashdata('pedidoVendido', (int) $dataVenta['idpedido']);
+            if (!empty($dataVenta['idcotizacion']) || !empty($dataVenta['idpedido'])) {
+                $cotizacionVendida = db_connect()->table('ventas')->where('request_token', $dataVenta['request_token'])->get()->getRow('idcotizacion');
+                if ($cotizacionVendida) session()->setFlashdata('cotizacionVendida', (int) $cotizacionVendida);
+            }
             return redirect()->to('admin/ventas')->with('success', 'Venta registrada exitosamente.');
         } else {
             $errorMsg = session()->getFlashdata('error') ?? 'No se pudo registrar la venta. Inténtelo nuevamente.';
             return redirect()->back()->with('error', $errorMsg)->withInput();
         }
     }
+
 
     public function detalles($idventa)
     {
@@ -246,6 +358,11 @@ class VentaController extends BaseController
 
     public function guardarClienteExpress()
     {
+        // El filtro CSRF ya regeneró el token, incluso si la validación del cliente falla.
+        $this->response->setHeader('X-CSRF-TOKEN', csrf_hash());
+        $this->response->setHeader('X-CSRF-NAME', csrf_token());
+        $this->response->setHeader('Cache-Control', 'no-store');
+
         if (!$this->request->isAJAX()) {
             return $this->response->setStatusCode(403)->setJSON([
                 'status' => 'error',
@@ -256,52 +373,45 @@ class VentaController extends BaseController
         $clienteModel = model(\App\Models\PersonaModel::class);
 
         $documento = trim((string) $this->request->getPost('documento'));
+        $tipoDoc = (string) $this->request->getPost('tipodoc');
         $nombre = trim((string) $this->request->getPost('nombre'));
         $telefono = trim((string) $this->request->getPost('telefono'));
 
-        if (!in_array(strlen($documento), [8, 11], true) || !ctype_digit($documento)) {
+        $longitudDocumento = ['DNI' => 8, 'RUC' => 11][$tipoDoc] ?? 0;
+        if (!$longitudDocumento || strlen($documento) !== $longitudDocumento || !ctype_digit($documento)) {
             return $this->response->setJSON([
                 'status' => 'error',
                 'message' => 'Ingrese un DNI de 8 dígitos o RUC de 11 dígitos.'
             ]);
         }
 
-        if (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 100) {
+        if (mb_strlen($nombre) < 2 || mb_strlen($nombre) > 100 || preg_match('/\p{N}/u', $nombre)) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'El nombre debe tener entre 2 y 100 caracteres.'
+                'message' => 'El nombre debe tener entre 2 y 100 caracteres y no contener números.'
             ]);
         }
 
-        if ($telefono !== '' && (!ctype_digit($telefono) || strlen($telefono) > 20)) {
+        if ($telefono !== '' && (!ctype_digit($telefono) || strlen($telefono) > 9)) {
             return $this->response->setJSON([
                 'status' => 'error',
                 'message' => 'Ingrese un teléfono válido.'
             ]);
         }
 
-        $tipoDoc = strlen($documento) === 11 ? 'RUC' : 'DNI';
-
-        $buscarCliente = static function () use ($clienteModel, $tipoDoc, $documento) {
+        $buscarCliente = static function () use ($clienteModel, $documento) {
             return $clienteModel
-                ->where('tipodoc', $tipoDoc)
                 ->where('numerodoc', $documento)
                 ->first();
         };
 
         try {
-            $existente = $buscarCliente();
+            $existente = $buscarCliente() ?: model(\App\Models\TecnicoModel::class)->where('dni', $documento)->first();
 
             if ($existente) {
                 return $this->response->setJSON([
-                    'status' => 'exists',
-                    'message' => 'Este documento ya está registrado.',
-                    'idcliente' => $existente['idpersona'],
-                    'nombre' => trim(
-                        ($existente['nombres'] ?? '') . ' ' .
-                            ($existente['apellidos'] ?? '')
-                    ),
-                    'documento' => $documento
+                    'status' => 'error',
+                    'message' => 'Este documento ya está registrado. No se puede registrar nuevamente.'
                 ]);
             }
 
@@ -338,18 +448,12 @@ class VentaController extends BaseController
             ]);
 
             try {
-                $existente = $buscarCliente();
+                $existente = $buscarCliente() ?: model(\App\Models\TecnicoModel::class)->where('dni', $documento)->first();
 
                 if ($existente) {
                     return $this->response->setJSON([
-                        'status' => 'exists',
-                        'message' => 'Este documento ya está registrado.',
-                        'idcliente' => $existente['idpersona'],
-                        'nombre' => trim(
-                            ($existente['nombres'] ?? '') . ' ' .
-                                ($existente['apellidos'] ?? '')
-                        ),
-                        'documento' => $documento
+                        'status' => 'error',
+                        'message' => 'Este documento ya está registrado. No se puede registrar nuevamente.'
                     ]);
                 }
             } catch (\Throwable $ignored) {
