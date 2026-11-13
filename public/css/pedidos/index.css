@@ -1,0 +1,52 @@
+.content-area:has(.df-pedidos) { box-sizing: border-box; min-width: 0; }
+.df-pedidos { --pedido-purple: #32005a; --pedido-pink: #ff2b50; color: #30263b; width: 100%; min-width: 0; }
+.df-pedidos, .df-pedidos * { box-sizing: border-box; }
+.df-pedidos .btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 1px solid transparent; border-radius: 8px; padding: 9px 13px; font-size: .8rem; text-decoration: none; cursor: pointer; }
+.df-pedidos .btn-light, .df-pedidos .btn-outline-secondary { background: #fff; color: #6d587c; border-color: #dfd6e7; }
+.df-pedidos .btn-outline-light { border-color: #ffffff60; color: #f7f0fb; }
+.df-pedidos .btn-outline-danger { color: #ac3254; border-color: #edb9c8; background: transparent; }
+.df-pedidos .card-body { padding: 18px; }
+.df-pedidos .pedido-card { min-width: 0; }
+.df-pedidos .pedido-grid > aside { min-width: 0; }
+.df-pedidos .pedido-resumen .btn { width: 100%; }
+.df-pedidos .table-responsive { overflow-x: auto; }
+.df-pedidos .table { width: 100%; border-collapse: collapse; }
+#formPedido .pedido-principal > section:first-child .row { display: grid; grid-template-columns: 2fr 3fr; gap: 14px; margin: 0; }
+#formPedido .pedido-principal > section:first-child .row > div { width: auto; padding: 0; margin: 0; min-width: 0; }
+.df-pedidos .pedido-eyebrow { color: #825c96; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+.df-pedidos .pedido-primary { background: var(--pedido-pink); border-color: var(--pedido-pink); color: #fff; font-weight: 600; }
+.df-pedidos .pedido-primary:hover { background: #df2143; color: #fff; }
+.df-pedidos .pedido-primary:disabled { background: #6c6077; border-color: #6c6077; color: #fff; cursor: not-allowed; }
+.df-pedidos .pedido-card { border: 1px solid #e7e1ed; border-radius: 12px; overflow: visible; box-shadow: 0 3px 15px #32005a05; }
+.df-pedidos .card-header { background: transparent; border-bottom: 1px solid #ece6f0; font-size: .87rem; font-weight: 700; padding: 14px 18px; }
+.df-pedidos .pedido-grid { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 18px; align-items: start; }
+.df-pedidos .pedido-principal { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.df-pedidos .form-label { display: block; margin-bottom: 6px; font-size: .8rem; font-weight: 600; }
+.df-pedidos .form-control, .df-pedidos .form-select { display: block; width: 100%; border: 1px solid #dfd6e7; border-radius: 8px; padding: 8px 10px; background-color: #fff; color: #30263b; min-height: 38px; font-size: .84rem; }
+.df-pedidos .form-select { padding-right: 2.25rem; }
+.df-pedidos .table th { font-size: .7rem; color: #82728e; background: #faf8fc; padding: 12px; }
+.df-pedidos .table td { padding: 12px; font-size: .83rem; }
+.df-pedidos .pedido-cantidad, .df-pedidos .pedido-precio { width: 105px; }
+.df-pedidos .pedido-kpi { display: flex; flex-direction: column; padding: 16px 20px; color: #594267; border: 1px solid #e7e1ed; background: #fff; border-radius: 12px; text-decoration: none; font-size: .8rem; }
+.df-pedidos .pedido-kpi strong { font-size: 1.8rem; color: var(--pedido-purple); }
+.df-pedidos .pedido-resumen { background: var(--pedido-purple); color: #f7f0fb; }
+.df-pedidos .pedido-resumen .card-header { border-color: #ffffff25; }
+.df-pedidos .pedido-resumen .form-label { color: #f0e4fa; }
+.df-pedidos .pedido-resumen p { color: #d4c0e1; }
+.df-pedidos .pedido-importe { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 14px; font-size: .85rem; }
+.df-pedidos .pedido-total { font-size: 1.25rem; border-top: 1px solid #ffffff25; padding-top: 15px; }
+.df-pedidos .pedido-total strong { font-size: 1.7rem; }
+.df-pedidos .pedido-estado { display: inline-block; font-size: .7rem; padding: 5px 9px; border-radius: 6px; background: #f2eaf7; color: #63377c; }
+.df-pedidos .estado-PENDIENTE { background: #fff3d4; color: #805c13; }
+.df-pedidos .estado-CONVERTIDO { background: #e5f5ed; color: #24704b; }
+.df-pedidos .estado-CANCELADO { background: #fde8ee; color: #9b3054; }
+.df-pedidos .pedido-evento { border-left: 2px solid #e5d9ef; padding: 0 0 18px 14px; }
+.df-pedidos .pedido-autocomplete { position: relative; }
+.df-pedidos .pedido-resultados { position: absolute; top: 100%; left: 0; right: 0; z-index: 30; max-height: 260px; overflow-y: auto; background: #fff; border: 1px solid #dfd6e7; border-radius: 8px; box-shadow: 0 8px 25px #32005a20; }
+.df-pedidos .pedido-resultados button { display: block; width: 100%; border: 0; background: #fff; text-align: left; padding: 10px 12px; font-size: .8rem; }
+.df-pedidos .pedido-resultados button[aria-selected=true], .df-pedidos .pedido-resultados button:hover { background: #f3edf8; }
+.df-pedidos kbd { background: #ffffff20; color: inherit; border: 1px solid #9e82b340; border-radius: 4px; font-size: .65rem; }
+.df-pedidos .pedido-aviso { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #fff6df; border: 1px solid #efdfb5; border-radius: 10px; padding: 10px 14px; font-size: .8rem; }
+.df-pedidos [hidden] { display: none !important; }
+@media (max-width: 1050px) { .df-pedidos .pedido-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { #formPedido .pedido-principal > section:first-child .row { grid-template-columns: minmax(0, 1fr); } }
