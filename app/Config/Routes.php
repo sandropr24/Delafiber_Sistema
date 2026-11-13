@@ -18,7 +18,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static functio
     $routes->group('locales', ['filter' => 'auth:Administrador'], static function ($routes) {
         $routes->get('/', 'LocalController::index');
         $routes->post('guardar', 'LocalController::guardar');
-        $routes->get('eliminar/(:num)', 'LocalController::eliminar/$1');
+        $routes->post('eliminar/(:num)', 'LocalController::eliminar/$1');
     });
 
     $routes->group('tecnicos', ['filter' => 'auth:Administrador'], static function ($routes) {
@@ -30,7 +30,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static functio
     $routes->group('usuarios', ['filter' => 'auth:Administrador'], static function ($routes) {
         $routes->get('/', 'UsuarioController::index');
         $routes->post('guardar', 'UsuarioController::guardar');
-        $routes->get('cambiarestado/(:num)', 'UsuarioController::cambiarEstado/$1');
+        $routes->post('cambiarestado/(:num)', 'UsuarioController::cambiarEstado/$1');
     });
 
     $routes->group('servicios', ['filter' => 'auth:Administrador,Operador'], static function ($routes) {
@@ -47,11 +47,20 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static functio
     $routes->group('proveedores', ['filter' => 'auth:Administrador,Operador'], static function ($routes) {
         $routes->get('/', 'ProveedorController::index');
         $routes->post('guardar', 'ProveedorController::guardar');
-        $routes->get('eliminar/(:num)', 'ProveedorController::eliminar/$1');
+        $routes->post('eliminar/(:num)', 'ProveedorController::eliminar/$1');
     });
 
-    $routes->group('cotizaciones', ['filter' => 'auth:Administrador,Operador'], static function ($routes) {
+    $routes->group('cotizaciones', ['filter' => 'auth:Administrador,Operador,Vendedor'], static function ($routes) {
         $routes->get('/', 'CotizacionController::index');
+        $routes->get('crear', 'CotizacionController::crear');
+        $routes->get('editar/(:num)', 'CotizacionController::editar/$1');
+        $routes->post('guardar', 'CotizacionController::guardar');
+        $routes->get('detalles/(:num)', 'CotizacionController::detalles/$1');
+        $routes->post('cambiar-estado/(:num)', 'CotizacionController::cambiarEstado/$1');
+        $routes->post('convertir-pedido/(:num)', 'CotizacionController::convertirPedido/$1', ['filter' => 'auth:Administrador,Vendedor']);
+        $routes->get('pdf/(:num)', 'CotizacionController::pdf/$1');
+        $routes->get('series', 'CotizacionController::series', ['filter' => 'auth:Administrador']);
+        $routes->post('guardar-serie', 'CotizacionController::guardarSerie', ['filter' => 'auth:Administrador']);
     });
 
     $routes->group('compras', ['filter' => 'auth:Administrador,Operador'], static function ($routes) {
@@ -64,7 +73,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static functio
     $routes->group('clientes', ['filter' => 'auth:Administrador,Vendedor'], static function ($routes) {
         $routes->get('/', 'ClienteController::index');
         $routes->post('guardar', 'ClienteController::guardar');
-        $routes->get('cambiarestado/(:num)', 'ClienteController::cambiarEstado/$1');
+        $routes->post('cambiarestado/(:num)', 'ClienteController::cambiarEstado/$1');
     });
     $routes->post('clientes/guardar-express', 'VentaController::guardarClienteExpress', ['filter' => 'auth:Administrador,Vendedor']);
 
@@ -81,27 +90,35 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static functio
 
     $routes->group('pedidos', ['filter' => 'auth:Administrador,Vendedor'], static function ($routes) {
         $routes->get('/', 'PedidoController::index');
+        $routes->get('crear', 'PedidoController::crear');
+        $routes->get('editar/(:num)', 'PedidoController::editar/$1');
+        $routes->post('guardar', 'PedidoController::guardar');
+        $routes->get('detalles/(:num)', 'PedidoController::detalles/$1');
+        $routes->post('cambiar-estado/(:num)', 'PedidoController::cambiarEstado/$1');
     });
 
     $routes->group('catalogos', ['filter' => 'auth:Administrador,Operador,Vendedor'], static function ($routes) {
-        $routes->get('', 'CatalogoController::index');
+        $routes->get('/', 'CatalogoController::index');
+        $routes->get('buscarCategorias', 'CatalogoController::buscarCategorias');
+        $routes->get('buscarMarcas', 'CatalogoController::buscarMarcas');
+    });
+
+    $routes->group('catalogos', ['filter' => 'auth:Administrador'], static function ($routes) {
         $routes->post('guardar-categoria', 'CatalogoController::guardarCategoria');
         $routes->post('guardar-marca', 'CatalogoController::guardarMarca');
         $routes->post('cambiar-estado-categoria/(:num)', 'CatalogoController::cambiarEstadoCategoria/$1');
         $routes->post('cambiar-estado-marca/(:num)', 'CatalogoController::cambiarEstadoMarca/$1');
-        $routes->get('buscarCategorias', 'CatalogoController::buscarCategorias');
-        $routes->get('buscarMarcas', 'CatalogoController::buscarMarcas');
     });
 
     $routes->group('productos', ['filter' => 'auth:Administrador,Operador,Vendedor'], static function ($routes) {
         $routes->get('buscar_tabla', 'ProductoController::buscar_tabla');
         $routes->get('/', 'ProductoController::index');
-        $routes->post('guardar', 'ProductoController::guardar');
-        $routes->post('cambiarestado/(:num)', 'ProductoController::cambiarEstado/$1');
+        $routes->post('guardar', 'ProductoController::guardar', ['filter' => 'auth:Administrador']);
+        $routes->post('cambiarestado/(:num)', 'ProductoController::cambiarEstado/$1', ['filter' => 'auth:Administrador']);
     });
 
     $routes->group('kardex', ['filter' => 'auth:Administrador,Operador,Vendedor'], static function ($routes) {
-        $routes->get('buscar_tabla', 'KardexController::buscar_tabla');
+     $routes->get('buscar_tabla', 'KardexController::buscar_tabla');
         $routes->get('', 'KardexController::index');
         $routes->get('historial/(:num)', 'KardexController::historial/$1');
     });

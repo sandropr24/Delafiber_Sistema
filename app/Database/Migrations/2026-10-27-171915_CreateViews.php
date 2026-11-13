@@ -41,8 +41,6 @@ class CreateViews extends Migration
             WHERE ci.estado = 'PENDIENTE'
         ");
 
-        git add app/Database/Migrations/2026-10-27-170000_CreateTableTecnicos.php
-
 
         $this->db->query("
             CREATE VIEW vw_series_vendidas AS
