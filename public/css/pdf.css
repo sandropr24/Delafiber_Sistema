@@ -1,117 +1,70 @@
-@page {
-  margin: 34px 40px;
-}
-* {
-  box-sizing: border-box;
-}
+/* Nota de venta A4. Tablas y medidas compatibles con Dompdf, sin recursos remotos. */
+@page { margin: 40px 44px 76px; }
+* { box-sizing: border-box; }
 body {
-  font-family: "DejaVu Sans", sans-serif;
-  font-size: 10px;
-  line-height: 1.5;
-  color: #303040;
   margin: 0;
+  color: #302a3b;
+  font-family: "DejaVu Sans", sans-serif;
+  font-size: 11px;
+  line-height: 1.5;
 }
-table {
-  border-spacing: 0;
-}
-.cabecera {
-  width: 100%;
-  border-bottom: 3px solid #ff2b50;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-}
-.cabecera td {
-  vertical-align: middle;
-  padding-bottom: 12px;
-}
-.empresa {
-  font-size: 24px;
-  font-weight: bold;
-  color: #32005a;
-}
-.subtitulo {
-  font-size: 9px;
-  color: #777;
-}
-.documento {
-  text-align: right;
-}
-.documento strong {
-  font-size: 16px;
-  color: #32005a;
-}
-.numero {
-  font-size: 12px;
-  font-weight: bold;
-  margin-top: 5px;
-}
-.datos {
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 18px;
-  background: #f8f6fb;
-}
-.datos td {
-  padding: 8px 10px;
-  vertical-align: top;
-}
-.etiqueta {
-  color: #6f6878;
-  font-size: 8px;
-  font-weight: bold;
-}
-.detalle {
-  border-collapse: collapse;
-  width: 100%;
-  margin-top: 12px;
-}
-.detalle th {
-  background-color: #32005a;
-  color: #fff;
-  text-align: left;
-  padding: 10px 8px;
-  font-weight: bold;
-}
-.detalle td {
-  border-bottom: 1px solid #e9e6ed;
-  padding: 10px 8px;
-}
-.detalle tbody tr:nth-child(even) {
-  background-color: #faf9fc;
-}
-.derecha {
-  text-align: right !important;
-}
-.totales {
-  width: 42%;
-  margin-left: 58%;
-  margin-top: 18px;
-  border-collapse: collapse;
-}
-.totales td {
-  padding: 10px;
-}
-.total td {
-  background-color: #32005a;
-  color: #fff;
-  font-size: 13px;
-  font-weight: bold;
-}
-.pagos {
-  margin-top: 20px;
-  padding-top: 10px;
-  border-top: 1px solid #e9e6ed;
-  color: #32005a;
-}
-.pie {
-  margin-top: 34px;
-  border-top: 1px solid #ddd;
-  padding-top: 12px;
-  text-align: center;
-  color: #777;
-  font-size: 9px;
-}
-.logo {
-  max-height: 58px;
-  max-width: 180px;
-}
+table { width: 100%; border-collapse: collapse; border-spacing: 0; }
+td, th { word-wrap: break-word; }
+.cabecera { table-layout: fixed; page-break-inside: avoid; }
+.cabecera td { vertical-align: top; padding-bottom: 20px; }
+.identidad { width: 58%; padding-right: 24px; }
+.logo { width: 190px; height: auto; }
+.empresa { color: #32005a; font-size: 28px; font-weight: bold; }
+.subtitulo { margin-top: 7px; margin-bottom: 9px; color: #706879; font-size: 9px; }
+.empresa-dato { color: #706879; font-size: 9px; line-height: 1.65; }
+.empresa-dato strong { color: #51435e; }
+.documento { width: 42%; text-align: right; }
+.documento-panel { padding: 16px 18px; border: 1px solid #e8dfef; border-radius: 8px; background: #faf8fc; }
+.documento-etiqueta { color: #84718e; font-size: 7px; font-weight: bold; letter-spacing: 1px; }
+.documento h1 { margin: 7px 0 8px; color: #32005a; font-size: 18px; line-height: 1.3; }
+.numero { color: #44334f; font-size: 13px; font-weight: bold; word-wrap: break-word; }
+.documento-moneda { margin-top: 9px; color: #817388; font-size: 8px; }
+.marca-linea { height: 3px; margin-bottom: 23px; border-left: 90px solid #ff2b50; background: #32005a; }
+.datos { margin-bottom: 25px; border: 1px solid #e8e3ed; background: #fcfbfd; table-layout: fixed; page-break-inside: avoid; }
+.datos td { padding: 16px 18px; vertical-align: top; }
+.datos-cliente { width: 60%; }
+.datos-operacion { width: 40%; border-left: 1px solid #e8e3ed; }
+.etiqueta { color: #81728d; font-size: 8px; font-weight: bold; letter-spacing: .5px; }
+.cliente-nombre { margin-top: 7px; color: #3b2b47; font-size: 12px; font-weight: bold; }
+.cliente-documento { margin-top: 6px; font-size: 10px; }
+.cliente-direccion { margin-top: 6px; color: #706879; font-size: 10px; }
+.dato-valor { margin-top: 4px; font-size: 10px; }
+.etiqueta-local { margin-top: 12px; }
+.seccion-titulo { margin-bottom: 10px; }
+.seccion-titulo h2 { margin: 0; color: #3e2b4c; font-size: 12px; }
+.seccion-titulo .derecha { color: #817388; font-size: 9px; }
+.detalle { table-layout: fixed; }
+.detalle thead, .pagos thead { display: table-header-group; }
+.detalle tr, .pagos tr { page-break-inside: avoid; }
+.detalle th { padding: 11px 8px; border-top: 1px solid #e7dfed; border-bottom: 1px solid #ded3e7; background: #f4eff8; color: #674c7c; font-size: 8px; font-weight: bold; text-align: left; text-transform: uppercase; }
+.detalle td { padding: 13px 8px; border-bottom: 1px solid #ece7f0; vertical-align: top; font-size: 10px; }
+.detalle tbody tr:nth-child(even) { background: #fcfbfd; }
+.detalle .item-numero { color: #9b8ca5; text-align: center; }
+.item-descripcion { line-height: 1.45; }
+.item-importe { color: #44334f; font-weight: bold; }
+.derecha { text-align: right !important; }
+.cifra { white-space: nowrap; }
+.sin-detalle { padding: 24px !important; color: #817388; text-align: center; }
+.resumen { margin-top: 22px; table-layout: fixed; page-break-inside: avoid; }
+.resumen > tbody > tr > td { vertical-align: top; }
+.resumen-nota { width: 52%; padding: 12px 35px 0 0; }
+.resumen-nota p { margin: 8px 0 0; color: #817388; font-size: 9px; line-height: 1.7; }
+.resumen-importes { width: 48%; }
+.totales td { padding: 10px 12px; border-bottom: 1px solid #ece7f0; color: #73637f; font-size: 10px; }
+.totales td.derecha { color: #44334f; font-weight: bold; }
+.totales .descuento td { color: #a54261; font-size: 9px; }
+.totales .total td { padding: 15px 12px; border-bottom: 3px solid #ff2b50; background: #32005a; color: #fff; font-size: 10px; }
+.totales .total td.derecha { color: #fff; font-size: 17px; }
+.pagos { margin-top: 25px; }
+.pagos th { padding: 8px 10px; border-bottom: 1px solid #e7dfed; color: #817388; font-size: 8px; font-weight: normal; text-align: left; }
+.pagos .pagos-titulo { padding: 0 0 10px; color: #3e2b4c; font-size: 11px; font-weight: bold; }
+.pagos td { padding: 9px 10px; border-bottom: 1px solid #ece7f0; color: #62526f; font-size: 9px; }
+.agradecimiento { margin-top: 14px; color: #674c7c; font-size: 10px; font-weight: bold; }
+.pie { position: fixed; bottom: -46px; left: 0; right: 0; height: 28px; padding-top: 8px; border-top: 1px solid #e7dfed; color: #817388; font-size: 8px; }
+.pie strong { color: #674c7c; font-size: 8px; }
+.pie div { margin-top: 3px; font-size: 7px; }

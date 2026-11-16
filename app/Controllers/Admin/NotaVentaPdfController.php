@@ -24,7 +24,10 @@ class NotaVentaPdfController extends BaseController
         }
 
         $venta = model(VentaModel::class)
-            ->select('ventas.*, CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, "")) AS cliente, personas.numerodoc, locales.nombrelocal AS local')
+            ->select('ventas.*,
+                IF(personas.tipopersona = "NATURAL", TRIM(CONCAT(COALESCE(personas.nombres, ""), " ", COALESCE(personas.apellidos, ""))), COALESCE(personas.razonsocial, "")) AS cliente,
+                personas.tipodoc, personas.numerodoc, personas.direccion AS cliente_direccion,
+                locales.nombrelocal AS local')
             ->join('personas', 'personas.idpersona = ventas.idcliente', 'left')
             ->join('locales', 'locales.idlocal = ventas.idlocal', 'left')
             ->where('ventas.idventa', $idventa)
@@ -52,7 +55,11 @@ class NotaVentaPdfController extends BaseController
             ->findAll();
 
         $logo = null;
-        $rutaLogo = FCPATH . 'img/Delafiber.png';
+        // La copia de impresión JPEG permite generar el PDF incluso sin PHP GD.
+        $rutaLogo = FCPATH . 'img/Delafiber-pdf.jpg';
+        if (!is_readable($rutaLogo) && function_exists('imagecreatefrompng')) {
+            $rutaLogo = FCPATH . 'img/Delafiber.png';
+        }
         if (is_file($rutaLogo) && is_readable($rutaLogo)) {
             $tipo = mime_content_type($rutaLogo) ?: 'image/png';
             $logo = 'data:' . $tipo . ';base64,' . base64_encode(file_get_contents($rutaLogo));
@@ -69,7 +76,15 @@ class NotaVentaPdfController extends BaseController
             return $this->response->setStatusCode(500)->setBody('El CSS de la nota de venta está vacío o no se pudo leer.');
         }
 
-        $html = view('ventas/pdf_nota', compact('venta', 'detalles', 'pagos', 'logo', 'estilosPdf'));
+        $empresa = array_column(
+            db_connect()->table('configuracion')
+                ->whereIn('clave', ['empresa_ruc', 'empresa_direccion', 'empresa_telefono', 'empresa_email'])
+                ->get()->getResultArray(),
+            'valor',
+            'clave'
+        );
+
+        $html = view('ventas/pdf_nota', compact('venta', 'detalles', 'pagos', 'logo', 'estilosPdf', 'empresa'));
         $options = new Options();
         $options->set('isRemoteEnabled', false);
         $options->set('defaultFont', 'DejaVu Sans');
@@ -77,10 +92,21 @@ class NotaVentaPdfController extends BaseController
         $pdf->loadHtml($html, 'UTF-8');
         $pdf->setPaper('A4', 'portrait');
         $pdf->render();
+        $canvas = $pdf->getCanvas();
+        $fuente = $pdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
+        $canvas->page_text(
+            $canvas->get_width() - 112,
+            $canvas->get_height() - 29,
+            'Página {PAGE_NUM} de {PAGE_COUNT}',
+            $fuente,
+            7,
+            [0.44, 0.42, 0.49]
+        );
 
         $archivo = 'nota_venta_' . $idventa . '.pdf';
         return $this->response
             ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Cache-Control', 'private, no-store')
             ->setHeader('Content-Disposition', 'inline; filename="' . $archivo . '"')
             ->setBody($pdf->output());
     }
