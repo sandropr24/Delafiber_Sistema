@@ -1,16 +1,24 @@
 <?= $this->extend('layouts/main') ?>
-
-<?= $this->section('contenido') ?>
+<?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('css/ventas/crear.css') ?>?v=<?= filemtime(FCPATH . 'css/ventas/crear.css') ?>">
+<link rel="stylesheet" href="<?= base_url('css/ventas/interfaz.css') ?>?v=<?= filemtime(FCPATH . 'css/ventas/interfaz.css') ?>">
+<?= $this->endSection() ?>
+<?= $this->section('contenido') ?>
 
-<div class="container-fluid px-3 px-lg-4 py-3 df-venta">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 venta-cabecera">
+<div class="container-fluid df-ventas df-venta">
+    <nav class="ventas-breadcrumb" aria-label="Ruta de navegación">
+        <a href="<?= base_url('admin/ventas') ?>">Ventas</a>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        <span aria-current="page">Nueva venta</span>
+    </nav>
+    <header class="ventas-page-heading">
         <div>
-            <span class="venta-eyebrow">DELAFIBER / PUNTO DE VENTA</span><h1 class="h3 fw-bold text-dark mb-1">Nueva venta</h1>
-            <?php if (!empty($pedidoSeleccionado)): ?><span class="small text-muted">Pedido <?= esc($pedidoSeleccionado['codigo']) ?></span><?php endif; ?>
-            <?php if (!empty($cotizacionSeleccionada)): ?><span class="small text-muted">Cotización <?= esc($cotizacionSeleccionada['numero']) ?></span><?php endif; ?>
+            <h1>Nueva venta</h1>
+            <p>Selecciona al cliente, agrega sus artículos y registra el pago.</p>
+            <?php if (!empty($pedidoSeleccionado)): ?><span class="ventas-etiqueta mt-2">Pedido <?= esc($pedidoSeleccionado['codigo']) ?></span><?php endif; ?>
+            <?php if (!empty($cotizacionSeleccionada)): ?><span class="ventas-etiqueta mt-2">Cotización <?= esc($cotizacionSeleccionada['numero']) ?></span><?php endif; ?>
         </div>
-        <div>
+        <div class="ventas-heading-acciones">
             <?php if (!empty($pedidoSeleccionado)): ?>
                 <a class="btn btn-light border" href="<?= base_url('admin/ventas/crear') . '?pedido=' . (int) $pedidoSeleccionado['idpedido'] . '&amp;desde_pedido=1' ?>">Recargar pedido</a>
                 <a class="btn btn-light border" href="<?= base_url('admin/ventas/crear') ?>">Venta directa</a>
@@ -19,13 +27,12 @@
                 <a class="btn btn-light border" href="<?= base_url('admin/ventas/crear') . '?cotizacion=' . (int) $cotizacionSeleccionada['idcotizacion'] . '&amp;desde_cotizacion=1' ?>">Recargar cotización</a>
                 <a class="btn btn-light border" href="<?= base_url('admin/ventas/crear') ?>">Venta directa</a>
             <?php endif; ?>
-            <button type="button" id="descartarBorrador" class="btn btn-light border me-2">Nueva venta vacía</button>
-            <a href="<?= base_url('admin/ventas') ?>" class="btn btn-light border text-secondary shadow-sm d-inline-flex align-items-center gap-2 px-3 py-2">
-                <i class="bi bi-arrow-left"></i>
-                <span class="fw-medium">Volver al listado</span>
+            <button type="button" id="descartarBorrador" class="btn ventas-btn-secundario"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Limpiar venta</button>
+            <a href="<?= base_url('admin/ventas') ?>" class="btn ventas-btn-secundario">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i> Volver al historial
             </a>
         </div>
-    </div>
+    </header>
 
     <form action="<?= base_url('admin/ventas/guardar') ?>" method="POST" autocomplete="off" id="formVenta">
         <?= csrf_field() ?>
@@ -41,19 +48,18 @@
             <button type="button" id="limpiarBorrador" class="btn btn-sm btn-light border">Descartar borrador / Limpiar</button>
             <button type="button" id="cerrarAvisoBorrador" class="btn btn-sm" aria-label="Cerrar aviso de borrador">&times;</button>
         </div>
-        <div class="row g-3 align-items-start df-venta-grid">
-            <div class="col-12 col-xl-7 venta-principal">
+        <div class="df-venta-grid">
+            <div class="venta-principal">
                 <div class="card border shadow-sm rounded-3 mb-3 venta-cliente">
-                    <div class="card-header bg-light py-3 px-4 border-bottom">
-                        <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-file-earmark-text text-primary"></i>
-                            1. Cliente y datos de venta
-                        </h6>
+                    <div class="card-header ventas-section-header">
+                        <span class="ventas-paso" aria-hidden="true">01</span>
+                        <div><h2>Datos de la venta</h2><p>Cliente, local y datos del comprobante.</p></div>
+                        <span class="ventas-campos-nota"><span class="text-danger">*</span> Obligatorios</span>
                     </div>
                     <div class="card-body p-4">
-                        <div class="row g-2 mb-2">
-                            <div class="col-12 col-md-5">
-                                <label class="form-label small fw-bold text-secondary text-uppercase">Local / Sucursal <span class="text-danger">*</span></label>
+                        <div class="venta-datos-principales">
+                            <div>
+                                <label for="selectLocal" class="form-label">Local / sucursal <span class="text-danger">*</span></label>
                                 <select name="idlocal" id="selectLocal" class="form-select" required>
                                     <option value="">Seleccione local...</option>
                                     <?php foreach ($locales ?? [] as $loc): ?>
@@ -62,7 +68,7 @@
                                 </select>
                             </div>
 
-                            <div class="col-12 col-md-7">
+                            <div>
                                 <label for="buscarClienteVenta" class="form-label small fw-bold text-secondary text-uppercase">Cliente <span class="text-danger">*</span> <kbd class="venta-atajo">F4</kbd></label>
                                 <div class="input-group venta-cliente-busqueda">
                                     <div class="venta-autocomplete">
@@ -78,36 +84,37 @@
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalClienteExpress" title="Cliente rápido">
-                                        <i class="bi bi-plus-lg"></i>
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalClienteExpress" title="Registrar cliente rápido" aria-label="Registrar un cliente rápido">
+                                        <i class="bi bi-person-plus" aria-hidden="true"></i>
                                     </button>
                                 </div>
                                 <button type="button" id="btnPublicoGeneral" data-cliente="<?= (int) $clienteInicial ?>" class="btn btn-sm btn-outline-secondary venta-publico-general" <?= empty($clienteInicial) ? 'disabled title="Configure un cliente Público General para habilitar este acceso"' : '' ?>><i class="bi bi-people me-1"></i>Público General</button>
                             </div>
 
                         </div>
-                        <div class="row g-2 mb-2">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Línea</label>
-                                <select name="idlinea" class="form-select" required>
+                        <div class="ventas-separador"></div>
+                        <div class="venta-datos-comprobante">
+                            <div>
+                                <label for="lineaVenta" class="form-label">Línea <span class="text-danger">*</span></label>
+                                <select name="idlinea" id="lineaVenta" class="form-select" required>
                                     <option value="">Seleccione</option>
                                     <?php foreach ($lineas as $x): ?>
                                         <option value="<?= esc($x['idlinea']) ?>"><?= esc($x['nombre'] ?? $x['linea'] ?? $x['idlinea']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Canal</label>
-                                <select name="idcanal" class="form-select" required>
+                            <div>
+                                <label for="canalVenta" class="form-label">Canal <span class="text-danger">*</span></label>
+                                <select name="idcanal" id="canalVenta" class="form-select" required>
                                     <option value="">Seleccione</option>
                                     <?php foreach ($canales as $x): ?>
                                         <option value="<?= esc($x['idcanal']) ?>"><?= esc($x['nombre'] ?? $x['canal'] ?? $x['idcanal']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Estado</label>
-                                <select name="idestado" class="form-select" required>
+                            <div>
+                                <label for="estadoInicialVenta" class="form-label">Estado <span class="text-danger">*</span></label>
+                                <select name="idestado" id="estadoInicialVenta" class="form-select" required>
                                     <option value="">Seleccione</option>
                                     <?php foreach ($estadosVenta as $x): ?>
                                         <option value="<?= esc($x['idestado']) ?>" <?= (int) $x['idestado'] === (int) $estadoInicial ? 'selected' : '' ?>><?= esc($x['estado']) ?></option>
@@ -116,16 +123,15 @@
                             </div>
                         </div>
 
-                        <div class="venta-comprobante"><span>Nota de venta</span><span>Numeración automática al registrar</span><input type="hidden" name="tipodocumento" value="NOTA_VENTA"></div>
+                        <div class="venta-comprobante"><span><i class="bi bi-receipt me-1" aria-hidden="true"></i> Nota de venta</span><span>Numeración automática al registrar</span><input type="hidden" name="tipodocumento" value="NOTA_VENTA"></div>
                     </div>
                 </div>
 
                 <div class="card border shadow-sm rounded-3 venta-catalogo">
-                    <div class="card-header bg-light py-3 px-4 border-bottom">
-                        <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-box-seam text-primary"></i>
-                            2. Buscar y agregar artículos <kbd class="venta-atajo">F2</kbd>
-                        </h6>
+                    <div class="card-header ventas-section-header">
+                        <span class="ventas-paso" aria-hidden="true">02</span>
+                        <div><h2>Artículos de la venta</h2><p>Busca productos, servicios o combos para agregarlos.</p></div>
+                        <kbd class="venta-atajo ms-auto">F2</kbd>
                     </div>
                     <div class="card-body p-4">
                         <div class="mb-3">
@@ -146,11 +152,11 @@
                             <div id="disponibilidadArticulo" class="small text-primary mt-2" aria-live="polite">Seleccione un local para consultar existencias.</div>
                             <div class="form-text" id="resultadoBusqueda" aria-live="polite">Selecciona el tipo o busca por nombre.</div>
                         </div>
-                        <details class="venta-manual"><summary>Selección manual de producto, servicio o combo</summary>
+                        <details class="venta-manual"><summary>Agregar desde el catálogo manual</summary>
                         <div class="p-2 bg-light rounded-3 mb-2 border">
                             <div class="row g-2 align-items-end">
                                 <div class="col-12 col-md-4 articulo-grupo" data-tipo="producto">
-                                    <label class="form-label small fw-bold text-secondary text-uppercase">Producto</label>
+                                    <label for="selectProducto" class="form-label">Producto</label>
                                     <select class="form-select" id="selectProducto">
                                         <option value="" selected disabled>Seleccionar producto...</option>
                                         <?php foreach ($productos ?? [] as $prod): ?>
@@ -166,7 +172,7 @@
                                     </select>
                                 </div>
                                 <div class="col-12 col-md-4 articulo-grupo" data-tipo="servicio">
-                                    <label class="form-label small fw-bold text-secondary text-uppercase">Servicio</label>
+                                    <label for="selectServicio" class="form-label">Servicio</label>
                                     <select class="form-select" id="selectServicio">
                                         <option value="" selected>Seleccionar servicio...</option>
                                         <?php foreach ($servicios ?? [] as $serv): ?>
@@ -180,7 +186,7 @@
                                     </select>
                                 </div>
                                 <div class="col-12 col-md-4 articulo-grupo" data-tipo="combo">
-                                    <label class="form-label small fw-bold text-secondary text-uppercase">Combo</label>
+                                    <label for="selectCombo" class="form-label">Combo</label>
                                     <select class="form-select" id="selectCombo">
                                         <option value="">Seleccionar combo...</option>
                                         <?php foreach ($combos ?? [] as $combo): ?>
@@ -194,44 +200,40 @@
                                     </select>
                                 </div>
                                 <div class="col-6 col-md-3">
-                                    <label class="form-label small fw-bold text-secondary text-uppercase">Cantidad</label>
+                                    <label for="inputCantidad" class="form-label">Cantidad</label>
                                     <input type="number" class="form-control text-center" id="inputCantidad" min="1" step="1" value="1">
                                 </div>
                                 <div class="col-6 col-md-3">
-                                    <label class="form-label small fw-bold text-secondary text-uppercase">P. Venta (S/)</label>
+                                    <label for="inputPrecio" class="form-label">Precio unitario (S/)</label>
                                     <input type="number" class="form-control text-end" id="inputPrecio" readonly step="0.01" min="0" placeholder="0.00">
                                 </div>
                                 <div class="col-12 col-md-6">
-                                    <button type="button" class="btn btn-primary w-100 fw-bold" id="btnAgregarItem" title="Agregar producto">
+                                    <button type="button" class="btn ventas-btn-morado w-100" id="btnAgregarItem" title="Agregar artículo">
                                         <i class="bi bi-plus-lg me-1"></i> Agregar al carrito
                                     </button>
                                 </div>
                             </div>
                         </div>
                         </details>
-                    </div>
-                </div>
-                <div class="card df-carrito-card mb-3">
-                    <div class="card-header">
-                        <h6 class="m-0 fw-bold"><i class="bi bi-cart3 text-primary me-2"></i>3. Carrito de venta</h6>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="table-responsive border rounded-2">
+                        <div class="ventas-tabla-heading"><span>Detalle de artículos</span><span>Precios en soles (PEN)</span></div>
+                        <div class="table-responsive ventas-tabla-wrap">
                             <table class="table table-hover align-middle mb-0" id="tablaDetalle">
+                                <caption class="visually-hidden">Artículos incluidos en esta venta</caption>
                                 <thead class="bg-light text-uppercase fs-7 text-secondary border-bottom">
                                     <tr>
-                                        <th class="ps-4 py-3">PRODUCTO</th>
-                                        <th class="text-center py-3">CANTIDAD</th>
-                                        <th class="text-end py-3">PRECIO (S/)</th>
-                                        <th class="text-end py-3">SUBTOTAL (S/)</th>
-                                        <th class="pe-4 text-center py-3">ACCIÓN</th>
+                                        <th scope="col">Artículo</th>
+                                        <th scope="col" class="text-center">Cantidad</th>
+                                        <th scope="col" class="text-end">Precio unit.</th>
+                                        <th scope="col" class="text-end">Importe</th>
+                                        <th scope="col"><span class="visually-hidden">Acciones</span></th>
                                     </tr>
                                 </thead>
                                 <tbody id="carritoBody">
                                     <tr id="filaVacia">
-                                        <td colspan="5" class="text-center text-muted py-3">
-                                            <i class="bi bi-cart-x fs-5 text-secondary opacity-50 d-block mb-2"></i>
-                                            <p class="mb-0 fw-medium">No se han agregado productos a la venta.</p>
+                                        <td colspan="5" class="ventas-estado-vacio">
+                                            <div class="ventas-vacio-icono"><i class="bi bi-cart3" aria-hidden="true"></i></div>
+                                            <strong>Tu venta empieza aquí</strong>
+                                            <span>Busca un artículo por nombre o código<br class="d-none d-sm-block"> y selecciónalo para agregarlo al detalle.</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -239,12 +241,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="card border shadow-sm rounded-3 mb-3">
-                    <div class="card-header bg-light py-3 px-4">
-                        <h6 class="m-0 fw-bold"><i class="bi bi-truck me-2"></i>4. Entrega</h6>
+                <div class="card border shadow-sm rounded-3 mb-3 venta-entrega">
+                    <div class="card-header ventas-section-header">
+                        <span class="ventas-paso" aria-hidden="true">03</span>
+                        <div><h2>Entrega de la venta</h2><p>Define cómo recibirá el cliente sus artículos.</p></div>
                     </div>
                     <div class="card-body p-3">
-                        <label class="form-label">Modalidad de entrega</label>
+                        <label for="tipoentrega" class="form-label">Modalidad de entrega</label>
                         <select class="form-select mb-3" name="tipoentrega" id="tipoentrega">
                             <option value="RECOJO_TIENDA">Recojo en tienda</option>
                             <option value="DOMICILIO">Entrega a domicilio (sin costo)</option>
@@ -252,19 +255,19 @@
                         <p class="small text-muted">Los artículos quedan reservados al registrar. La salida de stock se confirma en Entregas. Los servicios se programan en Servicios técnicos.</p>
                         <div id="camposEntrega" class="d-none">
                             <div class="mb-2">
-                                <label class="form-label">Dirección</label>
+                                <label for="direccion_entrega" class="form-label">Dirección</label>
                                 <input class="form-control" name="direccion_entrega" id="direccion_entrega" maxlength="150">
                             </div>
                             <div class="mb-2">
-                                <label class="form-label">Referencia</label>
-                                <input class="form-control" name="referencia_entrega" maxlength="150">
+                                <label for="referencia_entrega" class="form-label">Referencia</label>
+                                <input class="form-control" name="referencia_entrega" id="referencia_entrega" maxlength="150">
                             </div>
                             <div class="mb-2">
-                                <label class="form-label">Teléfono</label>
+                                <label for="telefono_entrega" class="form-label">Teléfono</label>
                                 <input class="form-control" name="telefono_entrega" id="telefono_entrega" inputmode="numeric" pattern="[0-9]{9}" maxlength="9">
                             </div>
                             <div>
-                                <label class="form-label">Técnico asignado (opcional)</label>
+                                <label for="idtecnico_entrega" class="form-label">Técnico asignado (opcional)</label>
                                 <select class="form-select" name="idtecnico_entrega" id="idtecnico_entrega">
                                     <option value="">Seleccione</option>
                                     <?php foreach ($tecnicosEntrega as $tecnico): ?>
@@ -275,14 +278,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-12 col-xl-5 venta-cobro">
                 <div class="card border shadow-sm rounded-3 mb-3 venta-pago">
-                    <div class="card-header bg-light py-3 px-4 border-bottom">
-                        <h6 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-wallet2 text-primary"></i>
-                            5. Pago
-                        </h6>
+                    <div class="card-header ventas-section-header">
+                        <span class="ventas-paso" aria-hidden="true">04</span>
+                        <div><h2>Métodos de pago</h2><p>Distribuye el total y verifica el efectivo recibido.</p></div>
                     </div>
                     <div class="card-body p-3">
 <?php if (!empty($puedeAplicarDescuento)): ?>
@@ -317,7 +316,7 @@
 <?php endif; ?>
                         <div class="row g-2 align-items-end mb-3">
                             <div class="col-12 col-md-5">
-                                <label class="form-label small fw-bold text-secondary text-uppercase">Método de Pago</label>
+                                <label for="selectTipoPago" class="form-label">Método de pago</label>
                                 <select class="form-select form-select-sm" id="selectTipoPago">
                                     <option value="" selected disabled>Seleccionar método...</option>
                                     <?php foreach ($tipospago ?? [] as $tp): ?>
@@ -328,11 +327,11 @@
                                 </select>
                             </div>
                             <div class="col-7 col-md-4">
-                                <label class="form-label small fw-bold text-secondary text-uppercase">Monto (S/)</label>
+                                <label for="inputMontoPago" class="form-label">Monto a aplicar (S/)</label>
                                 <input type="number" class="form-control form-control-sm text-end" id="inputMontoPago" step="0.01" min="0" placeholder="0.00">
                             </div>
                             <div class="col-5 col-md-3">
-                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold shadow-sm" id="btnAgregarPago">
+                                <button type="button" class="btn ventas-btn-morado w-100" id="btnAgregarPago">
                                     <i class="bi bi-plus-lg"></i> Agregar
                                 </button>
                             </div>
@@ -351,7 +350,7 @@
                                 <p id="previewVuelto" hidden class="small text-success fw-semibold mt-2 mb-0" aria-live="polite">Seleccione efectivo para calcular el vuelto.</p>
                             </div>
                         </div>
-                        <div class="table-responsive border rounded-2 mb-2">
+                        <div class="table-responsive ventas-tabla-wrap mb-2">
                             <table class="table table-hover align-middle mb-0" id="tablaPagos">
                                 <thead class="bg-light text-uppercase fs-7 text-secondary border-bottom">
                                     <tr>
@@ -373,12 +372,23 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <aside class="venta-cobro">
                 <div class="card border shadow-sm rounded-3 resumen-venta">
-                    <div class="card-header">
-                        <h6 class="m-0 fw-bold">6. Resumen de cobro <span id="contadorArticulos" class="badge text-bg-light float-end">0 artículos</span></h6>
+                    <div class="card-header ventas-section-header">
+                        <span class="ventas-resumen-icono"><i class="bi bi-receipt" aria-hidden="true"></i></span>
+                        <div><h2>Resumen de venta</h2><p>Verifica los datos del cobro</p></div>
                     </div>
                     <div class="card-body p-4">
-
+                        <dl class="ventas-resumen-datos">
+                            <div><dt>Cliente</dt><dd id="resumenClienteVenta">Sin seleccionar</dd></div>
+                            <div><dt>Local / sucursal</dt><dd id="resumenLocalVenta">Sin seleccionar</dd></div>
+                            <div><dt>Entrega</dt><dd id="resumenEntregaVenta">Recojo en tienda</dd></div>
+                        </dl>
+                        <div class="ventas-separador"></div>
+                        <div class="d-flex justify-content-between align-items-center mb-3 small">
+                            <span class="text-secondary">Detalle</span><span id="contadorArticulos" class="ventas-etiqueta">0 artículos</span>
+                        </div>
                         <div class="d-flex justify-content-between align-items-center mb-2 small">
                             <span class="text-secondary">Subtotal</span>
                             <span class="fw-semibold" id="lblSubtotal">S/ 0.00</span>
@@ -387,23 +397,22 @@
                             <span class="text-secondary">Descuento</span>
                             <span class="fw-semibold text-danger" id="lblDescuento">- S/ 0.00</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
-                            <span class="fw-bold text-secondary text-uppercase">Total a pagar</span>
-                            <h3 class="fw-bold text-success mb-0 text-nowrap" id="lblTotal">S/ 0.00</h3>
+                        <div class="ventas-total-panel">
+                            <span>Total de la venta</span>
+                            <strong id="lblTotal">S/ 0.00</strong>
+                            <small>Importe final en soles (PEN)</small>
                             <input type="hidden" name="total" id="inputTotal" value="0.00">
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded venta-vuelto"><span class="fw-semibold">Vuelto a entregar</span><strong id="lblVuelto" class="text-success fs-5" aria-live="polite">S/ 0.00</strong></div>
-                        <p id="estadoCobro" class="small text-muted" aria-live="polite">Agregue artículos y complete el pago.</p><button id="btnConfirmarVenta" type="submit" disabled aria-keyshortcuts="F9" class="btn btn-primary w-100 py-2 shadow-sm d-flex align-items-center justify-content-center gap-2">
-                            <i class="bi bi-check-circle-fill"></i>
+                        <p id="estadoCobro" class="small text-muted" aria-live="polite">Agregue artículos y complete el pago.</p><button id="btnConfirmarVenta" type="submit" disabled aria-keyshortcuts="F9" class="btn ventas-btn-principal w-100 d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-check2-circle" aria-hidden="true"></i>
                             <span class="fw-semibold" id="textoConfirmarVenta">Registrar venta</span>
                             <kbd class="venta-atajo">F9</kbd>
                         </button>
                     </div>
                 </div>
-
-
-
-            </div>
+                <div class="ventas-nota-lateral"><i class="bi bi-box-seam" aria-hidden="true"></i><div><strong>Reserva de inventario</strong><p>Al registrar se reservan los artículos. La salida de stock se confirma desde Entregas.</p></div></div>
+            </aside>
         </div>
     </form>
 </div>

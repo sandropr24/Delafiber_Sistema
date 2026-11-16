@@ -25,7 +25,7 @@ export const filas = () =>
 export const fila = (id) => $(`row-${id}`);
 
 const avisoVacio =
-    '<tr id="filaVacia"><td colspan="5" class="text-center text-muted py-5">No se han agregado productos a la venta.</td></tr>';
+    '<tr id="filaVacia"><td colspan="5" class="ventas-estado-vacio"><div class="ventas-vacio-icono"><i class="bi bi-cart3" aria-hidden="true"></i></div><strong>Tu venta empieza aquí</strong><span>Busca un artículo por nombre o código y selecciónalo para agregarlo al detalle.</span></td></tr>';
 
 export function entrega() {
     const domicilio = $("tipoentrega")?.value === "DOMICILIO";

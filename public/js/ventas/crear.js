@@ -42,6 +42,20 @@ function iniciarVenta() {
   restaurarBorrador();
   mostrarDisponibilidad();
   totalizar();
+  function actualizarResumenVenta() {
+    const cliente = $("selectCliente");
+    $("resumenClienteVenta").textContent = cliente.value
+      ? cliente.selectedOptions[0].textContent.trim().replace(/\s+/g, " ")
+      : "Sin seleccionar";
+    $("resumenLocalVenta").textContent =
+      estado.local.selectedOptions[0]?.textContent.trim() || "Sin seleccionar";
+    $("resumenEntregaVenta").textContent =
+      $("tipoentrega").value === "DOMICILIO"
+        ? "Entrega a domicilio"
+        : "Recojo en tienda";
+  }
+  $("formVenta").addEventListener("change", actualizarResumenVenta);
+  actualizarResumenVenta();
   document.addEventListener("keydown", (event) => {
     if (
       event.repeat ||

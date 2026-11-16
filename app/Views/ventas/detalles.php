@@ -1,4 +1,7 @@
 <?= $this->extend('layouts/main') ?>
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="<?= base_url('css/ventas/interfaz.css') ?>?v=<?= filemtime(FCPATH . 'css/ventas/interfaz.css') ?>">
+<?= $this->endSection() ?>
 <?= $this->section('contenido') ?>
 <?php
 $idVenta = (int) ($venta['idventa'] ?? 0);
@@ -47,26 +50,25 @@ $puedeSolicitarAnulacion = !empty($puedeSolicitar) && !$ventaAnulada && $entrega
 $esAdministradorAnulacion = !empty($puedeAutorizar);
 
 ?>
-<div class="container-fluid px-3 px-lg-4 py-4">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+<div class="container-fluid df-ventas ventas-detalle">
+    <nav class="ventas-breadcrumb" aria-label="Ruta de navegación">
+        <a href="<?= base_url('admin/ventas') ?>">Ventas</a><i class="bi bi-chevron-right" aria-hidden="true"></i><span aria-current="page">Detalle de venta</span>
+    </nav>
+    <header class="ventas-page-heading">
         <div>
-            <div class="small text-muted mb-1">Ventas / Detalle</div>
-            <h1 class="h4 fw-bold mb-1">Venta N.º <?= $idVenta ?></h1>
-            <div class="text-muted small"><?= esc($comprobante !== '' ? $comprobante : 'Sin número de comprobante') ?> · <?= esc($fecha($venta['fecha'] ?? null)) ?></div>
+            <h1>Venta <?= esc($comprobante !== '' ? $comprobante : '#' . $idVenta) ?></h1>
+            <p>Consulta los artículos, el pago y el seguimiento de esta operación.</p>
         </div>
-        <div class="d-flex flex-wrap align-items-center gap-2">
-            <?php if ($entregaComercial): ?>
-                <span class="badge bg-light text-dark border">Entrega: <?= esc(str_replace('_', ' ', $estadoEntrega)) ?></span>
-            <?php endif; ?>
-            <a href="<?= base_url('admin/ventas/nota-pdf/' . $idVenta) ?>" class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf me-1"></i> Nota de venta</a>
-            <a href="<?= base_url('admin/ventas') ?>" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i> Volver</a>
+        <div class="ventas-heading-acciones">
+            <a href="<?= base_url('admin/ventas/nota-pdf/' . $idVenta) ?>" class="btn ventas-btn-secundario" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Nota de venta</a>
+            <a href="<?= base_url('admin/ventas') ?>" class="btn ventas-btn-secundario"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver al historial</a>
         </div>
-    </div>
+    </header>
 
-    <div class="row g-3 mb-3">
-        <div class="col-lg-7">
+    <div class="ventas-detalle-layout">
+        <div class="ventas-detalle-principal">
             <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-semibold py-3">Información de la venta</div>
+                <div class="card-header ventas-section-header"><span class="ventas-resumen-icono"><i class="bi bi-person-vcard" aria-hidden="true"></i></span><div><h2>Información de la venta</h2><p>Cliente, comprobante y local de atención.</p></div></div>
                 <div class="card-body">
                     <dl class="row mb-0 gy-2 small">
                         <dt class="col-sm-4 text-muted">Cliente</dt>
@@ -84,27 +86,9 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
                     </dl>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-5">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-semibold py-3">Resumen de importes</div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Subtotal</span><span><?= $subtotal !== null ? esc($moneda($subtotal)) : 'No disponible' ?></span></div>
-                    <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Tipo de descuento</span><span><?= esc($tipoDescuento === 'NINGUNO' ? 'Sin descuento' : $tipoDescuento) ?></span></div>
-                    <?php if ($tipoDescuento !== 'NINGUNO'): ?>
-                        <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Valor indicado</span><span><?= $tipoDescuento === 'PORCENTAJE' ? esc(number_format($valorDescuento, 2)) . '%' : esc($moneda($valorDescuento)) ?></span></div>
-                        <?php if ($descuentoAplicado !== null): ?><div class="d-flex justify-content-between small mb-2"><span class="text-muted">Descuento aplicado</span><span class="text-danger">− <?= esc($moneda($descuentoAplicado)) ?></span></div><?php endif; ?>
-                        <?php if (!empty($venta['motivodescuento'])): ?><div class="small text-muted mb-2">Motivo: <?= esc($venta['motivodescuento']) ?></div><?php endif; ?>
-                    <?php endif; ?>
-                    <hr class="my-2">
-                    <div class="d-flex justify-content-between align-items-center"><strong>Total de venta</strong><strong class="fs-5"><?= esc($moneda($total)) ?></strong></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <div class="card shadow-sm border-0 mb-3">
-        <div class="card-header bg-white fw-semibold py-3">Productos, servicios y combos</div>
+        <div class="card-header ventas-section-header"><span class="ventas-resumen-icono"><i class="bi bi-box-seam" aria-hidden="true"></i></span><div><h2>Artículos de la venta</h2><p>Productos, servicios y combos incluidos.</p></div><span class="ventas-etiqueta ms-auto"><?= count($detalles) ?> artículos</span></div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -145,7 +129,7 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
     <div class="row g-3 mb-3">
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-semibold py-3">Métodos de pago</div>
+                <div class="card-header ventas-section-header"><span class="ventas-resumen-icono"><i class="bi bi-wallet2" aria-hidden="true"></i></span><h2>Métodos de pago</h2></div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
@@ -179,7 +163,7 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
         </div>
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white fw-semibold py-3">Entrega</div>
+                <div class="card-header ventas-section-header"><span class="ventas-resumen-icono"><i class="bi bi-truck" aria-hidden="true"></i></span><h2>Entrega</h2></div>
                 <div class="card-body small">
                     <?php if (!$entregaComercial): ?>
                         <p class="text-muted mb-0">No hay una entrega vinculada a esta venta.</p>
@@ -199,7 +183,7 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
     </div>
 
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-white fw-semibold py-3">Anulaciones y solicitudes</div>
+        <div class="card-header ventas-section-header"><span class="ventas-resumen-icono"><i class="bi bi-clock-history" aria-hidden="true"></i></span><div><h2>Seguimiento comercial</h2><p>Historial de solicitudes y anulaciones.</p></div></div>
         <div class="card-body">
             <?php if ($anulacionComercial): ?>
                 <div class="alert alert-warning small">Esta venta tiene un registro de anulación comercial.</div>
@@ -302,6 +286,30 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
+    </div>
+        </div>
+        <aside class="ventas-detalle-lateral">
+            <section class="card ventas-resumen-detalle" aria-labelledby="tituloResumenVenta">
+                <div class="card-header ventas-section-header"><span class="ventas-resumen-icono"><i class="bi bi-receipt" aria-hidden="true"></i></span><div><h2 id="tituloResumenVenta">Resumen de venta</h2><p>Importes de la operación</p></div></div>
+                <div class="card-body">
+                    <span class="ventas-estado <?= $ventaAnulada ? 'ventas-estado-anulado' : 'ventas-estado-activo' ?>"><?= $ventaAnulada ? 'Venta anulada' : 'Venta activa' ?></span>
+                    <dl class="ventas-resumen-datos mt-3">
+                        <div><dt>Fecha de registro</dt><dd><?= esc($fecha($venta['fecha'] ?? null)) ?></dd></div>
+                        <div><dt>Estado de entrega</dt><dd><?= esc(str_replace('_', ' ', $estadoEntrega)) ?></dd></div>
+                    </dl>
+                    <div class="ventas-separador"></div>
+                    <div class="ventas-importe-fila"><span>Subtotal</span><strong><?= $subtotal !== null ? esc($moneda($subtotal)) : 'No disponible' ?></strong></div>
+                    <div class="ventas-importe-fila"><span>Descuento</span><strong><?= esc($moneda($descuentoAplicado ?? 0)) ?></strong></div>
+                    <?php if ($tipoDescuento !== 'NINGUNO'): ?>
+                        <p class="ventas-texto-secundario"><?= esc($tipoDescuento) ?> · <?= $tipoDescuento === 'PORCENTAJE' ? esc(number_format($valorDescuento, 2)) . '%' : esc($moneda($valorDescuento)) ?></p>
+                        <?php if (!empty($venta['motivodescuento'])): ?><p class="ventas-texto-secundario">Motivo: <?= esc($venta['motivodescuento']) ?></p><?php endif; ?>
+                    <?php endif; ?>
+                    <div class="ventas-total-panel"><span>Total de la venta</span><strong><?= esc($moneda($total)) ?></strong><small>Importe final en soles (PEN)</small></div>
+                    <div class="ventas-importe-fila"><span>Pago registrado</span><strong><?= esc($moneda($totalPagado)) ?></strong></div>
+                </div>
+            </section>
+            <div class="ventas-nota-lateral"><i class="bi bi-info-circle" aria-hidden="true"></i><div><strong>Documento interno</strong><p>Consulta la nota de venta para ver el detalle del comprobante.</p></div></div>
+        </aside>
     </div>
 </div>
 <?= $this->endSection() ?>
