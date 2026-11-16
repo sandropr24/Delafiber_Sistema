@@ -10,8 +10,9 @@ $etiquetasEventos = [
     'REPROGRAMACION' => 'Programación actualizada', 'CONSUMO_MATERIAL' => 'Material registrado'
 ];
 ?>
-<div class="container-fluid px-3 px-lg-4 py-4 df-servicios">
-    <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-4"><div><p class="df-sv-eyebrow mb-1">Servicios / Detalle</p><h1 class="h3 fw-bold mb-1">Orden <?= esc($codigo) ?></h1><p class="text-muted small mb-0"><?= esc($orden['titulo']) ?></p></div><div class="d-flex gap-2 align-items-center"><span class="df-sv-status df-sv-status-<?= esc($estado, 'attr') ?>"><?= esc($estados[$estado] ?? $estado) ?></span><a class="btn btn-light border" href="<?= base_url('admin/servicios') ?>"><i class="bi bi-arrow-left me-1"></i>Volver</a></div></div>
+<div class="container-fluid df-page df-servicios">
+    <?= view('partials/ruta', ['uiSection' => 'Servicios', 'uiCurrent' => 'Detalle de orden', 'uiSectionUrl' => 'admin/servicios']) ?>
+    <div class="df-page-heading"><div><h1 class="h3 fw-bold mb-1">Orden <?= esc($codigo) ?></h1><p class="text-muted small mb-0"><?= esc($orden['titulo']) ?></p></div><div class="d-flex gap-2 align-items-center"><span class="df-sv-status df-sv-status-<?= esc($estado, 'attr') ?>"><?= esc($estados[$estado] ?? $estado) ?></span><a class="btn btn-light border" href="<?= base_url('admin/servicios') ?>"><i class="bi bi-arrow-left me-1"></i>Volver</a></div></div>
     <div class="row g-4 align-items-start">
         <div class="col-lg-7"><div class="card df-sv-card mb-4"><div class="card-header df-sv-section-title">Información de la orden</div><div class="card-body p-3 p-lg-4"><dl class="row mb-0 df-sv-description">
             <dt class="col-sm-4">Cliente</dt><dd class="col-sm-8"><?= esc($orden['cliente']) ?></dd>

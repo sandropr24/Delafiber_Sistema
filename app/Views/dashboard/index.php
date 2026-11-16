@@ -16,11 +16,12 @@ $indicadores = [
 ];
 ?>
 
-<div class="container-fluid px-3 px-lg-4 py-3 df-dashboard">
-    <div class="df-card p-3 p-lg-4 mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+<div class="container-fluid df-page df-dashboard">
+    <?= view('partials/ruta', ['uiSection' => 'Delafiber', 'uiCurrent' => 'Panel de control', 'uiSectionUrl' => null]) ?>
+    <div class="df-page-heading">
         <div>
-            <h4 class="fw-bold mb-1">Panel de control</h4>
-            <div class="df-sub">¡Hola, <?= esc($nombreUsuario ?? 'Usuario') ?>! · Resumen comercial de DELAFIBER</div>
+            <h1>Panel de control</h1>
+            <p>¡Hola, <?= esc($nombreUsuario ?? 'Usuario') ?>! Este es el resumen comercial de Delafiber.</p>
         </div>
         <div class="small text-muted">
             <i class="bi bi-calendar3 me-1"></i> <?= date('d/m/Y') ?>

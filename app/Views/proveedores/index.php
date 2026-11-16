@@ -2,8 +2,9 @@
 
 <?= $this->section('contenido') ?>
 
-<div class="container-fluid px-4 py-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<div class="container-fluid df-page">
+    <?= view('partials/ruta', ['uiSection' => 'Directorio', 'uiCurrent' => 'Proveedores', 'uiSectionUrl' => null]) ?>
+    <div class="df-page-heading">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1"><?= esc($titulo) ?></h1>
             <p class="text-muted small mb-0">Gestión y registro centralizado de proveedores autorizados para Delafiber.</p>

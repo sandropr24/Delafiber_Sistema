@@ -1,9 +1,12 @@
 <?= $this->extend('layouts/main') ?>
 
-<?= $this->section('contenido') ?>
+<?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('css/catalogos/index.css') ?>?v=2">
-<div class="container-fluid px-4 py-4" id="viewCatalogos">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<?= $this->endSection() ?>
+<?= $this->section('contenido') ?>
+<div class="container-fluid df-page" id="viewCatalogos">
+    <?= view('partials/ruta', ['uiSection' => 'Inventario', 'uiCurrent' => 'Catálogos', 'uiSectionUrl' => null]) ?>
+    <div class="df-page-heading">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1"><?= esc($titulo) ?></h1>
             <p class="text-muted small mb-0">Administra las categorías, subcategorías y marcas de tus productos desde un solo lugar.</p>

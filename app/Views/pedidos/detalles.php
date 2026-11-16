@@ -9,10 +9,10 @@
             console.warn(e);
         }
     </script><?php endif; ?>
-<div class="container-fluid px-3 px-lg-4 py-4 df-pedidos">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+<div class="container-fluid df-page df-pedidos">
+    <?= view('partials/ruta', ['uiSection' => 'Pedidos', 'uiCurrent' => 'Detalle de pedido', 'uiSectionUrl' => 'admin/pedidos']) ?>
+    <div class="df-page-heading">
         <div>
-            <p class="pedido-eyebrow">Comercial / Pedido</p>
             <h1 class="h3 fw-bold"><?= esc($pedido['codigo']) ?></h1><span class="pedido-estado estado-<?= esc($pedido['estado_codigo'], 'attr') ?>"><?= esc($pedido['estado']) ?></span>
             <?php if (!empty($pedido['idcotizacion'])): ?><a class="small d-block mt-2" href="<?= base_url('admin/cotizaciones/detalles/' . $pedido['idcotizacion']) ?>"><?= esc($pedido['cotizacion_numero']) ?></a><?php endif; ?>
         </div><a href="<?= base_url('admin/pedidos') ?>" class="btn btn-light border">Volver al listado</a>

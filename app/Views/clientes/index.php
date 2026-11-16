@@ -2,9 +2,11 @@
 
 <?= $this->section('contenido') ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid df-page">
+<?= view('partials/ruta', ['uiSection' => 'Directorio', 'uiCurrent' => 'Clientes', 'uiSectionUrl' => null]) ?>
+<div class="df-page-heading">
     <div>
-        <h4 class="fw-bold mb-1">Clientes</h4>
+        <h1>Clientes</h1>
         <p class="text-muted small mb-0">Directorio de personas y empresas para ventas y facturación.</p>
     </div>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCliente" onclick="limpiarFormulario()">
@@ -74,6 +76,7 @@
     </div>
 </div>
 
+</div>
 <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow">

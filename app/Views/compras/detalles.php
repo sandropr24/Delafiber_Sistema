@@ -2,8 +2,9 @@
 
 <?= $this->section('contenido') ?>
 
-<div class="container-fluid px-4 py-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<div class="container-fluid df-page">
+    <?= view('partials/ruta', ['uiSection' => 'Compras', 'uiCurrent' => 'Detalle de compra', 'uiSectionUrl' => 'admin/compras']) ?>
+    <div class="df-page-heading">
         <div>
             <h1 class="h3 mb-1 text-dark fw-bold"><?= esc($titulo) ?></h1>
             <p class="text-muted small mb-0">Información detallada del comprobante e ítems ingresados al inventario.</p>
@@ -72,9 +73,9 @@
                     </div>
 
                     <div class="mt-4 pt-3 border-top" style="border-color: #e5e7eb !important;">
-                        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded-3 border">
-                            <span class="fw-semibold text-secondary">Total Compra:</span>
-                            <h4 class="text-success fw-bold mb-0"><?= ($compra['moneda'] === 'USD' ? 'US$' : 'S/') ?> <?= number_format($compra['total'], 2) ?></h4>
+                        <div class="df-total-panel">
+                            <span>Total de la compra</span>
+                            <strong><?= ($compra['moneda'] === 'USD' ? 'US$' : 'S/') ?> <?= number_format($compra['total'], 2) ?></strong>
                         </div>
                     </div>
                 </div>

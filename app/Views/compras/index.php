@@ -2,8 +2,9 @@
 
 <?= $this->section('contenido') ?>
 
-<div class="container-fluid px-4 py-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<div class="container-fluid df-page">
+    <?= view('partials/ruta', ['uiSection' => 'Inventario', 'uiCurrent' => 'Compras', 'uiSectionUrl' => null]) ?>
+    <div class="df-page-heading">
         <div>
             <h1 class="h3 mb-1 text-dark fw-bold"><?= esc($titulo) ?></h1>
             <p class="text-muted small mb-0">Gestión de ingresos de mercadería y control de compras del sistema.</p>

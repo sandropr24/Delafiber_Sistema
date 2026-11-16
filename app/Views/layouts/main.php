@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <?= $this->renderSection('styles') ?>
+    <link href="<?= base_url('css/interfaz.css') ?>?v=<?= filemtime(FCPATH . 'css/interfaz.css') ?>" rel="stylesheet">
 </head>
 
 <body>

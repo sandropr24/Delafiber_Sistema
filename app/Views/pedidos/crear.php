@@ -2,10 +2,10 @@
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('css/pedidos/index.css') ?>?v=<?= filemtime(FCPATH . 'css/pedidos/index.css') ?>"><?= $this->endSection() ?>
 <?= $this->section('contenido') ?>
-<div class="container-fluid px-3 px-lg-4 py-4 df-pedidos">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+<div class="container-fluid df-page df-pedidos">
+    <?= view('partials/ruta', ['uiSection' => 'Pedidos', 'uiCurrent' => $pedido ? 'Editar pedido' : 'Nuevo pedido', 'uiSectionUrl' => 'admin/pedidos']) ?>
+    <div class="df-page-heading">
         <div>
-            <p class="pedido-eyebrow">Comercial / Pedidos</p>
             <h1 class="h3 fw-bold mb-1"><?= $pedido ? 'Editar ' . esc($pedido['codigo']) : 'Nuevo pedido' ?></h1>
             <p class="small text-muted mb-0">Guarda lo acordado con el cliente. El cobro y la reserva se realizan al convertirlo a venta.</p>
         </div><a class="btn btn-light border" href="<?= base_url('admin/pedidos') ?>">Volver al listado</a>
@@ -18,7 +18,7 @@
         <div class="pedido-grid">
             <div class="pedido-principal">
                 <section class="card pedido-card">
-                    <div class="card-header">1. Cliente y local</div>
+                    <div class="card-header"><span class="df-step" aria-hidden="true">01</span>Cliente y local</div>
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-5"><label for="localPedido" class="form-label">Local / Sucursal *</label><select id="localPedido" name="idlocal" class="form-select" required>
@@ -35,7 +35,7 @@
                     </div>
                 </section>
                 <section class="card pedido-card">
-                    <div class="card-header">2. Artículos <kbd>F2</kbd></div>
+                    <div class="card-header"><span class="df-step" aria-hidden="true">02</span>Artículos <kbd>F2</kbd></div>
                     <div class="card-body"><label for="buscarArticuloPedido" class="form-label">Producto, servicio o combo</label>
                         <div class="pedido-autocomplete"><input id="buscarArticuloPedido" class="form-control" type="search" placeholder="Nombre o código · Enter para agregar" role="combobox" aria-autocomplete="list" aria-controls="resultadosArticulosPedido" aria-expanded="false">
                             <div id="resultadosArticulosPedido" class="pedido-resultados" role="listbox" hidden></div>
@@ -44,7 +44,7 @@
                     </div>
                 </section>
                 <section class="card pedido-card">
-                    <div class="card-header">3. Detalle del pedido</div>
+                    <div class="card-header"><span class="df-step" aria-hidden="true">03</span>Detalle del pedido</div>
                     <div class="table-responsive">
                         <table class="table align-middle mb-0">
                             <thead>
@@ -67,7 +67,7 @@
             </div>
             <aside>
                 <section class="card pedido-card pedido-resumen">
-                    <div class="card-header">4. Revisar y guardar</div>
+                    <div class="card-header"><i class="bi bi-receipt df-section-icon" aria-hidden="true"></i> Resumen del pedido</div>
                     <div class="card-body">
                         <?php if ($esAdmin): ?><details class="mb-3" id="apartadoDescuentoPedido">
                                 <summary class="mb-2">Descuento</summary><label for="tipoDescuentoPedido" class="form-label">Tipo</label><select id="tipoDescuentoPedido" name="tipodescuento" class="form-select mb-2">

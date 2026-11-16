@@ -2,9 +2,11 @@
 
 <?= $this->section('contenido') ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid df-page">
+<?= view('partials/ruta', ['uiSection' => 'Administración', 'uiCurrent' => 'Locales y sedes', 'uiSectionUrl' => null]) ?>
+<div class="df-page-heading">
     <div>
-        <h4 class="fw-bold mb-1">Locales y Sedes</h4>
+        <h1>Locales y sedes</h1>
         <p class="text-muted small mb-0">Gestión de almacenes centrales, sucursales y puntos de venta.</p>
     </div>
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalLocal" onclick="limpiarFormulario()">
@@ -76,6 +78,7 @@
 </div>
 
 <!-- Modal -->
+</div>
 <div class="modal fade" id="modalLocal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">

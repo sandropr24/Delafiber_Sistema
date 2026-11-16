@@ -2,10 +2,10 @@
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= base_url('css/servicios/index.css') ?>"><?= $this->endSection() ?>
 <?= $this->section('contenido') ?>
-<div class="container-fluid px-3 px-lg-4 py-4 df-servicios">
-    <div class="d-flex align-items-center justify-content-between gap-3 mb-4 flex-wrap">
+<div class="container-fluid df-page df-servicios">
+    <?= view('partials/ruta', ['uiSection' => 'Servicios', 'uiCurrent' => 'Nueva orden', 'uiSectionUrl' => 'admin/servicios']) ?>
+    <div class="df-page-heading">
         <div>
-            <p class="df-sv-eyebrow mb-1">Servicios / Nueva orden</p>
             <h1 class="h3 fw-bold mb-1">Registrar orden de servicio</h1>
             <p class="text-muted small mb-0">Completa la solicitud y programa al técnico si ya tienes una fecha.</p>
         </div><a href="<?= base_url('admin/servicios') ?>" class="btn btn-light border"><i class="bi bi-arrow-left me-2"></i>Volver</a>

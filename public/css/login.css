@@ -1,7 +1,7 @@
 :root {
-  --primary-color: #d90429;
-  --primary-dark: #b80322;
-  --bg-dark: #0f172a;
+  --primary-color: #ff2b50;
+  --primary-dark: #df1d40;
+  --bg-dark: #32005a;
 }
 
 body.login-body-custom {
@@ -18,7 +18,7 @@ body.login-body-custom {
 
 .login-brand-side {
   background: url("../img/banner-rosa.png") center/contain no-repeat;
-  background-color: #0f172a;
+  background-color: #160a2b;
   color: #ffffff;
 }
 
@@ -53,6 +53,18 @@ body.login-body-custom {
 .login-form-box {
   width: 100%;
   max-width: 420px;
+}
+
+.login-form-box .form-control {
+  min-height: 44px;
+  border-color: #dedde6;
+  border-radius: 7px;
+  color: #292638;
+}
+
+.login-form-box .form-control:focus {
+  border-color: #9c78b8;
+  box-shadow: 0 0 0 3px rgb(85 37 123 / 9%);
 }
 
 .login-logo-fixed {

@@ -4,10 +4,10 @@
 <?= $this->section('contenido') ?>
 <?php $estados = ['PENDIENTE' => 'Pendiente', 'CONFIRMADO' => 'Confirmado', 'CONVERTIDO' => 'Convertido a venta', 'CANCELADO' => 'Cancelado'];
 $cantidades = array_column($resumen, 'cantidad', 'codigo'); ?>
-<div class="container-fluid px-3 px-lg-4 py-4 df-pedidos">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+<div class="container-fluid df-page df-pedidos">
+    <?= view('partials/ruta', ['uiSection' => 'Comercial', 'uiCurrent' => 'Pedidos', 'uiSectionUrl' => null]) ?>
+    <div class="df-page-heading">
         <div>
-            <p class="pedido-eyebrow">Comercial / Pedidos</p>
             <h1 class="h3 fw-bold mb-1">Pedidos</h1>
             <p class="text-muted small mb-0">Prepara lo solicitado por el cliente y conviértelo a venta cuando vaya a pagar.</p>
         </div>

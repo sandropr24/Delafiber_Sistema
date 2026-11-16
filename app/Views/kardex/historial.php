@@ -17,15 +17,10 @@ $formatearCantidad = static function ($valor, $unidad) {
 ?>
 
 
-<div class="container-fluid px-4 py-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<div class="container-fluid df-page">
+    <?= view('partials/ruta', ['uiSection' => 'Kardex', 'uiCurrent' => 'Historial de movimientos', 'uiSectionUrl' => 'admin/kardex']) ?>
+    <div class="df-page-heading">
         <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="<?= base_url('admin/kardex') ?>" class="text-decoration-none">Kardex</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Historial Detallado</li>
-                </ol>
-            </nav>
             <h1 class="h4 fw-bold text-dark mb-1"><?= esc($kardex['producto']) ?></h1>
             <p class="text-muted small mb-0">
                 Almacén: <strong class="text-dark"><?= esc($kardex['local']) ?></strong> |
@@ -34,7 +29,7 @@ $formatearCantidad = static function ($valor, $unidad) {
         </div>
         <div>
             <a href="<?= base_url('admin/kardex') ?>" class="btn btn-outline-secondary btn-sm shadow-sm px-3">
-                <i class="fas fa-arrow-left me-1"></i> Volver
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Volver
             </a>
         </div>
     </div>
@@ -67,7 +62,7 @@ $formatearCantidad = static function ($valor, $unidad) {
 
     <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
         <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
-            <h6 class="m-0 fw-bold text-dark"><i class="fas fa-history text-primary me-2"></i> Kárdex de Movimientos</h6>
+            <h6 class="m-0 fw-bold text-dark"><i class="bi bi-clock-history text-primary me-2" aria-hidden="true"></i> Kárdex de movimientos</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -96,10 +91,10 @@ $formatearCantidad = static function ($valor, $unidad) {
                                         $esEntrada = $tipo === 'ENTRADA';
                                         $esSalida = $tipo === 'SALIDA';
                                         $colorTipo = $esEntrada ? 'success' : ($esSalida ? 'danger' : 'warning');
-                                        $iconoTipo = $esEntrada ? 'arrow-down' : ($esSalida ? 'arrow-up' : 'exchange-alt');
+                                        $iconoTipo = $esEntrada ? 'arrow-down' : ($esSalida ? 'arrow-up' : 'arrow-left-right');
                                         ?>
                                         <span class="badge bg-<?= $colorTipo ?>-subtle text-<?= $colorTipo ?> border border-<?= $colorTipo ?>-subtle px-2 py-1 fw-bold">
-                                            <i class="fas fa-<?= $iconoTipo ?> fa-xs me-1"></i> <?= esc($mov['tipo']) ?>
+                                            <i class="bi bi-<?= $iconoTipo ?> me-1" aria-hidden="true"></i> <?= esc($mov['tipo']) ?>
                                         </span>
                                     </td>
                                     <td class="text-dark">
@@ -112,7 +107,7 @@ $formatearCantidad = static function ($valor, $unidad) {
                                         <?= $formatearCantidad($mov['saldo'], $kardex['unidad'] ?? '') ?>
                                     </td>
                                     <td class="text-secondary small">
-                                        <i class="fas fa-user-circle text-muted me-1"></i> <?= esc($mov['usuario'] ?? 'Sistema') ?>
+                                        <i class="bi bi-person-circle text-muted me-1" aria-hidden="true"></i> <?= esc($mov['usuario'] ?? 'Sistema') ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -120,7 +115,7 @@ $formatearCantidad = static function ($valor, $unidad) {
                             <tr>
                                 <td colspan="6" class="text-center py-5 text-muted">
                                     <div class="my-3">
-                                        <i class="fas fa-clipboard-list fa-3x text-light mb-3"></i>
+                                        <i class="bi bi-clipboard fs-1 d-block mb-3" aria-hidden="true"></i>
                                         <p class="mb-0">No hay movimientos registrados para este producto en este almacén.</p>
                                     </div>
                                 </td>

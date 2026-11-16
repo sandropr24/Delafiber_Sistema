@@ -5,10 +5,11 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('contenido') ?>
-<div class="container-fluid px-4 py-4" id="viewProductos" data-url-buscar="<?= site_url('admin/productos/buscar_tabla') ?>">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid df-page" id="viewProductos" data-url-buscar="<?= site_url('admin/productos/buscar_tabla') ?>">
+    <?= view('partials/ruta', ['uiSection' => 'Inventario', 'uiCurrent' => 'Productos', 'uiSectionUrl' => null]) ?>
+    <div class="df-page-heading">
         <div>
-            <h4 class="fw-bold mb-1">Catálogo de Productos</h4>
+            <h1>Catálogo de productos</h1>
             <p class="text-muted small mb-0">Equipos, servicios técnicos y combos que se pueden vender.</p>
         </div>
         <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="limpiarFormulario()">

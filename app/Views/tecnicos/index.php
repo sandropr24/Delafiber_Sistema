@@ -3,8 +3,9 @@
 <link rel="stylesheet" href="<?= base_url('css/tecnicos/index.css') ?>">
 <?= $this->endSection() ?>
 <?= $this->section('contenido') ?>
-<div class="container-fluid px-4 py-4 df-tecnicos">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+<div class="container-fluid df-page df-tecnicos">
+    <?= view('partials/ruta', ['uiSection' => 'Operaciones', 'uiCurrent' => 'Técnicos', 'uiSectionUrl' => null]) ?>
+    <div class="df-page-heading">
         <div>
             <h1 class="h3 fw-bold mb-1">Gestión de Técnicos</h1>
             <p class="text-muted mb-0">Personal asignado a entregas, sin acceso al sistema.</p>

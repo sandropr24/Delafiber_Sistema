@@ -9,10 +9,10 @@
 $grupos = [];
 foreach ($ordenes as $orden) $grupos[substr($orden['fecha_inicio'], 0, 10)][] = $orden;
 ?>
-<div class="container-fluid px-3 px-lg-4 py-4 df-servicios">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+<div class="container-fluid df-page df-servicios">
+    <?= view('partials/ruta', ['uiSection' => 'Servicios', 'uiCurrent' => 'Agenda', 'uiSectionUrl' => 'admin/servicios']) ?>
+    <div class="df-page-heading">
         <div>
-            <p class="df-sv-eyebrow mb-1">Servicios / Agenda</p>
             <h1 class="h3 fw-bold mb-1">Agenda de Servicios</h1>
             <p class="text-muted small mb-0">Trabajos programados y en proceso, ordenados por fecha.</p>
         </div>

@@ -17,8 +17,9 @@ $formatearCantidad = static function ($valor, $unidad) {
 ?>
 
 
-<div class="container-fluid px-4 py-4" id="viewKardex" data-url-buscar="<?= base_url('admin/kardex/buscar_tabla') ?>">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<div class="container-fluid df-page" id="viewKardex" data-url-buscar="<?= base_url('admin/kardex/buscar_tabla') ?>">
+    <?= view('partials/ruta', ['uiSection' => 'Inventario', 'uiCurrent' => 'Kardex', 'uiSectionUrl' => null]) ?>
+    <div class="df-page-heading">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1"><?= esc($titulo) ?></h1>
             <p class="text-muted small mb-0">Visualización en tiempo real de existencias, costos promedio y stock por almacén.</p>
@@ -91,7 +92,7 @@ $formatearCantidad = static function ($valor, $unidad) {
     <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
         <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
             <h6 class="m-0 fw-bold text-dark">
-                <i class="fas fa-warehouse text-primary me-2"></i> Stock Actual en Almacenes
+                <i class="bi bi-box-seam text-primary me-2" aria-hidden="true"></i> Stock actual en almacenes
             </h6>
         </div>
         <div class="card-body p-0">
@@ -148,7 +149,7 @@ $formatearCantidad = static function ($valor, $unidad) {
                             <tr>
                                 <td colspan="8" class="text-center py-5 text-muted">
                                     <div class="my-3">
-                                        <i class="fas fa-boxes fa-3x text-light mb-3"></i>
+                                        <i class="bi bi-box-seam fs-1 d-block mb-3" aria-hidden="true"></i>
                                         <p class="mb-0">No hay registros de stock disponibles en los almacenes.</p>
                                     </div>
                                 </td>
