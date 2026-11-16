@@ -1,196 +1,220 @@
 <?= $this->extend('layouts/main') ?>
-
+<?= $this->section('styles') ?>
+<link rel="stylesheet" href="<?= base_url('css/compras/nuevo.css') ?>?v=<?= filemtime(FCPATH . 'css/compras/nuevo.css') ?>">
+<?= $this->endSection() ?>
 <?= $this->section('contenido') ?>
 
-<div class="container-fluid px-4">
-    <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+<div class="container-fluid compra-nueva">
+    <nav class="compra-breadcrumb" aria-label="Ruta de navegación">
+        <a href="<?= base_url('admin/compras') ?>">Compras</a>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        <span aria-current="page">Nueva compra</span>
+    </nav>
+    <header class="compra-page-heading">
         <div>
-            <h1 class="h3 mb-0 text-gray-800 fw-bold"><?= esc($titulo) ?></h1>
-            <p class="text-muted small mb-0">Registrar ingreso de mercadería y actualizar automáticamente el Kardex.</p>
+            <h1>Nueva compra</h1>
+            <p>Registra tu comprobante y los productos que ingresan al almacén.</p>
         </div>
-        <div>
-            <a href="<?= base_url('admin/compras') ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm">
-                <i class="fas fa-arrow-left me-1"></i> Volver a Compras
-            </a>
-        </div>
-    </div>
+        <a href="<?= base_url('admin/compras') ?>" class="btn compra-btn-volver"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver al historial</a>
+    </header>
 
     <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i><?= session()->getFlashdata('error') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i><?= esc(session()->getFlashdata('error')) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
     <?php endif; ?>
 
     <form action="<?= base_url('admin/compras/guardar') ?>" method="POST" id="formCompra">
         <?= csrf_field() ?>
-
-        <div class="row">
-            <div class="col-lg-4 mb-4">
-                <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
-                    <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-file-invoice me-2"></i>Información General
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="idproveedor" class="form-label fw-semibold small text-uppercase text-muted">Proveedor <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted"><i class="fas fa-truck"></i></span>
+        <div class="compra-layout">
+            <div class="compra-principal">
+                <section class="compra-section" aria-labelledby="tituloDatosCompra">
+                    <header class="compra-section-header">
+                        <span class="compra-paso" aria-hidden="true">01</span>
+                        <div>
+                            <h2 id="tituloDatosCompra">Datos de la compra</h2>
+                            <p>Proveedor, comprobante y almacén de destino.</p>
+                        </div>
+                        <span class="compra-campos-nota"><span class="compra-required">*</span> Obligatorios</span>
+                    </header>
+                    <div class="compra-section-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label for="idproveedor" class="form-label">Proveedor <span class="compra-required">*</span></label>
                                 <select class="form-select" name="idproveedor" id="idproveedor" required>
-                                    <option value="" selected disabled>Seleccione un proveedor</option>
+                                    <option value="" selected disabled>Selecciona un proveedor</option>
                                     <?php foreach ($proveedores as $prov): ?>
-                                        <option value="<?= $prov['idproveedor'] ?>"><?= esc($prov['razonsocial']) ?></option>
+                                        <option value="<?= esc($prov['idproveedor'], 'attr') ?>"><?= esc($prov['razonsocial']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="tipocomprobante" class="form-label fw-semibold small text-uppercase text-muted">Tipo Comprobante <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted"><i class="fas fa-receipt"></i></span>
-                                <select class="form-select" name="tipocomprobante" id="tipocomprobante" required>
-                                    <option value="FACTURA">FACTURA</option>
-                                    <option value="BOLETA">BOLETA</option>
-                                    <option value="GUIA">GUÍA DE REMISIÓN</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="serie" class="form-label fw-semibold small text-uppercase text-muted">Serie <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted"><i class="fas fa-hashtag"></i></span>
-                                <input type="text" class="form-control" name="serie" id="serie" placeholder="Ej. N001" maxlength="20" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="numero" class="form-label fw-semibold small text-uppercase text-muted">Número <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="numero" id="numero" placeholder="000123" maxlength="20" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="moneda" class="form-label fw-semibold small text-uppercase text-muted">Moneda</label>
-                            <select name="moneda" id="moneda" class="form-select">
-                                <option value="PEN">Soles (PEN)</option>
-                                <option value="USD">Dólares (USD)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="tipocambio" class="form-label fw-semibold small text-uppercase text-muted">Tipo de cambio a PEN</label>
-                            <input type="number" class="form-control" name="tipocambio" id="tipocambio" min="0.0001" step="0.0001" value="1.0000" required readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label for="fechacompra" class="form-label fw-semibold small text-uppercase text-muted">Fecha de Compra <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted"><i class="fas fa-calendar-alt"></i></span>
-                                <input type="date" class="form-control" name="fechacompra" id="fechacompra" value="<?= date('Y-m-d') ?>" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="idlocal" class="form-label fw-semibold small text-uppercase text-muted">Almacén / Destino <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted"><i class="fas fa-warehouse"></i></span>
+                            <div class="col-12 col-md-6">
+                                <label for="idlocal" class="form-label">Almacén de destino <span class="compra-required">*</span></label>
                                 <select class="form-select" name="idlocal" id="idlocal" required>
                                     <?php foreach ($locales as $loc): ?>
-                                        <option value="<?= $loc['idlocal'] ?>"><?= esc($loc['nombrelocal']) ?></option>
+                                        <option value="<?= esc($loc['idlocal'], 'attr') ?>"><?= esc($loc['nombrelocal']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
-
-                        <div class="p-3 bg-light rounded-3 mb-4 text-center border">
-                            <span class="text-uppercase small text-muted d-block fw-semibold mb-1">Total Compra</span>
-                            <div class="input-group">
-                                <span class="input-group-text bg-success text-white fw-bold border-0" id="simboloTotalCompra">S/</span>
-                                <input type="text" class="form-control form-control-lg fw-bold text-success text-end bg-white border-0" id="totalGeneral" value="0.00" readonly>
+                        <div class="compra-separador"></div>
+                        <div class="row g-3">
+                            <div class="col-12 col-sm-4">
+                                <label for="tipocomprobante" class="form-label">Comprobante <span class="compra-required">*</span></label>
+                                <select class="form-select" name="tipocomprobante" id="tipocomprobante" required>
+                                    <option value="FACTURA">Factura</option>
+                                    <option value="BOLETA">Boleta</option>
+                                    <option value="GUIA">Guía de remisión</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label for="serie" class="form-label">Serie <span class="compra-required">*</span></label>
+                                <input type="text" class="form-control" name="serie" id="serie" placeholder="Ej. F001" maxlength="20" required>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label for="numero" class="form-label">Número <span class="compra-required">*</span></label>
+                                <input type="text" class="form-control" name="numero" id="numero" placeholder="Ej. 000123" maxlength="20" required>
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label for="fechacompra" class="form-label">Fecha de compra <span class="compra-required">*</span></label>
+                                <input type="date" class="form-control" name="fechacompra" id="fechacompra" value="<?= date('Y-m-d') ?>" required>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label for="moneda" class="form-label">Moneda</label>
+                                <select name="moneda" id="moneda" class="form-select">
+                                    <option value="PEN">Soles (PEN)</option>
+                                    <option value="USD">Dólares (USD)</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label for="tipocambio" class="form-label">Tipo de cambio</label>
+                                <input type="number" class="form-control" name="tipocambio" id="tipocambio" min="0.0001" step="0.0001" value="1.0000" aria-describedby="ayudaTipoCambio" required readonly>
                             </div>
                         </div>
-
-                        <button type="submit" class="btn btn-primary w-100 py-2 shadow-sm rounded-3 fw-bold">
-                            <i class="fas fa-save me-1"></i> Guardar Compra
-                        </button>
+                        <p class="compra-ayuda" id="ayudaTipoCambio"><i class="bi bi-info-circle" aria-hidden="true"></i> En dólares, indica cuántos soles equivalen a 1 USD.</p>
                     </div>
-                </div>
-            </div>
+                </section>
 
-            <div class="col-lg-8 mb-4">
-                <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
-                    <div class="card-header py-3 px-4" style="background-color: #f8f9fa; border-bottom: 1px solid #e0e0e0;">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-boxes me-2"></i>Detalle de Ítems
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="p-3 bg-light rounded-3 mb-4 border">
-                            <div class="row g-2 align-items-end">
-                                <div class="col-md-5">
-                                    <label class="form-label small fw-bold text-secondary">Producto</label>
+                <section class="compra-section" aria-labelledby="tituloProductosCompra">
+                    <header class="compra-section-header">
+                        <span class="compra-paso" aria-hidden="true">02</span>
+                        <div>
+                            <h2 id="tituloProductosCompra">Productos de la compra</h2>
+                            <p>Agrega cantidades, costos y números de serie.</p>
+                        </div>
+                        <span class="compra-contador" id="contadorItemsCompra">0 artículos</span>
+                    </header>
+                    <div class="compra-section-body">
+                        <div class="compra-agregar-panel">
+                            <div class="compra-agregar-titulo"><i class="bi bi-plus-circle" aria-hidden="true"></i> Agregar producto</div>
+                            <div class="compra-agregar-grid">
+                                <div class="compra-selector-producto">
+                                    <label for="selectProducto" class="form-label">Producto</label>
                                     <select class="form-select" id="selectProducto">
-                                        <option value="" selected disabled>Seleccionar producto...</option>
+                                        <option value="" selected disabled>Selecciona un producto</option>
                                         <?php foreach ($productos as $prod): ?>
-                                            <option value="<?= $prod['idproducto'] ?>"
+                                            <option value="<?= esc($prod['idproducto'], 'attr') ?>"
                                                 data-nombre="<?= esc($prod['nombre'] ?? $prod['descripcion'], 'attr') ?>"
                                                 data-unidad="<?= esc($prod['abreviaturaunidad'] ?? 'UND', 'attr') ?>"
                                                 data-serie="<?= (int) ($prod['controlaserie'] ?? 0) ?>"
-                                                data-precio="<?= $prod['precioventa'] ?? 0 ?>">
+                                                data-precio="<?= esc($prod['precioventa'] ?? 0, 'attr') ?>">
                                                 <?= esc($prod['nombre'] ?? $prod['descripcion']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-bold text-secondary">Cantidad <span id="etiquetaUnidad" class="text-muted fw-normal"></span></label>
+                                <div>
+                                    <label for="inputCantidad" class="form-label">Cantidad <span id="etiquetaUnidad" class="compra-unidad"></span></label>
                                     <input type="number" class="form-control text-center" id="inputCantidad" min="0.01" step="0.01" value="1">
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small fw-bold text-secondary">P. Compra (S/)</label>
-                                    <input type="number" class="form-control text-end" id="inputPrecio" step="0.01" min="0" placeholder="0.00">
+                                <div>
+                                    <label for="inputPrecio" class="form-label">Costo unitario</label>
+                                    <div class="input-group compra-precio-input">
+                                        <span class="input-group-text" id="simboloPrecioCompra">S/</span>
+                                        <input type="number" class="form-control text-end" id="inputPrecio" step="0.01" min="0" placeholder="0.00">
+                                    </div>
                                 </div>
-                                <div class="col-md-1">
-                                    <button type="button" class="btn btn-success w-100 fw-bold shadow-sm" id="btnAgregarItem" title="Agregar producto">
-                                        <i class="fas fa-plus">+</i>
-                                    </button>
-                                </div>
+                                <button type="button" class="btn compra-btn-agregar" id="btnAgregarItem"><i class="bi bi-plus-lg" aria-hidden="true"></i> <span>Agregar</span></button>
                             </div>
                         </div>
-
-                        <div class="border rounded-3 p-3 mb-3 d-none" id="panelSeriesCompra">
-                            <div class="fw-semibold mb-1"><i class="bi bi-upc-scan me-1"></i>Números de serie del producto</div>
-                            <div class="text-muted small mb-2">Ingrese una serie diferente por cada unidad que está comprando.</div>
+                        <div class="compra-series-panel d-none" id="panelSeriesCompra">
+                            <div class="compra-series-titulo"><i class="bi bi-upc-scan" aria-hidden="true"></i> Números de serie</div>
+                            <p>Ingresa una serie diferente por cada unidad antes de agregar el producto.</p>
                             <div class="row g-2" id="camposSeriesCompra"></div>
                         </div>
-                        <div class="table-responsive">
+                        <div class="compra-tabla-cabecera">
+                            <span>Detalle de productos</span>
+                            <span class="compra-tabla-nota">Importes en la moneda seleccionada</span>
+                        </div>
+                        <div class="table-responsive compra-tabla-wrap">
                             <table class="table table-hover align-middle mb-0" id="tablaDetalle">
-                                <thead class="table-light text-uppercase fs-7 text-secondary">
+                                <caption class="visually-hidden">Productos que se registrarán en esta compra</caption>
+                                <thead>
                                     <tr>
-                                        <th>Producto</th>
-                                        <th class="text-center" style="width: 120px;">Cantidad</th>
-                                        <th class="text-end" style="width: 150px;">Precio (S/)</th>
-                                        <th class="text-end" style="width: 150px;">Subtotal</th>
-                                        <th class="text-center" style="width: 60px;">Acción</th>
+                                        <th scope="col">Producto</th>
+                                        <th scope="col" class="text-center">Cantidad</th>
+                                        <th scope="col" class="text-end">Costo unit.</th>
+                                        <th scope="col" class="text-end">Importe</th>
+                                        <th scope="col"><span class="visually-hidden">Acciones</span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr id="filaVacia">
-                                        <td colspan="5" class="text-center text-muted py-5">
-                                            <i class="fas fa-cart-arrow-down fa-2x mb-2 text-black-50 d-block"></i>
-                                            No se han agregado productos a la compra.
+                                        <td colspan="5" class="compra-estado-vacio">
+                                            <div class="compra-vacio-icono"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
+                                            <strong>Tu compra empieza aquí</strong>
+                                            <span>Selecciona un producto, indica su cantidad y costo,<br class="d-none d-sm-block"> y pulsa <b>Agregar</b> para incluirlo en el detalle.</span>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                </div>
+                </section>
+                <p class="compra-nota-final"><i class="bi bi-info-circle" aria-hidden="true"></i> Revisa las cantidades y los costos antes de guardar la compra.</p>
             </div>
+            <aside class="compra-lateral">
+                <section class="compra-resumen" aria-labelledby="tituloResumenCompra">
+                    <div class="compra-resumen-encabezado">
+                        <span class="compra-resumen-icono"><i class="bi bi-receipt" aria-hidden="true"></i></span>
+                        <div>
+                            <h2 id="tituloResumenCompra">Resumen de compra</h2>
+                            <p>Verifica los datos del ingreso</p>
+                        </div>
+                    </div>
+                    <div class="compra-resumen-cuerpo">
+                        <dl class="compra-resumen-datos">
+                            <div><dt>Proveedor</dt><dd id="resumenProveedor" class="compra-sin-dato">Sin seleccionar</dd></div>
+                            <div><dt>Almacén de destino</dt><dd id="resumenAlmacen">Sin seleccionar</dd></div>
+                        </dl>
+                        <div class="compra-resumen-desglose">
+                            <div><span>Moneda</span><strong id="resumenMoneda">Soles · PEN</strong></div>
+                            <div><span>Líneas de detalle</span><strong id="resumenLineas">0</strong></div>
+                            <div><span>Series registradas</span><strong id="resumenSeries">0</strong></div>
+                        </div>
+                        <div class="compra-total-panel">
+                            <label for="totalGeneral">Total de la compra</label>
+                            <div class="compra-total-row">
+                                <span id="simboloTotalCompra">S/</span>
+                                <input type="text" id="totalGeneral" value="0.00" readonly aria-label="Total de la compra">
+                            </div>
+                            <span class="compra-total-nota">En la moneda del comprobante</span>
+                        </div>
+                        <button type="submit" class="btn compra-btn-guardar w-100"><i class="bi bi-check2-circle" aria-hidden="true"></i> Guardar compra <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+                        <p class="compra-guardar-nota">La compra se registrará al guardar.</p>
+                    </div>
+                </section>
+                <div class="compra-inventario-nota">
+                    <i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>
+                    <div><strong>Ingreso al inventario</strong><p>Al guardar, el stock y el Kardex se actualizarán en el almacén seleccionado.</p></div>
+                </div>
+                <div class="visually-hidden" id="anuncioDetalleCompra" role="status" aria-live="polite" aria-atomic="true"></div>
+            </aside>
         </div>
     </form>
 </div>
-
+<?= $this->endSection() ?>
+<?= $this->section('scripts') ?>
 <script src="<?= base_url('js/compras/nuevo.js') ?>"></script>
-
 <?= $this->endSection() ?>
