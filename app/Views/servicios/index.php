@@ -5,9 +5,6 @@
 
 <?= $this->endSection() ?>
 <?= $this->section('contenido') ?>
-<?php
-$etiquetas = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROCESO' => 'En proceso', 'FINALIZADO' => 'Finalizado', 'CANCELADO' => 'Cancelado'];
-?>
 <div class="container-fluid df-page df-servicios">
     <?= view('partials/ruta', ['uiSection' => 'Operaciones', 'uiCurrent' => 'Servicios técnicos', 'uiSectionUrl' => null]) ?>
     <div class="df-page-heading">
@@ -15,7 +12,7 @@ $etiquetas = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROC
             <h1 class="h3 fw-bold mb-1">Servicios Técnicos</h1>
             <p class="text-muted small mb-0">Organiza órdenes, técnicos y visitas programadas.</p>
         </div>
-        <div class="d-flex gap-2 flex-wrap"><a href="<?= base_url('admin/servicios/agenda') ?>" class="btn btn-light border"><i class="bi bi-calendar3 me-2"></i>Agenda</a><a href="<?= base_url('admin/servicios/crear') ?>" class="btn df-sv-btn"><i class="bi bi-plus-lg me-2"></i>Nueva orden</a></div>
+        <div class="d-flex gap-2 flex-wrap"><a href="<?= base_url('admin/servicios/agenda') ?>" class="btn btn-light border"><i class="bi bi-calendar3 me-2"></i>Agenda</a><?php if ($puedeGestionar): ?><a href="<?= base_url('admin/servicios/crear') ?>" class="btn df-sv-btn"><i class="bi bi-plus-lg me-2"></i>Nueva orden</a><?php endif; ?></div>
     </div>
     <div class="row g-3 mb-4">
         <?php foreach ([['PENDIENTE', 'Pendientes', 'bi-inbox', 'warning'], ['PROGRAMADO', 'Programados', 'bi-calendar-check', 'primary'], ['EN_PROCESO', 'En proceso', 'bi-tools', 'info'], ['FINALIZADO', 'Finalizados', 'bi-check2-circle', 'success']] as $dato): ?>
@@ -32,17 +29,18 @@ $etiquetas = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROC
                 <div>
                     <h2 class="h6 fw-bold mb-1">Órdenes registradas</h2>
                     <p class="text-muted small mb-0">Consulta el estado y los datos de cada trabajo.</p>
-                </div><span class="small text-muted" id="contadorOrdenes"><?= count($ordenes) ?> orden(es)</span>
+                </div><span class="small text-muted" id="contadorOrdenes"><?= (int) ($paginacion['total'] ?? count($ordenes)) ?> orden(es)</span>
             </div>
-            <div class="row g-2 mb-3">
-                <div class="col-lg-8">
+            <form method="get" action="<?= base_url('admin/servicios') ?>" class="row g-2 mb-3">
+                <div class="col-lg-7">
                     <label class="visually-hidden" for="buscarOrden">Buscar órdenes</label>
-                    <div class="input-group"><span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span><input type="search" id="buscarOrden" class="form-control border-start-0" placeholder="Buscar por cliente, código, servicio o técnico"></div>
+                    <div class="input-group"><span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span><input type="search" id="buscarOrden" name="buscar" value="<?= esc($filtros['buscar'] ?? '', 'attr') ?>" class="form-control border-start-0" placeholder="Buscar por cliente, código, servicio o técnico"></div>
                 </div>
-                <div class="col-lg-4"><label class="visually-hidden" for="filtrarEstado">Filtrar por estado</label><select id="filtrarEstado" class="form-select">
-                        <option value="TODOS">Todos los estados</option><?php foreach ($etiquetas as $codigo => $texto): ?><option value="<?= $codigo ?>"><?= esc($texto) ?></option><?php endforeach; ?>
+                <div class="col-lg-3"><label class="visually-hidden" for="filtrarEstado">Filtrar por estado</label><select id="filtrarEstado" name="estado" class="form-select">
+                        <option value="">Todos los estados</option><?php foreach ($etiquetas as $codigo => $texto): ?><option value="<?= $codigo ?>" <?= ($filtros['estado'] ?? '') === $codigo ? 'selected' : '' ?>><?= esc($texto) ?></option><?php endforeach; ?>
                     </select></div>
-            </div>
+                <div class="col-lg-2 d-flex gap-2"><button class="btn df-sv-btn flex-grow-1" type="submit">Filtrar</button><?php if (!empty($filtros['buscar']) || !empty($filtros['estado'])): ?><a class="btn btn-light border" href="<?= base_url('admin/servicios') ?>" aria-label="Limpiar filtros"><i class="bi bi-x-lg"></i></a><?php endif; ?></div>
+            </form>
             <div class="table-responsive">
                 <table class="table table-hover align-middle df-sv-table" id="tablaOrdenes">
                     <thead>
@@ -75,8 +73,12 @@ $etiquetas = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROC
                 </table>
             </div>
             <div id="sinOrdenes" class="text-center text-muted py-5 <?= count($ordenes) ? 'd-none' : '' ?>"><i class="bi bi-clipboard2-x fs-3 d-block mb-2"></i>No hay órdenes que coincidan con la búsqueda.</div>
+            <?php if (($paginacion['paginas'] ?? 1) > 1): ?>
+                <nav class="mt-3" aria-label="Paginación de órdenes"><ul class="pagination pagination-sm justify-content-end mb-0">
+                    <?php for ($pagina = 1; $pagina <= $paginacion['paginas']; $pagina++): ?><li class="page-item <?= $pagina === $paginacion['pagina'] ? 'active' : '' ?>"><a class="page-link" href="<?= base_url('admin/servicios?' . http_build_query(['buscar' => $filtros['buscar'] ?? '', 'estado' => $filtros['estado'] ?? '', 'pagina' => $pagina])) ?>"><?= $pagina ?></a></li><?php endfor; ?>
+                </ul></nav>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 <?= $this->endSection() ?>
-<?= $this->section('scripts') ?><script src="<?= base_url('js/servicios/index.js') ?>"></script><?= $this->endSection() ?>

@@ -5,6 +5,10 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\OrdenServicioModel;
 use App\Models\HistorialOrdenServicioModel;
+use App\Services\InventoryMovementService;
+use App\Services\PermissionService;
+use App\Services\ServicioConsultaService;
+use App\Services\ServicioWorkflow;
 use CodeIgniter\HTTP\RedirectResponse;
 use DateTimeImmutable;
 use RuntimeException;
@@ -14,17 +18,22 @@ class ServicioController extends BaseController
 {
     private OrdenServicioModel $ordenes;
     private HistorialOrdenServicioModel $historial;
+    private PermissionService $permisos;
+    private ServicioConsultaService $consultas;
+    private ServicioWorkflow $workflow;
 
     public function __construct()
     {
         $this->ordenes = model(OrdenServicioModel::class);
         $this->historial = model(HistorialOrdenServicioModel::class);
+        $this->permisos = new PermissionService();
+        $this->consultas = new ServicioConsultaService();
+        $this->workflow = new ServicioWorkflow();
     }
 
-    private function autorizado(): bool
+    private function autorizado(string $permiso = 'servicios.ver'): bool
     {
-        return in_array(session()->get('rol'), ['Administrador', 'Operador'], true)
-            && (int) session()->get('idusuario') > 0;
+        return $this->permisos->can((int) session()->get('idusuario'), $permiso);
     }
 
     private function denegar(): RedirectResponse
@@ -32,70 +41,17 @@ class ServicioController extends BaseController
         return redirect()->to(base_url('admin/dashboard'))->with('error', 'No tienes permiso para gestionar servicios técnicos.');
     }
 
-    private function consultarOrdenes(bool $soloAgenda = false): array
-    {
-        $db = db_connect();
-        $consulta = $db->table('ordenes_servicio os')
-            ->select("os.*, COALESCE(NULLIF(p.razonsocial, ''), TRIM(CONCAT(COALESCE(p.nombres, ''), ' ', COALESCE(p.apellidos, '')))) AS cliente, CONCAT(COALESCE(t.nombres, ''), ' ', COALESCE(t.apellidos, '')) AS tecnico, pr.nombre AS servicio", false)
-            ->join('personas p', 'p.idpersona = os.idcliente')
-            ->join('tecnicos t', 't.idtecnico = os.idtecnico', 'left')
-            ->join('productos pr', 'pr.idproducto = os.idservicio', 'left');
-
-        if ($soloAgenda) {
-            $consulta->whereIn('os.estado', ['PROGRAMADO', 'EN_PROCESO'])
-                ->where('os.fecha_inicio >=', date('Y-m-d 00:00:00', strtotime('-7 days')))
-                ->where('os.fecha_inicio <=', date('Y-m-d 23:59:59', strtotime('+60 days')))
-                ->orderBy('os.fecha_inicio', 'ASC');
-        } else {
-            $consulta->orderBy('os.idorden', 'DESC');
-        }
-        return $consulta->limit(300)->get()->getResultArray();
-    }
-
     public function index()
     {
         if (!$this->autorizado()) return $this->denegar();
-        $db = db_connect();
-        $resumen = ['PENDIENTE' => 0, 'PROGRAMADO' => 0, 'EN_PROCESO' => 0, 'FINALIZADO' => 0, 'CANCELADO' => 0];
-        foreach ($db->table('ordenes_servicio')->select('estado, COUNT(*) AS cantidad')->groupBy('estado')->get()->getResultArray() as $fila) {
-            $resumen[$fila['estado']] = (int) $fila['cantidad'];
-        }
-        return view('servicios/index', ['titulo' => 'Servicios Técnicos', 'ordenes' => $this->consultarOrdenes(), 'resumen' => $resumen]);
-    }
-
-    private function serviciosDeVenta(int $idVenta): array
-    {
-        $db = db_connect();
-        $servicios = [];
-        $directos = $db->table('detventa d')
-            ->select('p.idproducto, p.nombre')->join('productos p', 'p.idproducto = d.idproducto')
-            ->where('d.idventa', $idVenta)->where('p.tipo', 'SERVICIO')->get()->getResultArray();
-        foreach ($directos as $s) $servicios[(int) $s['idproducto']] = $s;
-
-        if ($db->tableExists('venta_combo_componentes')) {
-            $combos = $db->table('venta_combo_componentes c')
-                ->select('p.idproducto, p.nombre')->join('detventa d', 'd.iddetventa = c.iddetventa')
-                ->join('productos p', 'p.idproducto = c.idproducto')
-                ->where('d.idventa', $idVenta)->where('p.tipo', 'SERVICIO')->get()->getResultArray();
-            foreach ($combos as $s) $servicios[(int) $s['idproducto']] = $s;
-        }
-        return array_values($servicios);
-    }
-
-    private function ventasConServicios(): array
-    {
-        $db = db_connect();
-        $condiciones = ["EXISTS (SELECT 1 FROM detventa d INNER JOIN productos p ON p.idproducto = d.idproducto WHERE d.idventa = v.idventa AND p.tipo = 'SERVICIO')"];
-        if ($db->tableExists('venta_combo_componentes')) {
-            $condiciones[] = "EXISTS (SELECT 1 FROM detventa d INNER JOIN venta_combo_componentes c ON c.iddetventa = d.iddetventa INNER JOIN productos p ON p.idproducto = c.idproducto WHERE d.idventa = v.idventa AND p.tipo = 'SERVICIO')";
-        }
-        $sql = 'SELECT v.idventa, v.idcliente, v.serie, v.numero, v.fecha FROM ventas v WHERE v.fechaanulacion IS NULL AND (' . implode(' OR ', $condiciones) . ') ORDER BY v.idventa DESC LIMIT 150';
-        return $db->query($sql)->getResultArray();
+        $filtros = ['buscar' => trim((string) $this->request->getGet('buscar')), 'estado' => strtoupper(trim((string) $this->request->getGet('estado')))];
+        $resultado = $this->consultas->listar($filtros, max(1, (int) $this->request->getGet('pagina')));
+        return view('servicios/index', ['titulo' => 'Servicios Técnicos', 'ordenes' => $resultado['items'], 'resumen' => $this->consultas->resumenPorEstado(), 'paginacion' => $resultado, 'filtros' => $filtros, 'etiquetas' => ServicioWorkflow::ETIQUETAS, 'puedeGestionar' => $this->autorizado('servicios.gestionar')]);
     }
 
     public function crear()
     {
-        if (!$this->autorizado()) return $this->denegar();
+        if (!$this->autorizado('servicios.gestionar')) return $this->denegar();
         $db = db_connect();
         $ventaSeleccionada = null;
         $serviciosVenta = [];
@@ -105,23 +61,74 @@ class ServicioController extends BaseController
             if (!$ventaSeleccionada || $ventaSeleccionada['fechaanulacion'] !== null) {
                 return redirect()->to(base_url('admin/servicios/crear'))->with('error', 'La venta seleccionada no existe o está anulada.');
             }
-            $serviciosVenta = $this->serviciosDeVenta($idVenta);
+            $serviciosVenta = array_values(array_filter($this->consultas->serviciosDeVenta($idVenta), fn(array $servicio): bool => $this->cantidadCentimos((string) $servicio['pendiente'], true) > 0));
             if (!$serviciosVenta) return redirect()->to(base_url('admin/servicios/crear'))->with('error', 'Esta venta no contiene servicios para programar.');
         }
-        $idClienteVenta = (int) ($ventaSeleccionada['idcliente'] ?? 0);
+        $idClienteVenta = (int) ($ventaSeleccionada['idcliente'] ?? old('idcliente') ?? 0);
         $clientes = $db->query(
             "SELECT p.idpersona, p.telefono, p.direccion,
                     COALESCE(NULLIF(p.razonsocial, ''), TRIM(CONCAT(COALESCE(p.nombres, ''), ' ', COALESCE(p.apellidos, '')))) AS cliente
              FROM personas p
-             WHERE NOT EXISTS (SELECT 1 FROM usuarios u WHERE u.idpersona = p.idpersona)
-                OR p.idpersona = ?
-             ORDER BY (p.idpersona = ?) DESC, cliente LIMIT 1000",
+              WHERE p.estado = 1 AND p.idpersona = ? AND (NOT EXISTS (SELECT 1 FROM usuarios u WHERE u.idpersona = p.idpersona)
+                 OR p.idpersona = ?)
+              LIMIT 1",
             [$idClienteVenta, $idClienteVenta]
         )->getResultArray();
-        $servicios = $ventaSeleccionada ? $serviciosVenta : $db->table('productos')->select('idproducto, nombre')->where('tipo', 'SERVICIO')->where('estado', 1)->orderBy('nombre')->get()->getResultArray();
+        $servicios = $ventaSeleccionada ? $serviciosVenta : $db->table('productos p')->select('p.idproducto, p.nombre, p.idunidad, um.abreviatura')->join('unidadesmedida um', 'um.idunidad = p.idunidad')->where('p.tipo', 'SERVICIO')->where('p.estado', 1)->orderBy('p.nombre')->get()->getResultArray();
         $tecnicos = $db->table('tecnicos')->select('idtecnico, nombres, apellidos, especialidad')->where('estado', 'ACTIVO')->orderBy('nombres')->get()->getResultArray();
-        $ventasDisponibles = $this->ventasConServicios();
+        $ventasDisponibles = $ventaSeleccionada ? [$ventaSeleccionada] : [];
         return view('servicios/crear', compact('clientes', 'servicios', 'tecnicos', 'ventasDisponibles', 'ventaSeleccionada') + ['titulo' => 'Nueva orden de servicio']);
+    }
+
+    public function buscarClientes()
+    {
+        if (!$this->autorizado('servicios.gestionar')) return $this->response->setStatusCode(403)->setJSON(['error' => 'Acceso denegado']);
+        $buscar = trim((string) $this->request->getGet('q'));
+        if (mb_strlen($buscar) < 2) return $this->response->setJSON([]);
+        $db = db_connect();
+        $constructor = $db->table('personas p')
+            ->select("p.idpersona, p.telefono, p.direccion, p.numerodoc, COALESCE(NULLIF(p.razonsocial, ''), TRIM(CONCAT(COALESCE(p.nombres, ''), ' ', COALESCE(p.apellidos, '')))) AS cliente", false)
+            ->where('p.estado', 1)
+            ->where('NOT EXISTS (SELECT 1 FROM usuarios u WHERE u.idpersona = p.idpersona)', null, false)
+            ->groupStart()->like('p.nombres', $buscar)->orLike('p.apellidos', $buscar)->orLike('p.razonsocial', $buscar)->orLike('p.numerodoc', $buscar)->groupEnd()
+            ->orderBy('cliente')->limit(20);
+        return $this->response->setJSON(array_map(static fn(array $fila): array => [
+            'id' => (int) $fila['idpersona'],
+            'texto' => trim($fila['cliente'] . ' · ' . $fila['numerodoc']),
+            'direccion' => $fila['direccion'] ?? '',
+            'telefono' => $fila['telefono'] ?? '',
+        ], $constructor->get()->getResultArray()));
+    }
+
+    public function buscarVentas()
+    {
+        if (!$this->autorizado('servicios.gestionar')) return $this->response->setStatusCode(403)->setJSON(['error' => 'Acceso denegado']);
+        $buscar = trim((string) $this->request->getGet('q'));
+        if (mb_strlen($buscar) > 100) return $this->response->setStatusCode(400)->setJSON(['error' => 'La búsqueda es demasiado extensa.']);
+        if ($buscar !== '' && !ctype_digit($buscar) && mb_strlen($buscar) < 2) return $this->response->setJSON([]);
+        return $this->response->setJSON($this->consultas->buscarVentas($buscar));
+    }
+
+    public function buscarMateriales()
+    {
+        if (!$this->autorizado('inventario.consumir')) return $this->response->setStatusCode(403)->setJSON(['error' => 'Acceso denegado']);
+        $buscar = trim((string) $this->request->getGet('q'));
+        if (mb_strlen($buscar) < 2) return $this->response->setJSON([]);
+        $patron = '%' . str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $buscar) . '%';
+        $filas = db_connect()->query("SELECT k.idkardex, k.idlocal, k.stockactual, p.nombre AS producto, l.nombrelocal,
+            COALESCE((SELECT SUM(r.cantidad) FROM reservas_stock r WHERE r.idkardex = k.idkardex AND r.estado = 'RESERVADO'), 0) AS reservado
+            FROM kardex k JOIN productos p ON p.idproducto = k.idproducto JOIN locales l ON l.idlocal = k.idlocal
+            JOIN usuario_local ul ON ul.idlocal = k.idlocal AND ul.idusuario = ?
+            WHERE p.tipo = 'PRODUCTO' AND p.controlastock = 1 AND p.controlaserie = 0 AND p.estado = 1
+              AND (p.nombre LIKE ? ESCAPE '!' OR l.nombrelocal LIKE ? ESCAPE '!')
+            ORDER BY p.nombre, l.nombrelocal LIMIT 20", [(int) session('idusuario'), $patron, $patron])->getResultArray();
+        $resultado = [];
+        foreach ($filas as $fila) {
+            $disponible = round((float) $fila['stockactual'] - (float) $fila['reservado'], 2);
+            if ($disponible <= 0) continue;
+            $resultado[] = ['id' => (int) $fila['idkardex'], 'texto' => $fila['producto'] . ' · ' . $fila['nombrelocal'], 'disponible' => number_format($disponible, 2, '.', '')];
+        }
+        return $this->response->setJSON($resultado);
     }
 
     private function fechaFormulario(?string $texto): ?string
@@ -130,6 +137,21 @@ class ServicioController extends BaseController
         $fecha = DateTimeImmutable::createFromFormat('!Y-m-d\TH:i', $texto);
         if (!$fecha || $fecha->format('Y-m-d\TH:i') !== $texto) throw new RuntimeException('La fecha y hora seleccionadas no son válidas.');
         return $fecha->format('Y-m-d H:i:s');
+    }
+
+    private function cantidadCentimos(string $cantidad, bool $permitirCero = false): int
+    {
+        if (!preg_match('/^(\d{1,8})(?:\.(\d{1,2}))?$/D', trim($cantidad), $partes)) {
+            throw new RuntimeException('Ingresa una cantidad válida de hasta dos decimales.');
+        }
+        $valor = ((int) $partes[1] * 100) + (int) str_pad($partes[2] ?? '', 2, '0');
+        if (!$permitirCero && $valor < 1) throw new RuntimeException('La cantidad debe ser mayor que cero.');
+        return $valor;
+    }
+
+    private function cantidadDecimal(int $centimos): string
+    {
+        return intdiv($centimos, 100) . '.' . str_pad((string) ($centimos % 100), 2, '0', STR_PAD_LEFT);
     }
 
     private function disponibilidad(int $idTecnico, string $inicio, string $fin, int $excluir = 0): void
@@ -143,7 +165,7 @@ class ServicioController extends BaseController
 
     public function guardar(): RedirectResponse
     {
-        if (!$this->autorizado()) return $this->denegar();
+        if (!$this->autorizado('servicios.gestionar')) return $this->denegar();
         $datos = [
             'idcliente' => (int) $this->request->getPost('idcliente'),
             'idservicio' => (int) $this->request->getPost('idservicio'),
@@ -167,12 +189,14 @@ class ServicioController extends BaseController
 
         $db = db_connect();
         $idVenta = (int) $this->request->getPost('idventa');
+        $cantidadSolicitada = trim((string) $this->request->getPost('cantidad_servicio')) ?: '1';
         // Las órdenes independientes usan clientes del catálogo. En órdenes vinculadas, se valida contra la venta bloqueada más abajo.
-        if ($idVenta <= 0 && !$db->query('SELECT p.idpersona FROM personas p WHERE p.idpersona = ? AND NOT EXISTS (SELECT 1 FROM usuarios u WHERE u.idpersona = p.idpersona) LIMIT 1', [$datos['idcliente']])->getRowArray()) return redirect()->back()->withInput()->with('error', 'Selecciona un cliente válido.');
+        if ($idVenta <= 0 && !$db->query('SELECT p.idpersona FROM personas p WHERE p.idpersona = ? AND p.estado = 1 AND NOT EXISTS (SELECT 1 FROM usuarios u WHERE u.idpersona = p.idpersona) LIMIT 1', [$datos['idcliente']])->getRowArray()) return redirect()->back()->withInput()->with('error', 'Selecciona un cliente activo válido.');
         if (!$idVenta && $datos['idservicio'] && !$db->table('productos')->where('idproducto', $datos['idservicio'])->where('tipo', 'SERVICIO')->where('estado', 1)->countAllResults()) return redirect()->back()->withInput()->with('error', 'El servicio elegido no está disponible.');
 
         $transOpen = false;
         try {
+            $cantidadCentimos = $this->cantidadCentimos($cantidadSolicitada);
             $inicio = $this->fechaFormulario($this->request->getPost('fecha_inicio'));
             $fin = $this->fechaFormulario($this->request->getPost('fecha_fin'));
             $asignada = $datos['idtecnico'] > 0 || $inicio !== null || $fin !== null;
@@ -180,21 +204,31 @@ class ServicioController extends BaseController
             if ($asignada && ($inicio >= $fin || $inicio < date('Y-m-d H:i:s'))) throw new RuntimeException('El horario debe ser futuro y la hora de fin posterior al inicio.');
             $db->transBegin();
             $transOpen = true;
+            $servicioElegido = null;
             if ($idVenta > 0) {
                 // Bloquear la venta evita duplicados por clics o solicitudes concurrentes.
                 $venta = $db->query('SELECT idventa, idcliente, fechaanulacion FROM ventas WHERE idventa = ? FOR UPDATE', [$idVenta])->getRowArray();
                 if (!$venta || $venta['fechaanulacion'] !== null) throw new RuntimeException('La venta ya no está disponible.');
                 if ((int) $venta['idcliente'] !== $datos['idcliente']) throw new RuntimeException('El cliente no coincide con el de la venta.');
-                $vendidos = array_column($this->serviciosDeVenta($idVenta), 'idproducto');
-                if (!$datos['idservicio'] || !in_array($datos['idservicio'], array_map('intval', $vendidos), true)) throw new RuntimeException('Este servicio no está incluido en la venta.');
-                $duplicado = $db->query("SELECT idorden FROM ordenes_servicio WHERE idventa = ? AND idservicio = ? AND estado <> 'CANCELADO' LIMIT 1 FOR UPDATE", [$idVenta, $datos['idservicio']])->getRowArray();
-                if ($duplicado) throw new RuntimeException('Este servicio ya tiene una orden activa o finalizada en la venta.');
+                foreach ((new ServicioConsultaService($db))->serviciosDeVenta($idVenta) as $servicio) {
+                    if ((int) $servicio['idproducto'] === $datos['idservicio']) $servicioElegido = $servicio;
+                }
+                if (!$servicioElegido) throw new RuntimeException('Este servicio no está incluido en la venta.');
+                if ($cantidadCentimos > $this->cantidadCentimos((string) $servicioElegido['pendiente'], true)) {
+                    throw new RuntimeException('La cantidad supera lo pendiente de programar (' . $servicioElegido['pendiente'] . ' ' . $servicioElegido['abreviatura'] . ').');
+                }
+            } elseif ($datos['idservicio']) {
+                $servicioElegido = $db->table('productos p')->select('p.idunidad, um.abreviatura')->join('unidadesmedida um', 'um.idunidad = p.idunidad')
+                    ->where('p.idproducto', $datos['idservicio'])->where('p.tipo', 'SERVICIO')->where('p.estado', 1)->get()->getRowArray();
             }
             if ($asignada) $this->disponibilidad($datos['idtecnico'], $inicio, $fin);
             $id = $this->ordenes->insert([
                 'idcliente' => $datos['idcliente'],
                 'idventa' => $idVenta ?: null,
                 'idservicio' => $datos['idservicio'] ?: null,
+                'cantidad_servicio' => $this->cantidadDecimal($cantidadCentimos),
+                'idunidad_servicio' => $servicioElegido['idunidad'] ?? null,
+                'unidad_servicio_snapshot' => $servicioElegido['abreviatura'] ?? 'SERV',
                 'idtecnico' => $datos['idtecnico'] ?: null,
                 'titulo' => $datos['titulo'],
                 'descripcion' => $datos['descripcion'] ?: null,
@@ -230,41 +264,25 @@ class ServicioController extends BaseController
     public function detalles(int $id)
     {
         if (!$this->autorizado()) return $this->denegar();
-        $orden = null;
-        foreach ($this->consultarOrdenes() as $item) {
-            if ((int) $item['idorden'] === $id) {
-                $orden = $item;
-                break;
-            }
-        }
-        if (!$orden) {
-            $db = db_connect();
-            $orden = $db->table('ordenes_servicio os')
-                ->select("os.*, COALESCE(NULLIF(p.razonsocial, ''), TRIM(CONCAT(COALESCE(p.nombres, ''), ' ', COALESCE(p.apellidos, '')))) AS cliente, CONCAT(COALESCE(t.nombres, ''), ' ', COALESCE(t.apellidos, '')) AS tecnico, pr.nombre AS servicio", false)
-                ->join('personas p', 'p.idpersona = os.idcliente')
-                ->join('tecnicos t', 't.idtecnico = os.idtecnico', 'left')
-                ->join('productos pr', 'pr.idproducto = os.idservicio', 'left')->where('os.idorden', $id)->get()->getRowArray();
-        }
-        if (!$orden) return redirect()->to(base_url('admin/servicios'))->with('error', 'La orden solicitada no existe.');
         $db = db_connect();
+        $orden = $db->table('ordenes_servicio os')
+            ->select("os.*, COALESCE(NULLIF(p.razonsocial, ''), TRIM(CONCAT(COALESCE(p.nombres, ''), ' ', COALESCE(p.apellidos, '')))) AS cliente, CONCAT(COALESCE(t.nombres, ''), ' ', COALESCE(t.apellidos, '')) AS tecnico, pr.nombre AS servicio", false)
+            ->join('personas p', 'p.idpersona = os.idcliente')
+            ->join('tecnicos t', 't.idtecnico = os.idtecnico', 'left')
+            ->join('productos pr', 'pr.idproducto = os.idservicio', 'left')->where('os.idorden', $id)->get()->getRowArray();
+        if (!$orden) return redirect()->to(base_url('admin/servicios'))->with('error', 'La orden solicitada no existe.');
         $historial = $db->table('historial_orden_servicio h')->select('h.*, u.nombreusuario')->join('usuarios u', 'u.idusuario = h.idusuario')->where('h.idorden', $id)->orderBy('h.idhistorial', 'DESC')->get()->getResultArray();
         $tecnicos = $db->table('tecnicos')->select('idtecnico, nombres, apellidos')->where('estado', 'ACTIVO')->orderBy('nombres')->get()->getResultArray();
-        $materiales = $db->table('consumos_servicio cs')->select('cs.*, k.idproducto, k.idlocal, p.nombre AS producto, l.nombrelocal, u.nombreusuario')
+        $materiales = $db->table('consumos_servicio cs')->select('cs.*, k.idproducto, k.idlocal, p.nombre AS producto, l.nombrelocal, u.nombreusuario, ac.idanulacionconsumo, ac.fecha AS fecha_anulacion, ac.motivo AS motivo_anulacion, ac.idmovimiento AS idmovimiento_anulacion')
             ->join('kardex k', 'k.idkardex = cs.idkardex')->join('productos p', 'p.idproducto = k.idproducto')
             ->join('locales l', 'l.idlocal = k.idlocal')->join('usuarios u', 'u.idusuario = cs.idusuario')
+            ->join('anulaciones_consumo_servicio ac', 'ac.idconsumo = cs.idconsumo', 'left')
             ->where('cs.idorden', $id)->orderBy('cs.idconsumo', 'DESC')->get()->getResultArray();
-        $stockMateriales = $db->query("SELECT k.idkardex, k.idproducto, k.idlocal, k.stockactual, p.nombre AS producto,
-            l.nombrelocal, p.controlaserie, p.controlastock,
-            COALESCE((SELECT SUM(r.cantidad) FROM reservas_stock r WHERE r.idkardex = k.idkardex AND r.estado = 'RESERVADO'), 0) AS reservado
-            FROM kardex k JOIN productos p ON p.idproducto = k.idproducto JOIN locales l ON l.idlocal = k.idlocal
-            WHERE p.tipo = 'PRODUCTO' AND p.controlastock = 1 AND p.controlaserie = 0 AND p.estado = 1
-            ORDER BY l.nombrelocal, p.nombre")->getResultArray();
-        $materialesDisponibles = [];
-        foreach ($stockMateriales as $fila) {
-            $fila['disponible'] = round((float) $fila['stockactual'] - (float) $fila['reservado'], 2);
-            if ($fila['disponible'] <= 0) continue;
-            if ($this->productoVendidoEnOrden((int) ($orden['idventa'] ?? 0), (int) $fila['idproducto'])) continue;
-            $materialesDisponibles[] = $fila;
+        $tokensAnulacion = [];
+        foreach ($materiales as $material) {
+            if (empty($material['idanulacionconsumo'])) {
+                $tokensAnulacion[(int) $material['idconsumo']] = bin2hex(random_bytes(16));
+            }
         }
         return view('servicios/detalles', [
             'titulo' => 'Orden de servicio',
@@ -272,20 +290,56 @@ class ServicioController extends BaseController
             'historial' => $historial,
             'tecnicos' => $tecnicos,
             'materiales' => $materiales,
-            'materialesDisponibles' => $materialesDisponibles,
-            'tokenConsumo' => bin2hex(random_bytes(16))
+            'tokenConsumo' => bin2hex(random_bytes(16)),
+            'tokensAnulacion' => $tokensAnulacion,
+            'puedeGestionar' => $this->autorizado('servicios.gestionar'),
+            'puedeConsumir' => $this->autorizado('inventario.consumir'),
+            'puedeAnularConsumo' => $this->autorizado('inventario.anular_consumo'),
+            'puedeVerVenta' => in_array((string) session('rol'), ['Administrador', 'Vendedor'], true),
+            'etiquetas' => ServicioWorkflow::ETIQUETAS,
         ]);
     }
 
     public function agenda()
     {
         if (!$this->autorizado()) return $this->denegar();
-        return view('servicios/agenda', ['titulo' => 'Agenda de Servicios', 'ordenes' => $this->consultarOrdenes(true)]);
+        $hoy = new DateTimeImmutable('today');
+        $filtros = [
+            'desde' => trim((string) $this->request->getGet('desde')) ?: $hoy->modify('-7 days')->format('Y-m-d'),
+            'hasta' => trim((string) $this->request->getGet('hasta')) ?: $hoy->modify('+60 days')->format('Y-m-d'),
+            'estado' => strtoupper(trim((string) $this->request->getGet('estado'))),
+            'tecnico' => max(0, (int) $this->request->getGet('tecnico')),
+        ];
+        try {
+            $desde = DateTimeImmutable::createFromFormat('!Y-m-d', $filtros['desde']);
+            $hasta = DateTimeImmutable::createFromFormat('!Y-m-d', $filtros['hasta']);
+            if (!$desde || $desde->format('Y-m-d') !== $filtros['desde'] || !$hasta || $hasta->format('Y-m-d') !== $filtros['hasta']) {
+                throw new RuntimeException('Selecciona un rango de fechas válido.');
+            }
+            if ($desde > $hasta) throw new RuntimeException('La fecha inicial no puede ser posterior a la fecha final.');
+            if ($desde->diff($hasta)->days > 180) throw new RuntimeException('El rango de la agenda no puede superar 180 días.');
+            if (!in_array($filtros['estado'], ['', ServicioWorkflow::PROGRAMADO, ServicioWorkflow::EN_PROCESO], true)) {
+                throw new RuntimeException('El estado seleccionado no es válido para la agenda.');
+            }
+        } catch (RuntimeException $e) {
+            return redirect()->to(base_url('admin/servicios/agenda'))->with('error', $e->getMessage());
+        }
+        $resultado = $this->consultas->agenda($filtros);
+        $tecnicos = db_connect()->table('tecnicos')->select('idtecnico, nombres, apellidos')->where('estado', 'ACTIVO')->orderBy('nombres')->get()->getResultArray();
+        return view('servicios/agenda', [
+            'titulo' => 'Agenda de Servicios',
+            'ordenes' => $resultado['items'],
+            'agendaTruncada' => $resultado['truncada'],
+            'filtros' => $filtros,
+            'tecnicos' => $tecnicos,
+            'etiquetas' => ServicioWorkflow::ETIQUETAS,
+            'puedeGestionar' => $this->autorizado('servicios.gestionar'),
+        ]);
     }
 
     public function reprogramar(int $id): RedirectResponse
     {
-        if (!$this->autorizado()) return $this->denegar();
+        if (!$this->autorizado('servicios.gestionar')) return $this->denegar();
         $db = db_connect();
         $transOpen = false;
         try {
@@ -315,34 +369,29 @@ class ServicioController extends BaseController
 
     public function cambiarEstado(int $id): RedirectResponse
     {
-        if (!$this->autorizado()) return $this->denegar();
+        if (!$this->autorizado('servicios.gestionar')) return $this->denegar();
         $nuevo = strtoupper(trim((string) $this->request->getPost('estado')));
         $nota = trim((string) $this->request->getPost('observacion'));
-        $cambios = [
-            'PENDIENTE' => ['CANCELADO'],
-            'PROGRAMADO' => ['EN_PROCESO', 'CANCELADO'],
-            'EN_PROCESO' => ['FINALIZADO']
-        ];
+        $resultado = trim((string) $this->request->getPost('resultado'));
         $db = db_connect();
         $transOpen = false;
         try {
-            if (mb_strlen($nota) > 255) throw new RuntimeException('La observación no puede superar 255 caracteres.');
-            if ($nuevo === 'FINALIZADO' && mb_strlen($nota) < 5) throw new RuntimeException('Describe el trabajo realizado para finalizar.');
-            if ($nuevo === 'CANCELADO' && mb_strlen($nota) < 5) throw new RuntimeException('Indica el motivo de cancelación.');
+            if (mb_strlen($nota) > 255 || mb_strlen($resultado) > 5000) throw new RuntimeException('La observación o el resultado superan la longitud permitida.');
             $db->transBegin();
             $transOpen = true;
             $orden = $db->query('SELECT idorden, estado, fecha_inicio, fecha_fin FROM ordenes_servicio WHERE idorden = ? FOR UPDATE', [$id])->getRowArray();
-            if (!$orden || !in_array($nuevo, $cambios[$orden['estado']] ?? [], true)) throw new RuntimeException('Este cambio de estado no está permitido.');
+            if (!$orden) throw new RuntimeException('La orden no existe.');
+            $this->workflow->validarTransicion($orden['estado'], $nuevo, $nuevo === 'FINALIZADO' ? $resultado : $nota);
             if ($nuevo === 'EN_PROCESO' && !empty($orden['fecha_inicio']) && $orden['fecha_inicio'] > date('Y-m-d H:i:s') && mb_strlen($nota) < 10) {
                 throw new RuntimeException('El trabajo está programado para una fecha futura. Si va a iniciar antes, escribe el motivo (mínimo 10 caracteres).');
             }
             $datos = ['estado' => $nuevo];
             if ($nuevo === 'FINALIZADO') {
-                $datos['resultado'] = $nota;
+                $datos['resultado'] = $resultado;
                 $datos['fecha_finalizacion'] = date('Y-m-d H:i:s');
             }
             if (!$this->ordenes->update($id, $datos)) throw new RuntimeException('No se pudo modificar el estado.');
-            if (!$this->historial->insert(['idorden' => $id, 'tipoevento' => 'CAMBIO_ESTADO', 'estado_anterior' => $orden['estado'], 'estado_nuevo' => $nuevo, 'observacion' => $nota ?: 'Actualización del estado de la orden.', 'idusuario' => (int) session('idusuario'), 'fecha' => date('Y-m-d H:i:s')])) throw new RuntimeException('No se pudo registrar el historial.');
+            if (!$this->historial->insert(['idorden' => $id, 'tipoevento' => 'CAMBIO_ESTADO', 'estado_anterior' => $orden['estado'], 'estado_nuevo' => $nuevo, 'observacion' => $nota ?: ($nuevo === 'FINALIZADO' ? 'Servicio finalizado con resultado técnico registrado.' : 'Actualización del estado de la orden.'), 'idusuario' => (int) session('idusuario'), 'fecha' => date('Y-m-d H:i:s')])) throw new RuntimeException('No se pudo registrar el historial.');
             if ($db->transStatus() === false) throw new RuntimeException('No se pudieron guardar los cambios.');
             $db->transCommit();
             $transOpen = false;
@@ -354,21 +403,9 @@ class ServicioController extends BaseController
         }
     }
 
-    private function productoVendidoEnOrden(int $idVenta, int $idProducto): bool
-    {
-        if ($idVenta <= 0) return false;
-        $db = db_connect();
-        if ($db->table('detventa')->where('idventa', $idVenta)->where('idproducto', $idProducto)->countAllResults() > 0) return true;
-        if ($db->tableExists('venta_combo_componentes')) {
-            return $db->table('venta_combo_componentes c')->join('detventa d', 'd.iddetventa = c.iddetventa')
-                ->where('d.idventa', $idVenta)->where('c.idproducto', $idProducto)->countAllResults() > 0;
-        }
-        return false;
-    }
-
     public function registrarMaterial(int $id): RedirectResponse
     {
-        if (!$this->autorizado()) return $this->denegar();
+        if (!$this->autorizado('inventario.consumir')) return $this->denegar();
         $destino = base_url('admin/servicios/detalles/' . $id);
         $idKardex = (int) $this->request->getPost('idkardex');
         $cantidadTexto = trim((string) $this->request->getPost('cantidad'));
@@ -379,65 +416,38 @@ class ServicioController extends BaseController
         $transOpen = false;
 
         try {
-            if ($id < 1 || $idKardex < 1 || !preg_match('/^\d{1,8}(?:\.\d{1,2})?$/', $cantidadTexto)) {
+            if ($id < 1 || $idKardex < 1) {
                 throw new RuntimeException('Selecciona un material e ingresa una cantidad válida de hasta dos decimales.');
             }
-            $cantidad = round((float) $cantidadTexto, 2);
-            if ($cantidad <= 0 || mb_strlen($nota) > 255 || !preg_match('/^[a-f0-9]{32}$/', $token)) {
+            $cantidadCentimos = $this->cantidadCentimos($cantidadTexto);
+            if (mb_strlen($nota) > 255 || !preg_match('/^[a-f0-9]{32}$/D', $token)) {
                 throw new RuntimeException('La cantidad, observación o solicitud no es válida.');
             }
             $db->transBegin();
             $transOpen = true;
-            $orden = $db->query('SELECT idorden, idventa, estado FROM ordenes_servicio WHERE idorden = ? FOR UPDATE', [$id])->getRowArray();
+            $orden = $db->query('SELECT idorden, estado FROM ordenes_servicio WHERE idorden = ? FOR UPDATE', [$id])->getRowArray();
             if (!$orden || $orden['estado'] !== 'EN_PROCESO') throw new RuntimeException('Solo puedes registrar consumos cuando la orden está EN PROCESO.');
             if ($db->table('consumos_servicio')->where('token_operacion', $token)->countAllResults() > 0) {
                 throw new RuntimeException('Este consumo ya se procesó. Actualiza la página para registrar otro.');
             }
-            $kardex = $db->query("SELECT k.idkardex, k.idproducto, k.idlocal, k.stockactual, p.nombre,
-                p.tipo, p.controlastock, p.controlaserie, p.estado
-                FROM kardex k JOIN productos p ON p.idproducto = k.idproducto WHERE k.idkardex = ? FOR UPDATE", [$idKardex])->getRowArray();
-            if (
-                !$kardex || $kardex['tipo'] !== 'PRODUCTO' || (int) $kardex['controlastock'] !== 1 ||
-                (int) $kardex['controlaserie'] !== 0 || (int) $kardex['estado'] !== 1
-            ) {
-                throw new RuntimeException('El material no está habilitado para consumo directo (los artículos con serie requieren otro procedimiento).');
+            $kardex = $db->query('SELECT idlocal FROM kardex WHERE idkardex = ? FOR UPDATE', [$idKardex])->getRowArray();
+            if (!$kardex || !$this->permisos->canUseLocation($idUsuario, (int) $kardex['idlocal'])) {
+                throw new RuntimeException('No tienes permiso para consumir inventario de este local.');
             }
-            if ($this->productoVendidoEnOrden((int) ($orden['idventa'] ?? 0), (int) $kardex['idproducto'])) {
-                throw new RuntimeException('Este artículo ya pertenece a la venta. Su salida debe gestionarse desde Entregas.');
-            }
-            $reservado = (float) $db->table('reservas_stock')->selectSum('cantidad')->where('idkardex', $idKardex)
-                ->where('estado', 'RESERVADO')->get()->getRow('cantidad');
-            $disponible = round((float) $kardex['stockactual'] - $reservado, 2);
-            if ($cantidad > $disponible + 0.001) {
-                throw new RuntimeException('Stock insuficiente. Disponible sin reservas: ' . number_format(max(0, $disponible), 2) . '.');
-            }
-            $triggers = $db->query("SELECT TRIGGER_NAME FROM INFORMATION_SCHEMA.TRIGGERS
-                WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE = 'movimientos'
-                AND EVENT_MANIPULATION = 'INSERT'")->getResultArray();
-            if ($triggers) {
-                throw new RuntimeException('Se detectó un trigger al insertar movimientos. Verifica si actualiza Kardex antes de registrar consumos.');
-            }
-            $nuevoStock = round((float) $kardex['stockactual'] - $cantidad, 2);
             $ahora = date('Y-m-d H:i:s');
-            if (!$db->table('kardex')->where('idkardex', $idKardex)->update(['stockactual' => $nuevoStock])) {
-                throw new RuntimeException('No se pudo actualizar el stock físico.');
-            }
-            if (!$db->table('movimientos')->insert([
-                'idkardex' => $idKardex,
-                'idusuario' => $idUsuario,
-                'tipo' => 'SALIDA',
-                'fecha' => $ahora,
-                'cantidad' => $cantidad,
-                'saldo' => $nuevoStock,
-                'descripcion' => 'Material usado en orden OS-' . str_pad((string) $id, 5, '0', STR_PAD_LEFT),
-                'motivo' => 'Consumo servicio técnico'
-            ])) throw new RuntimeException('No se pudo crear el movimiento de Kardex.');
-            $idMovimiento = (int) $db->insertID();
+            $inventario = new InventoryMovementService($db);
+            $movimiento = $inventario->consume(
+                $idKardex,
+                $this->cantidadDecimal($cantidadCentimos),
+                $idUsuario,
+                'Material usado en orden OS-' . str_pad((string) $id, 5, '0', STR_PAD_LEFT),
+                'Consumo servicio técnico'
+            );
             if (!$db->table('consumos_servicio')->insert([
                 'idorden' => $id,
                 'idkardex' => $idKardex,
-                'idmovimiento' => $idMovimiento,
-                'cantidad' => $cantidad,
+                'idmovimiento' => $movimiento['idmovimiento'],
+                'cantidad' => $movimiento['cantidad'],
                 'observacion' => $nota ?: null,
                 'token_operacion' => $token,
                 'idusuario' => $idUsuario,
@@ -448,7 +458,7 @@ class ServicioController extends BaseController
                 'tipoevento' => 'CONSUMO_MATERIAL',
                 'estado_anterior' => $orden['estado'],
                 'estado_nuevo' => $orden['estado'],
-                'observacion' => mb_substr('Material: ' . $kardex['nombre'] . ', cantidad ' . number_format($cantidad, 2) . '. ' . $nota, 0, 255),
+                'observacion' => mb_substr('Material: ' . $movimiento['kardex']['nombre'] . ', cantidad ' . $movimiento['cantidad'] . '. ' . $nota, 0, 255),
                 'idusuario' => $idUsuario,
                 'fecha' => $ahora
             ])) throw new RuntimeException('No se pudo registrar el historial del consumo.');
@@ -460,6 +470,60 @@ class ServicioController extends BaseController
             if ($transOpen) $db->transRollback();
             log_message('error', '[Servicios] Consumo orden ' . $id . ': ' . $e->getMessage());
             return redirect()->to($destino)->with('error', $e instanceof RuntimeException ? $e->getMessage() : 'No se pudo registrar el consumo.');
+        }
+    }
+
+    public function anularMaterial(int $id, int $idConsumo): RedirectResponse
+    {
+        if (!$this->autorizado('inventario.anular_consumo')) return $this->denegar();
+        $destino = base_url('admin/servicios/detalles/' . $id);
+        $motivo = trim((string) $this->request->getPost('motivo'));
+        $token = trim((string) $this->request->getPost('token_operacion'));
+        $idUsuario = (int) session('idusuario');
+        $db = db_connect();
+        $transOpen = false;
+
+        try {
+            if ($id < 1 || $idConsumo < 1 || mb_strlen($motivo) < 5 || mb_strlen($motivo) > 255 || !preg_match('/^[a-f0-9]{32}$/D', $token)) {
+                throw new RuntimeException('Indica un motivo válido de al menos 5 caracteres.');
+            }
+            $db->transBegin();
+            $transOpen = true;
+            $consumo = $db->query('SELECT cs.*, k.idlocal, p.nombre AS producto, os.estado FROM consumos_servicio cs JOIN kardex k ON k.idkardex = cs.idkardex JOIN productos p ON p.idproducto = k.idproducto JOIN ordenes_servicio os ON os.idorden = cs.idorden WHERE cs.idconsumo = ? AND cs.idorden = ? FOR UPDATE', [$idConsumo, $id])->getRowArray();
+            if (!$consumo) throw new RuntimeException('El consumo no existe en esta orden.');
+            if ($consumo['estado'] !== 'EN_PROCESO') throw new RuntimeException('Solo puedes anular consumos mientras la orden está EN PROCESO.');
+            if (!$this->permisos->canUseLocation($idUsuario, (int) $consumo['idlocal'])) throw new RuntimeException('No tienes acceso al local del consumo.');
+            if ($db->table('anulaciones_consumo_servicio')->where('idconsumo', $idConsumo)->countAllResults()) throw new RuntimeException('Este consumo ya fue anulado.');
+            if ($db->table('anulaciones_consumo_servicio')->where('token_operacion', $token)->countAllResults()) throw new RuntimeException('Esta anulación ya fue procesada.');
+
+            $movimiento = (new InventoryMovementService($db))->reverse((int) $consumo['idmovimiento'], $idUsuario, $motivo);
+            $ahora = date('Y-m-d H:i:s');
+            if (!$db->table('anulaciones_consumo_servicio')->insert([
+                'idconsumo' => $idConsumo,
+                'idmovimiento' => $movimiento['idmovimiento'],
+                'cantidad' => $movimiento['cantidad'],
+                'motivo' => $motivo,
+                'token_operacion' => $token,
+                'idusuario' => $idUsuario,
+                'fecha' => $ahora,
+            ])) throw new RuntimeException('No se pudo registrar la anulación del consumo.');
+            if (!$this->historial->insert([
+                'idorden' => $id,
+                'tipoevento' => 'ANULACION_CONSUMO',
+                'estado_anterior' => $consumo['estado'],
+                'estado_nuevo' => $consumo['estado'],
+                'observacion' => mb_substr('Se anuló el consumo de ' . $consumo['producto'] . ' por ' . $movimiento['cantidad'] . '. Motivo: ' . $motivo, 0, 255),
+                'idusuario' => $idUsuario,
+                'fecha' => $ahora,
+            ])) throw new RuntimeException('No se pudo registrar el historial de la anulación.');
+            if ($db->transStatus() === false) throw new RuntimeException('No se completó la transacción.');
+            $db->transCommit();
+            $transOpen = false;
+            return redirect()->to($destino)->with('mensaje', 'Consumo anulado y material devuelto al stock.');
+        } catch (Throwable $e) {
+            if ($transOpen) $db->transRollback();
+            log_message('error', '[Servicios] Anulación consumo ' . $idConsumo . ': ' . $e->getMessage());
+            return redirect()->to($destino)->with('error', $e instanceof RuntimeException ? $e->getMessage() : 'No se pudo anular el consumo.');
         }
     }
 }

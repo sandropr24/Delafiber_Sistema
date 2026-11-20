@@ -50,15 +50,27 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static functio
         $routes->post('cambiarestado/(:num)', 'UsuarioController::cambiarEstado/$1');
     });
 
-    $routes->group('servicios', ['filter' => 'auth:Administrador,Operador'], static function ($routes) {
+    $routes->group('garantias', ['filter' => 'auth:Administrador,Operador,Vendedor'], static function ($routes) {
+        $routes->get('', 'GarantiaController::index');
+        $routes->get('detalles/(:num)', 'GarantiaController::detalles/$1');
+        $routes->get('crear', 'GarantiaController::crear', ['filter' => 'auth:Administrador,Operador']);
+        $routes->post('guardar', 'GarantiaController::guardar', ['filter' => 'auth:Administrador,Operador']);
+        $routes->post('cambiar-estado/(:num)', 'GarantiaController::cambiarEstado/$1', ['filter' => 'auth:Administrador,Operador']);
+    });
+
+    $routes->group('servicios', ['filter' => 'auth'], static function ($routes) {
         $routes->get('', 'ServicioController::index');
         $routes->get('crear', 'ServicioController::crear');
         $routes->post('guardar', 'ServicioController::guardar');
         $routes->get('agenda', 'ServicioController::agenda');
+        $routes->get('buscar-clientes', 'ServicioController::buscarClientes');
+        $routes->get('buscar-ventas', 'ServicioController::buscarVentas');
+        $routes->get('buscar-materiales', 'ServicioController::buscarMateriales');
         $routes->get('detalles/(:num)', 'ServicioController::detalles/$1');
         $routes->post('reprogramar/(:num)', 'ServicioController::reprogramar/$1');
         $routes->post('cambiar-estado/(:num)', 'ServicioController::cambiarEstado/$1');
         $routes->post('registrar-material/(:num)', 'ServicioController::registrarMaterial/$1');
+        $routes->post('anular-material/(:num)/(:num)', 'ServicioController::anularMaterial/$1/$2');
     });
 
     $routes->group('proveedores', ['filter' => 'auth:Administrador,Operador'], static function ($routes) {

@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const texto = form.dataset.confirmacion || '¿Confirmar esta operación?';
             const mensaje = estado === 'CANCELADO' ? 'La orden quedará cancelada.' : texto;
             const nota = form.querySelector('textarea[name="observacion"]')?.value.trim() || '';
+            const resultado = form.querySelector('textarea[name="resultado"]')?.value.trim() || '';
             const inicio = form.querySelector('input[name="fecha_inicio"]');
             const fin = form.querySelector('input[name="fecha_fin"]');
             if (inicio && fin) {
@@ -25,8 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            if (['CANCELADO', 'FINALIZADO'].includes(estado) && nota.length < 5) {
+            if (estado === 'CANCELADO' && nota.length < 5) {
                 alert('Escribe al menos 5 caracteres para justificar esta operación.');
+                return;
+            }
+            if (estado === 'FINALIZADO' && resultado.length < 5) {
+                alert('Describe el resultado técnico con al menos 5 caracteres.');
                 return;
             }
             let confirmado;
@@ -50,22 +55,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Ayuda visual de disponibilidad. El servidor vuelve a validar bajo bloqueo de BD.
 const material = document.getElementById('materialKardex');
+const buscarMaterial = document.getElementById('buscarMaterialServicio');
+const opcionesMaterial = document.getElementById('materialesServicioOpciones');
 const cantidad = document.getElementById('cantidadConsumo');
 const informacion = document.getElementById('stockDisponibleServicio');
 const consumo = document.getElementById('formConsumoServicio');
 if (material && cantidad && informacion && consumo) {
+    let encontrados = new Map();
+    let temporizador;
     const mostrarStock = () => {
-        const disponible = Number(material.selectedOptions[0]?.dataset.disponible || 0);
+        const elegido = encontrados.get(buscarMaterial?.value || '');
+        const disponible = Number(elegido?.disponible || 0);
+        material.value = elegido?.id || '';
         informacion.textContent = material.value
             ? `Disponible sin reservas: ${disponible.toFixed(2)}`
             : 'Selecciona un material para consultar su disponibilidad.';
         cantidad.max = material.value ? disponible.toFixed(2) : '';
     };
-    material.addEventListener('change', mostrarStock);
-    mostrarStock();
+    buscarMaterial?.addEventListener('input', () => {
+        material.value = '';
+        mostrarStock();
+        clearTimeout(temporizador);
+        const texto = buscarMaterial.value.trim();
+        if (texto.length < 2) { opcionesMaterial.replaceChildren(); return; }
+        temporizador = setTimeout(async () => {
+            try {
+                const respuesta = await fetch(`${buscarMaterial.dataset.url}?q=${encodeURIComponent(texto)}`, { headers: { Accept: 'application/json' } });
+                if (!respuesta.ok) return;
+                const filas = await respuesta.json();
+                encontrados = new Map();
+                opcionesMaterial.replaceChildren();
+                filas.forEach(fila => {
+                    const etiqueta = `${fila.texto} · Disp.: ${fila.disponible} · #${fila.id}`;
+                    encontrados.set(etiqueta, fila);
+                    const opcion = document.createElement('option');
+                    opcion.value = etiqueta;
+                    opcionesMaterial.appendChild(opcion);
+                });
+                mostrarStock();
+            } catch (_) { opcionesMaterial.replaceChildren(); }
+        }, 250);
+    });
+    buscarMaterial?.addEventListener('change', mostrarStock);
     consumo.addEventListener('submit', evento => {
         if (consumo.dataset.enviando === 'si') { evento.preventDefault(); return; }
-        const disponible = Number(material.selectedOptions[0]?.dataset.disponible || 0);
+        const disponible = Number(encontrados.get(buscarMaterial?.value || '')?.disponible || 0);
         const solicitado = Number(cantidad.value);
         if (!material.value || !Number.isFinite(solicitado) || solicitado <= 0 || solicitado > disponible) {
             evento.preventDefault();

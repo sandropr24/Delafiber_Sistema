@@ -2,12 +2,13 @@
 <?= $this->section('styles') ?><link rel="stylesheet" href="<?= base_url('css/servicios/index.css') ?>"><?= $this->endSection() ?>
 <?= $this->section('contenido') ?>
 <?php
-$estados = ['PENDIENTE' => 'Pendiente', 'PROGRAMADO' => 'Programado', 'EN_PROCESO' => 'En proceso', 'FINALIZADO' => 'Finalizado', 'CANCELADO' => 'Cancelado'];
+$estados = $etiquetas;
 $estado = $orden['estado'];
 $codigo = 'OS-' . str_pad((string) $orden['idorden'], 5, '0', STR_PAD_LEFT);
 $etiquetasEventos = [
     'CREACION' => 'Orden registrada', 'CAMBIO_ESTADO' => 'Estado actualizado',
-    'REPROGRAMACION' => 'Programación actualizada', 'CONSUMO_MATERIAL' => 'Material registrado'
+    'REPROGRAMACION' => 'Programación actualizada', 'CONSUMO_MATERIAL' => 'Material registrado',
+    'ANULACION_CONSUMO' => 'Consumo anulado'
 ];
 ?>
 <div class="container-fluid df-page df-servicios">
@@ -17,12 +18,13 @@ $etiquetasEventos = [
         <div class="col-lg-7"><div class="card df-sv-card mb-4"><div class="card-header df-sv-section-title">Información de la orden</div><div class="card-body p-3 p-lg-4"><dl class="row mb-0 df-sv-description">
             <dt class="col-sm-4">Cliente</dt><dd class="col-sm-8"><?= esc($orden['cliente']) ?></dd>
             <dt class="col-sm-4">Servicio</dt><dd class="col-sm-8"><?= esc($orden['servicio'] ?: 'Servicio personalizado') ?></dd>
+            <dt class="col-sm-4">Cantidad atendida</dt><dd class="col-sm-8"><?= esc(number_format((float) $orden['cantidad_servicio'], 2) . ' ' . $orden['unidad_servicio_snapshot']) ?></dd>
             <dt class="col-sm-4">Trabajo</dt><dd class="col-sm-8"><?= esc($orden['titulo']) ?></dd>
             <dt class="col-sm-4">Descripción</dt><dd class="col-sm-8"><?= nl2br(esc($orden['descripcion'] ?: 'Sin descripción')) ?></dd>
             <dt class="col-sm-4">Dirección</dt><dd class="col-sm-8"><?= esc($orden['direccion'] ?: 'No indicada') ?></dd>
             <dt class="col-sm-4">Teléfono</dt><dd class="col-sm-8"><?= esc($orden['telefono'] ?: 'No indicado') ?></dd>
             <dt class="col-sm-4">Observaciones</dt><dd class="col-sm-8"><?= nl2br(esc($orden['observaciones'] ?: 'Sin observaciones')) ?></dd>
-            <dt class="col-sm-4">Venta vinculada</dt><dd class="col-sm-8"><?= $orden['idventa'] ? '<a href="' . base_url('admin/ventas/detalles/' . $orden['idventa']) . '">Venta N.º ' . (int) $orden['idventa'] . '</a>' : '<span class="text-muted">Sin vincular</span>' ?></dd>
+            <dt class="col-sm-4">Venta vinculada</dt><dd class="col-sm-8"><?php if ($orden['idventa'] && $puedeVerVenta): ?><a href="<?= base_url('admin/ventas/detalles/' . $orden['idventa']) ?>">Venta N.º <?= (int) $orden['idventa'] ?></a><?php elseif ($orden['idventa']): ?>Venta N.º <?= (int) $orden['idventa'] ?><?php else: ?><span class="text-muted">Sin vincular</span><?php endif; ?></dd>
             <?php if ($orden['resultado']): ?><dt class="col-sm-4">Trabajo realizado</dt><dd class="col-sm-8"><?= nl2br(esc($orden['resultado'])) ?></dd><?php endif; ?>
         </dl></div></div>
         <div class="card df-sv-card mb-4">
@@ -31,29 +33,23 @@ $etiquetasEventos = [
                 <p class="small text-muted mb-3">Registra solo materiales adicionales usados en este trabajo. Los productos vendidos se controlan desde Entregas.</p>
                 <?php if (!empty($materiales)): ?>
                     <div class="table-responsive mb-3"><table class="table table-sm align-middle mb-0">
-                        <thead class="table-light"><tr><th>Material</th><th>Almacén</th><th class="text-end">Cantidad</th><th class="text-end">Movimiento</th></tr></thead>
+                        <thead class="table-light"><tr><th>Material</th><th>Almacén</th><th class="text-end">Cantidad</th><th class="text-end">Movimiento</th><th class="text-end">Estado</th></tr></thead>
                         <tbody><?php foreach ($materiales as $m): ?><tr>
                             <td><?= esc($m['producto']) ?><div class="small text-muted"><?= esc($m['fecha']) ?></div></td>
                             <td><?= esc($m['nombrelocal']) ?></td>
-                            <td class="text-end"><?= number_format((float) $m['cantidad'], 2) ?></td>
+                            <td class="text-end <?= $m['idanulacionconsumo'] ? 'text-decoration-line-through text-muted' : '' ?>"><?= number_format((float) $m['cantidad'], 2) ?></td>
                             <td class="text-end">#<?= (int) $m['idmovimiento'] ?></td>
+                            <td class="text-end"><?php if ($m['idanulacionconsumo']): ?><span class="badge text-bg-secondary" title="<?= esc($m['motivo_anulacion'], 'attr') ?>">Anulado #<?= (int) $m['idmovimiento_anulacion'] ?></span><?php elseif ($estado === 'EN_PROCESO' && $puedeAnularConsumo): ?><form action="<?= base_url('admin/servicios/anular-material/' . $orden['idorden'] . '/' . $m['idconsumo']) ?>" method="post" class="df-sv-confirm-form" data-confirmacion="¿Anular este consumo y devolver el material al stock?"><?= csrf_field() ?><input type="hidden" name="token_operacion" value="<?= esc($tokensAnulacion[(int) $m['idconsumo']], 'attr') ?>"><input name="motivo" class="form-control form-control-sm mb-1" minlength="5" maxlength="255" required placeholder="Motivo de anulación"><button class="btn btn-sm btn-outline-danger" type="submit">Anular</button></form><?php else: ?><span class="badge text-bg-success">Activo</span><?php endif; ?></td>
                         </tr><?php endforeach; ?></tbody>
                     </table></div>
                 <?php else: ?><div class="text-muted small mb-3">Todavía no se han utilizado materiales adicionales.</div><?php endif; ?>
-                <?php if ($estado === 'EN_PROCESO'): ?>
+                <?php if ($estado === 'EN_PROCESO' && $puedeConsumir): ?>
                     <form action="<?= base_url('admin/servicios/registrar-material/' . $orden['idorden']) ?>" method="post" id="formConsumoServicio">
                         <?= csrf_field() ?>
                         <input type="hidden" name="token_operacion" value="<?= esc($tokenConsumo, 'attr') ?>">
                         <div class="row g-3">
-                            <div class="col-12"><label class="form-label" for="materialKardex">Material y almacén <span class="text-danger">*</span></label>
-                                <select id="materialKardex" name="idkardex" class="form-select" required>
-                                    <option value="">Selecciona material</option>
-                                    <?php foreach ($materialesDisponibles as $p): ?>
-                                        <option value="<?= (int) $p['idkardex'] ?>" data-disponible="<?= esc(number_format((float) $p['disponible'], 2, '.', ''), 'attr') ?>">
-                                            <?= esc($p['producto'] . ' · ' . $p['nombrelocal'] . ' · Disp.: ' . number_format((float) $p['disponible'], 2)) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                            <div class="col-12"><label class="form-label" for="buscarMaterialServicio">Material y almacén <span class="text-danger">*</span></label>
+                                <input id="buscarMaterialServicio" class="form-control" type="text" list="materialesServicioOpciones" data-url="<?= base_url('admin/servicios/buscar-materiales') ?>" placeholder="Escribe material o almacén" autocomplete="off" required><datalist id="materialesServicioOpciones"></datalist><input id="materialKardex" name="idkardex" type="hidden">
                                 <div id="stockDisponibleServicio" class="form-text" aria-live="polite">Selecciona un material para consultar su disponibilidad.</div>
                             </div>
                             <div class="col-md-4"><label for="cantidadConsumo" class="form-label">Cantidad <span class="text-danger">*</span></label>
@@ -67,14 +63,14 @@ $etiquetasEventos = [
                             </button></div>
                         </div>
                     </form>
-                <?php else: ?><p class="small text-muted mb-0">Para registrar consumos, la orden debe estar <strong>En proceso</strong>.</p><?php endif; ?>
+                <?php else: ?><p class="small text-muted mb-0"><?= $estado === 'EN_PROCESO' ? 'No tienes permiso para registrar consumos.' : 'Para registrar consumos, la orden debe estar <strong>En proceso</strong>.' ?></p><?php endif; ?>
             </div>
         </div>
         <div class="card df-sv-card"><div class="card-header df-sv-section-title">Historial y seguimiento</div><div class="card-body p-3 p-lg-4"><div class="df-sv-timeline">
             <?php foreach ($historial as $evento): ?><div class="df-sv-event"><div class="d-flex flex-wrap justify-content-between gap-2"><strong><?= esc($etiquetasEventos[$evento['tipoevento']] ?? ucfirst(strtolower(str_replace('_', ' ', $evento['tipoevento'])))) ?></strong><span class="text-muted small"><?= esc(date('d/m/Y H:i', strtotime($evento['fecha']))) ?></span></div><div class="text-muted small mb-1">Por <?= esc($evento['nombreusuario']) ?><?php if ($evento['estado_nuevo']): ?> · <?= esc($estados[$evento['estado_nuevo']] ?? $evento['estado_nuevo']) ?><?php endif; ?></div><div class="small"><?= esc($evento['observacion'] ?: 'Sin observaciones') ?></div></div><?php endforeach; ?>
         </div></div></div></div>
         <div class="col-lg-5"><div class="card df-sv-card mb-4"><div class="card-header df-sv-section-title">Programación y técnico</div><div class="card-body p-3 p-lg-4"><dl class="row mb-0 df-sv-description"><dt class="col-5">Técnico</dt><dd class="col-7"><?= $orden['idtecnico'] ? esc(trim($orden['tecnico'])) : 'Sin asignar' ?></dd><dt class="col-5">Inicio</dt><dd class="col-7"><?= $orden['fecha_inicio'] ? esc(date('d/m/Y H:i', strtotime($orden['fecha_inicio']))) : 'Sin programar' ?></dd><dt class="col-5">Fin estimado</dt><dd class="col-7"><?= $orden['fecha_fin'] ? esc(date('d/m/Y H:i', strtotime($orden['fecha_fin']))) : 'Sin programar' ?></dd><?php if ($orden['fecha_finalizacion']): ?><dt class="col-5">Finalizado</dt><dd class="col-7"><?= esc(date('d/m/Y H:i', strtotime($orden['fecha_finalizacion']))) ?></dd><?php endif; ?></dl></div></div>
-        <?php if (in_array($estado, ['PENDIENTE', 'PROGRAMADO'], true)): ?>
+        <?php if ($puedeGestionar && in_array($estado, ['PENDIENTE', 'PROGRAMADO'], true)): ?>
             <div class="card df-sv-card mb-4"><div class="card-header df-sv-section-title"><i class="bi bi-calendar2-plus me-2"></i><?= $estado === 'PENDIENTE' ? 'Programar orden' : 'Reprogramar orden' ?></div><div class="card-body p-3 p-lg-4"><form method="post" action="<?= base_url('admin/servicios/reprogramar/' . $orden['idorden']) ?>" class="df-sv-confirm-form" data-confirmacion="¿Confirmas la programación de esta orden?">
                 <?= csrf_field() ?>
                 <div class="mb-3"><label for="idtecnico" class="form-label">Técnico <span class="text-danger">*</span></label><select class="form-select" id="idtecnico" name="idtecnico" required><option value="">Selecciona un técnico</option><?php foreach ($tecnicos as $t): ?><option value="<?= (int) $t['idtecnico'] ?>" <?= (int) $orden['idtecnico'] === (int) $t['idtecnico'] ? 'selected' : '' ?>><?= esc($t['nombres'] . ' ' . $t['apellidos']) ?></option><?php endforeach; ?></select></div>
@@ -84,10 +80,10 @@ $etiquetasEventos = [
                 <button type="submit" class="btn df-sv-btn w-100">Guardar programación</button>
             </form></div></div>
         <?php endif; ?>
-        <?php if (in_array($estado, ['PENDIENTE', 'PROGRAMADO', 'EN_PROCESO'], true)): ?>
+        <?php if ($puedeGestionar && in_array($estado, ['PENDIENTE', 'PROGRAMADO', 'EN_PROCESO'], true)): ?>
             <div class="card df-sv-card"><div class="card-header df-sv-section-title">Actualizar el trabajo</div><div class="card-body p-3 p-lg-4"><form action="<?= base_url('admin/servicios/cambiar-estado/' . $orden['idorden']) ?>" method="post" class="df-sv-confirm-form" data-confirmacion="¿Confirmas el cambio de estado de esta orden?">
                 <?= csrf_field() ?>
-                <div class="mb-3"><label for="notaEstado" class="form-label"><?= $estado === 'EN_PROCESO' ? 'Trabajo realizado *' : 'Observación / motivo' ?></label><textarea class="form-control" id="notaEstado" name="observacion" rows="3" maxlength="255" <?= in_array($estado, ['PENDIENTE', 'EN_PROCESO'], true) ? 'required' : '' ?> placeholder="Describe el avance o el motivo de la actualización"></textarea><div class="form-text">Para finalizar o cancelar se requiere un texto de al menos 5 caracteres.</div></div>
+                <?php if ($estado === 'EN_PROCESO'): ?><div class="mb-3"><label for="resultadoEstado" class="form-label">Resultado técnico *</label><textarea class="form-control" id="resultadoEstado" name="resultado" rows="5" maxlength="5000" minlength="5" required placeholder="Describe detalladamente el trabajo realizado"></textarea></div><div class="mb-3"><label for="notaEstado" class="form-label">Observación de cierre</label><textarea class="form-control" id="notaEstado" name="observacion" rows="2" maxlength="255" placeholder="Nota breve opcional para el historial"></textarea></div><?php else: ?><div class="mb-3"><label for="notaEstado" class="form-label">Observación / motivo</label><textarea class="form-control" id="notaEstado" name="observacion" rows="3" maxlength="255" <?= $estado === 'PENDIENTE' ? 'required' : '' ?> placeholder="Describe el avance o el motivo de la actualización"></textarea><div class="form-text">Para cancelar se requiere un texto de al menos 5 caracteres.</div></div><?php endif; ?>
                 <?php if ($estado === 'PROGRAMADO'): ?><p class="form-text mb-2">Si el servicio comienza antes de la hora programada, indica el motivo (mínimo 10 caracteres).</p><?php endif; ?>
                 <div class="d-flex flex-wrap gap-2">
                     <?php if ($estado === 'PENDIENTE' || $estado === 'PROGRAMADO'): ?><button type="submit" class="btn btn-outline-danger btn-sm" name="estado" value="CANCELADO">Cancelar orden</button><?php endif; ?>
