@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\UsuarioModel;
+use App\Services\LoginAttemptService;
 
 class Auth extends BaseController
 {
@@ -17,24 +18,14 @@ class Auth extends BaseController
 
     public function autenticar()
     {
-        $throttler = \Config\Services::throttler();
-        if ($throttler->check('login_' . md5($this->request->getIPAddress()), 5, 300) === false) {
-            return redirect()->back()->with('error', 'Demasiados intentos. Espere unos minutos.');
-        }
-
-        if (! $this->validate([
-            'nombreusuario' => 'required|max_length[50]',
-            'claveacceso'   => 'required|max_length[72]',
-        ])) {
-            return redirect()->back()->withInput()->with('error', 'Complete usuario y contraseña.');
-        }
-
-        $usuario = (new UsuarioModel())->buscarPorNombre($this->request->getPost('nombreusuario'));
-        $clave   = (string) $this->request->getPost('claveacceso');
-
-        if (! $usuario || (int) $usuario['estado'] !== 1 || ! password_verify($clave, $usuario['claveacceso'])) {
-            return redirect()->back()->withInput()->with('error', 'Usuario o contraseña incorrectos.');
-        }
+        $nombre = $this->request->getPost('nombreusuario');
+        $clave = $this->request->getPost('claveacceso');
+        $nombre = is_string($nombre) ? trim($nombre) : '';
+        $clave = is_string($clave) ? $clave : '';
+        $usuario = $nombre !== '' && strlen($nombre) <= 50 && strlen($clave) <= 72 ? $this->usuariosLogin()->buscarPorNombre($nombre) : null;
+        $resultado = $this->intentosLogin()->intentar('admin', $nombre, $this->request->getIPAddress(), $clave, $usuario['claveacceso'] ?? null, (int) ($usuario['estado'] ?? 0) === 1);
+        if ($resultado !== LoginAttemptService::OK) return redirect()->to(base_url('admin/login'))->with('error',
+            $resultado === LoginAttemptService::BLOQUEADO ? 'Demasiados intentos fallidos. Espera cinco minutos.' : 'Usuario o contraseña incorrectos.');
 
         session()->regenerate(true);
         session()->set([
@@ -50,6 +41,9 @@ class Auth extends BaseController
 
         return redirect()->to('/admin/dashboard');
     }
+
+    protected function usuariosLogin(): UsuarioModel { return new UsuarioModel(); }
+    protected function intentosLogin(): LoginAttemptService { return new LoginAttemptService(); }
 
     public function logout()
     {

@@ -35,6 +35,8 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'auth'          => \App\Filters\AuthFilter::class,
+        'productionsecurity' => \App\Filters\ProductionSecurityFilter::class,
+        'throttle' => \App\Filters\ThrottleFilter::class,
     ];
 
     /**
@@ -52,6 +54,7 @@ class Filters extends BaseFilters
      */
     public array $required = [
         'before' => [
+            'productionsecurity',
             'forcehttps', // Force Global Secure Requests
             'pagecache',  // Web Page Caching
         ],
@@ -78,9 +81,8 @@ class Filters extends BaseFilters
             // 'invalidchars',
         ],
         'after' => [
-            'toolbar',
+            'secureheaders',
             // 'honeypot',
-            // 'secureheaders',
         ],
     ];
 
