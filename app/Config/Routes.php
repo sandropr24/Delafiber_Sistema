@@ -176,9 +176,9 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static functio
         $routes->get('/', 'EntregaController::index');
         $routes->get('buscar_tabla', 'EntregaController::buscar_tabla');
         $routes->get('token-csrf', 'EntregaController::token_csrf');
-        $routes->post('cambiar_estado', 'EntregaController::cambiar_estado');
-        $routes->post('registrar-incidencia', 'EntregaController::registrar_incidencia');
-        $routes->post('cancelar-definitivamente', 'EntregaController::cancelar_definitivamente');
+        $routes->post('cambiar_estado', 'EntregaController::cambiar_estado', ['filter' => 'auth:Administrador,Operador']);
+        $routes->post('registrar-incidencia', 'EntregaController::registrar_incidencia', ['filter' => 'auth:Administrador,Operador']);
+        $routes->post('cancelar-definitivamente', 'EntregaController::cancelar_definitivamente', ['filter' => 'auth:Administrador']);
         $routes->get('historial-incidencias/(:num)', 'EntregaController::historial_incidencias/$1');
     });
 });

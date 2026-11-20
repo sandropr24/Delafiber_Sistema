@@ -184,6 +184,26 @@ class App extends BaseConfig
      */
     public array $proxyIPs = [];
 
+    public function __construct()
+    {
+        parent::__construct();
+
+        $lista = env('app.proxyIPs', '');
+
+        if (is_string($lista) && trim($lista) !== '') {
+            $this->proxyIPs = [];
+
+            foreach (explode(',', $lista) as $proxy) {
+                $proxy = trim($proxy);
+
+                if ($proxy !== '') {
+                    $this->proxyIPs[$proxy] = 'X-Forwarded-For';
+                }
+            }
+        }
+    }
+
+
     /**
      * --------------------------------------------------------------------------
      * Content Security Policy
