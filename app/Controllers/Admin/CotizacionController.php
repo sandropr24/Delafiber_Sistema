@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
@@ -9,9 +10,18 @@ use Dompdf\Options;
 class CotizacionController extends BaseController
 {
     private CotizacionModel $cotizaciones;
-    public function __construct() { $this->cotizaciones = model(CotizacionModel::class); }
-    private function autorizado(): bool { return (int) session('idusuario') > 0 && in_array(session('rol'), ['Administrador', 'Vendedor', 'Operador'], true); }
-    private function denegar() { return redirect()->to(base_url('admin/dashboard'))->with('error', 'No tienes permiso para gestionar cotizaciones.'); }
+    public function __construct()
+    {
+        $this->cotizaciones = model(CotizacionModel::class);
+    }
+    private function autorizado(): bool
+    {
+        return (int) session('idusuario') > 0 && in_array(session('rol'), ['Administrador', 'Vendedor', 'Operador'], true);
+    }
+    private function denegar()
+    {
+        return redirect()->to(base_url('admin/dashboard'))->with('error', 'No tienes permiso para gestionar cotizaciones.');
+    }
 
     public function index()
     {
@@ -25,14 +35,21 @@ class CotizacionController extends BaseController
             $consulta->where('e.codigo', $filtros['estado']);
             if (in_array($filtros['estado'], ['BORRADOR', 'EMITIDA', 'ACEPTADA'], true)) $consulta->where('c.fechavencimiento >=', date('Y-m-d'));
         } else $filtros['estado'] = '';
-        $total = (clone $consulta)->countAllResults(); $paginas = max(1, (int) ceil($total / 25));
+        $total = (clone $consulta)->countAllResults();
+        $paginas = max(1, (int) ceil($total / 25));
         $pagina = min($paginas, max(1, (int) $this->request->getGet('pagina')));
         $cotizaciones = $consulta->orderBy('c.idcotizacion', 'DESC')->limit(25, ($pagina - 1) * 25)->get()->getResultArray();
         return view('cotizaciones/index', compact('cotizaciones', 'filtros', 'total', 'pagina', 'paginas') + ['titulo' => 'Cotizaciones', 'esAdmin' => session('rol') === 'Administrador']);
     }
 
-    public function crear() { return $this->formulario(); }
-    public function editar(int $id) { return $this->formulario($id); }
+    public function crear()
+    {
+        return $this->formulario();
+    }
+    public function editar(int $id)
+    {
+        return $this->formulario($id);
+    }
     private function formulario(int $id = 0)
     {
         if (!$this->autorizado()) return $this->denegar();
@@ -80,15 +97,25 @@ class CotizacionController extends BaseController
     public function cambiarEstado(int $id)
     {
         if (!$this->autorizado()) return $this->denegar();
-        try { $this->cotizaciones->cambiarEstado($id, (string) $this->request->getPost('estado'), (int) session('idusuario')); return redirect()->to(base_url('admin/cotizaciones/detalles/' . $id))->with('mensaje', 'Estado actualizado.'); }
-        catch (\Throwable $e) { log_message('error', 'Estado cotización: ' . $e->getMessage()); return redirect()->to(base_url('admin/cotizaciones/detalles/' . $id))->with('error', $e instanceof \InvalidArgumentException ? $e->getMessage() : 'No se pudo actualizar el estado.'); }
+        try {
+            $this->cotizaciones->cambiarEstado($id, (string) $this->request->getPost('estado'), (int) session('idusuario'));
+            return redirect()->to(base_url('admin/cotizaciones/detalles/' . $id))->with('mensaje', 'Estado actualizado.');
+        } catch (\Throwable $e) {
+            log_message('error', 'Estado cotización: ' . $e->getMessage());
+            return redirect()->to(base_url('admin/cotizaciones/detalles/' . $id))->with('error', $e instanceof \InvalidArgumentException ? $e->getMessage() : 'No se pudo actualizar el estado.');
+        }
     }
 
     public function convertirPedido(int $id)
     {
         if (!$this->autorizado()) return $this->denegar();
-        try { $pedido = $this->cotizaciones->convertirAPedido($id, (int) session('idusuario')); return redirect()->to(base_url('admin/pedidos/detalles/' . $pedido))->with('mensaje', 'Pedido creado desde la cotización, sin cobrar ni reservar stock.'); }
-        catch (\Throwable $e) { log_message('error', 'Convertir cotización: ' . $e->getMessage()); return redirect()->to(base_url('admin/cotizaciones/detalles/' . $id))->with('error', $e instanceof \InvalidArgumentException ? $e->getMessage() : 'No se pudo convertir la cotización.'); }
+        try {
+            $pedido = $this->cotizaciones->convertirAPedido($id, (int) session('idusuario'));
+            return redirect()->to(base_url('admin/pedidos/detalles/' . $pedido))->with('mensaje', 'Pedido creado desde la cotización, sin cobrar ni reservar stock.');
+        } catch (\Throwable $e) {
+            log_message('error', 'Convertir cotización: ' . $e->getMessage());
+            return redirect()->to(base_url('admin/cotizaciones/detalles/' . $id))->with('error', $e instanceof \InvalidArgumentException ? $e->getMessage() : 'No se pudo convertir la cotización.');
+        }
     }
 
     public function series()
@@ -102,8 +129,13 @@ class CotizacionController extends BaseController
     public function guardarSerie()
     {
         if (!$this->autorizado()) return $this->denegar();
-        try { $this->cotizaciones->configurarSerie((int) $this->request->getPost('idlinea'), strtoupper(trim((string) $this->request->getPost('prefijo'))), (int) $this->request->getPost('numero_inicial'), (int) session('idusuario'), trim((string) $this->request->getPost('nombre_linea'))); return redirect()->to(base_url('admin/cotizaciones/series'))->with('mensaje', 'Numeración configurada. Los números ya asignados se conservan.'); }
-        catch (\Throwable $e) { log_message('error', 'Serie cotización: ' . $e->getMessage()); return redirect()->to(base_url('admin/cotizaciones/series'))->with('error', $e instanceof \InvalidArgumentException ? $e->getMessage() : 'No se pudo configurar la serie.'); }
+        try {
+            $this->cotizaciones->configurarSerie((int) $this->request->getPost('idlinea'), strtoupper(trim((string) $this->request->getPost('prefijo'))), (int) $this->request->getPost('numero_inicial'), (int) session('idusuario'), trim((string) $this->request->getPost('nombre_linea')));
+            return redirect()->to(base_url('admin/cotizaciones/series'))->with('mensaje', 'Numeración configurada. Los números ya asignados se conservan.');
+        } catch (\Throwable $e) {
+            log_message('error', 'Serie cotización: ' . $e->getMessage());
+            return redirect()->to(base_url('admin/cotizaciones/series'))->with('error', $e instanceof \InvalidArgumentException ? $e->getMessage() : 'No se pudo configurar la serie.');
+        }
     }
 
     public function pdf(int $id)
@@ -114,9 +146,15 @@ class CotizacionController extends BaseController
         $detalles = $this->cotizaciones->detalles($id);
         $cliente = json_decode($cotizacion['cliente_snapshot'] ?? 'null', true) ?: ['nombre' => $cotizacion['cliente']];
         $empresa = array_column(db_connect()->table('configuracion')->whereIn('clave', ['empresa_ruc', 'empresa_direccion', 'empresa_telefono', 'empresa_email'])->get()->getResultArray(), 'valor', 'clave');
-        $ruta = FCPATH . 'img/Delafiber.png'; $logo = is_readable($ruta) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ruta)) : null;
-        $options = new Options(); $options->set('isRemoteEnabled', false); $options->set('defaultFont', 'DejaVu Sans');
-        $pdf = new Dompdf($options); $pdf->loadHtml(view('cotizaciones/pdf', compact('cotizacion', 'detalles', 'cliente', 'empresa', 'logo')), 'UTF-8'); $pdf->setPaper('A4', 'portrait'); $pdf->render();
+        $ruta = FCPATH . 'img/Delafiber.png';
+        $logo = is_readable($ruta) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ruta)) : null;
+        $options = new Options();
+        $options->set('isRemoteEnabled', false);
+        $options->set('defaultFont', 'DejaVu Sans');
+        $pdf = new Dompdf($options);
+        $pdf->loadHtml(view('cotizaciones/pdf', compact('cotizacion', 'detalles', 'cliente', 'empresa', 'logo')), 'UTF-8');
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->render();
         $disposicion = $this->request->getGet('descargar') === '1' ? 'attachment' : 'inline';
         return $this->response->setHeader('Content-Type', 'application/pdf')->setHeader('Cache-Control', 'private, no-store')->setHeader('Content-Disposition', $disposicion . '; filename="' . $cotizacion['numero'] . '.pdf"')->setBody($pdf->output());
     }

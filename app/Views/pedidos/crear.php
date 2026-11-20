@@ -75,7 +75,14 @@
                                     <option value="PORCENTAJE">Porcentaje (%)</option>
                                     <option value="MONTO">Monto (S/)</option>
                                 </select>
-                                <div id="camposDescuentoPedido" hidden><label for="valorDescuentoPedido" class="form-label">Valor</label><input id="valorDescuentoPedido" name="valordescuento" type="number" min="0.01" step="0.01" class="form-control mb-2"><label for="motivoDescuentoPedido" class="form-label">Motivo</label><input id="motivoDescuentoPedido" name="motivodescuento" maxlength="300" minlength="5" class="form-control"></div>
+                                <div id="camposDescuentoPedido" hidden><label for="valorDescuentoPedido" class="form-label">Valor</label><input id="valorDescuentoPedido" name="valordescuento" type="number" min="0.01" step="0.01" class="form-control mb-2"><label for="motivoDescuentoPedido" class="form-label">Motivo</label><input list="motivosPedido" id="motivoDescuentoPedido" name="motivodescuento" maxlength="300" minlength="5" class="form-control"></div>
+                                <datalist id="motivosPedido">
+                                    <option value="Compra por volumen">
+                                    <option value="Promoción">
+                                    <option value="Negación Comercial">
+                                    <option value="Cliente Frecuente">
+                                    <option value="Cortesía Comercial">
+                                </datalist>
                             </details><?php else: ?><input type="hidden" name="tipodescuento" value="NINGUNO"><input type="hidden" name="valordescuento" value="0"><?php endif; ?>
                         <div class="pedido-importe"><span>Subtotal</span><strong id="subtotalPedido">S/ 0.00</strong></div>
                         <div class="pedido-importe"><span>Descuento</span><strong id="descuentoPedido">S/ 0.00</strong></div>

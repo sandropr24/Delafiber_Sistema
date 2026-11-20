@@ -10,6 +10,8 @@ $entregados = 0;
 $reprogramados = 0;
 $rechazados = 0;
 $incidencias = 0;
+$puedeGestionar = in_array((string) session()->get('rol'), ['Administrador', 'Operador'], true);
+$puedeCancelar = session()->get('rol') === 'Administrador';
 foreach ($entregas as $entrega) {
     switch ($entrega['estado']) {
         case 'PENDIENTE':
@@ -201,7 +203,7 @@ foreach ($entregas as $entrega) {
                                     <td class="text-center">
                                         <button
                                             type="button"
-                                            class="btn btn-sm btn-light border text-primary btn-gestionar-entrega"
+                                            class="btn btn-sm btn-light border text-primary btn-gestionar-entrega<?= $puedeGestionar ? '' : ' d-none' ?>"
                                             title="Gestionar Entrega"
                                             data-id="<?= (int) $item['identrega'] ?>"
                                             data-estado="<?= esc($estado, 'attr') ?>"
@@ -212,8 +214,10 @@ foreach ($entregas as $entrega) {
                                             data-telefono="<?= esc($item['telefono'] ?? '', 'attr') ?>">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-warning btn-incidencia-entrega" title="Registrar incidencia" data-id="<?= (int) $item['identrega'] ?>" data-estado="<?= esc($estado, 'attr') ?>" <?= in_array($estado, ['ENTREGADO', 'CANCELADO'], true) ? 'disabled' : '' ?>><i class="bi bi-exclamation-triangle"></i></button>
-                                        <?php if (in_array($estado, ['PENDIENTE', 'RECHAZADO', 'REPROGRAMADO', 'INCIDENCIA'], true)): ?>
+                                        <?php if ($puedeGestionar): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-warning btn-incidencia-entrega" title="Registrar incidencia" data-id="<?= (int) $item['identrega'] ?>" data-estado="<?= esc($estado, 'attr') ?>" <?= in_array($estado, ['ENTREGADO', 'CANCELADO'], true) ? 'disabled' : '' ?>><i class="bi bi-exclamation-triangle"></i></button>
+                                        <?php endif; ?>
+                                        <?php if ($puedeCancelar && in_array($estado, ['PENDIENTE', 'RECHAZADO', 'REPROGRAMADO', 'INCIDENCIA'], true)): ?>
                                             <button type="button" class="btn btn-sm btn-outline-danger btn-cancelar-entrega" title="Cancelar solo la entrega" data-id="<?= (int) $item['identrega'] ?>"><i class="bi bi-x-circle"></i></button>
                                         <?php endif; ?>
                                         <button type="button" class="btn btn-sm btn-outline-secondary btn-historial-entrega" title="Historial de incidencias" data-id="<?= (int) $item['identrega'] ?>"><i class="bi bi-clock-history"></i></button>
