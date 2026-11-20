@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Services\CajaService;
 
 class VentaAnulacionController extends BaseController
 {
@@ -18,11 +19,34 @@ class VentaAnulacionController extends BaseController
         return $usuario ? trim((string) $usuario['rol']) : null;
     }
 
+    public function reembolsar(int $idAnulacion)
+    {
+        $idUsuario = (int) session()->get('idusuario');
+        $db = \Config\Database::connect();
+        $acta = $db->table('anulaciones_comerciales')->select('idventa')->where('idanulacion', $idAnulacion)->get()->getRowArray();
+        $destino = 'admin/ventas' . ($acta ? '/detalles/' . (int) $acta['idventa'] : '');
+        try {
+            (new CajaService($db))->reembolsar(
+                $idAnulacion,
+                (int) $this->request->getPost('idpagoventa'),
+                (int) $this->request->getPost('idapertura'),
+                $this->request->getPost('monto'),
+                trim((string) $this->request->getPost('referencia')),
+                $idUsuario,
+                trim((string) $this->request->getPost('token_operacion'))
+            );
+            return redirect()->to($destino)->with('success', 'Reembolso registrado y descontado del arqueo de caja.');
+        } catch (\Throwable $e) {
+            log_message('error', 'Registrar reembolso: ' . $e->getMessage());
+            return redirect()->to($destino)->with('error', $e instanceof \InvalidArgumentException ? $e->getMessage() : 'No se pudo registrar el reembolso.');
+        }
+    }
+
     public function solicitar(int $idVenta)
     {
         $idUsuario = (int) session()->get('idusuario');
         $motivo = trim((string) $this->request->getPost('motivo'));
-        $destino = 'ventas/detalles/' . $idVenta;
+        $destino = 'admin/ventas/detalles/' . $idVenta;
 
         if ($idVenta < 1 || $idUsuario < 1 || mb_strlen($motivo) < 15 || mb_strlen($motivo) > 2000) {
             return redirect()->to($destino)->with('error', 'Ingresa un motivo de 15 a 2000 caracteres.');
@@ -103,7 +127,7 @@ class VentaAnulacionController extends BaseController
         }
 
         $db->transBegin();
-        $destino = 'ventas';
+        $destino = 'admin/ventas';
 
         try {
             $referencia = $db->table('solicitudes_anulacion')
@@ -116,7 +140,7 @@ class VentaAnulacionController extends BaseController
             }
 
             $idVenta = (int) $referencia['idventa'];
-            $destino = 'ventas/detalles/' . $idVenta;
+            $destino = 'admin/ventas/detalles/' . $idVenta;
 
             $venta = $db->query(
                 'SELECT fechaanulacion FROM ventas WHERE idventa = ? FOR UPDATE',
@@ -193,7 +217,7 @@ class VentaAnulacionController extends BaseController
             return redirect()->to('admin/ventas')->with('error', 'Confirma el control físico e indica una observación de 15 a 1000 caracteres.');
         }
 
-        $destino = 'ventas';
+        $destino = 'admin/ventas';
         $db->transBegin();
 
         try {
@@ -207,7 +231,7 @@ class VentaAnulacionController extends BaseController
             }
 
             $idVenta = (int) $referencia['idventa'];
-            $destino = 'ventas/detalles/' . $idVenta;
+            $destino = 'admin/ventas/detalles/' . $idVenta;
 
             $venta = $db->query(
                 'SELECT * FROM ventas WHERE idventa = ? FOR UPDATE',

@@ -6,6 +6,13 @@ use InvalidArgumentException;
 
 final class CobroVenta
 {
+    public const MEDIOS = ['Efectivo', 'Yape', 'Plin', 'QR', 'Tarjeta Débito/Crédito', 'Transferencia Bancaria', 'Depósito'];
+
+    public static function esEfectivo(string $metodo): bool
+    {
+        return mb_strtolower(trim($metodo)) === 'efectivo';
+    }
+
     public static function centimos($valor): int
     {
         if (!is_scalar($valor) || !preg_match('/^\d{1,8}(?:\.\d{1,2})?$/D', (string) $valor)) {
@@ -18,8 +25,11 @@ final class CobroVenta
     public static function normalizar(array $pago, string $metodo): array
     {
         $monto = self::centimos($pago['monto'] ?? '');
-        $efectivo = mb_strtolower(trim($metodo)) === 'efectivo';
+        $efectivo = self::esEfectivo($metodo);
         $recibido = $efectivo ? self::centimos($pago['montorecibido'] ?? $pago['monto']) : $monto;
+        if (!is_scalar($pago['referencia'] ?? '')) {
+            throw new InvalidArgumentException('La referencia de operación no es válida.');
+        }
         $referencia = trim((string) ($pago['referencia'] ?? ''));
         if ($monto <= 0 || $recibido < $monto) {
             throw new InvalidArgumentException('El pago debe ser positivo y el efectivo recibido debe cubrir el monto aplicado.');

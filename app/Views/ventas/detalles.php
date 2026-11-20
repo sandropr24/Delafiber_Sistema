@@ -48,6 +48,8 @@ $ventaAnulada = !empty($venta['fechaanulacion']) || !empty($anulacionComercial);
 $entregaCancelada = $estadoEntrega === 'CANCELADO';
 $puedeSolicitarAnulacion = !empty($puedeSolicitar) && !$ventaAnulada && $entregaCancelada && !$solicitudActiva;
 $esAdministradorAnulacion = !empty($puedeAutorizar);
+$esVentaCuotas = ($venta['formapago'] ?? '') === 'CUOTAS';
+$cuotasPorId = array_column($cuotas ?? [], null, 'idcuota');
 
 ?>
 <div class="container-fluid df-ventas ventas-detalle">
@@ -60,6 +62,7 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
             <p>Consulta los artículos, el pago y el seguimiento de esta operación.</p>
         </div>
         <div class="ventas-heading-acciones">
+            <?php if (session('rol') === 'Administrador'): ?><a href="<?= base_url('admin/garantias/crear?venta=' . $idVenta) ?>" class="btn ventas-btn-secundario"><i class="bi bi-shield-check" aria-hidden="true"></i> Registrar garantía</a><?php endif; ?>
             <a href="<?= base_url('admin/ventas/nota-pdf/' . $idVenta) ?>" class="btn ventas-btn-secundario" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Nota de venta</a>
             <a href="<?= base_url('admin/ventas') ?>" class="btn ventas-btn-secundario"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver al historial</a>
         </div>
@@ -126,6 +129,17 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
         </div>
     </div>
 
+    <?php if ($esVentaCuotas): ?>
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header ventas-section-header"><span class="ventas-resumen-icono"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span><div><h2>Cronograma de cuotas</h2><p>Pago inicial: <?= esc($moneda($venta['montoinicial'] ?? 0)) ?> · <?= (int) ($venta['nrocuotas'] ?? count($cuotas ?? [])) ?> cuotas <?= esc(mb_strtolower((string) ($venta['frecuenciacuotas'] ?? ''))) ?></p></div></div>
+        <div class="card-body p-0"><div class="table-responsive"><table class="table align-middle mb-0"><thead class="table-light"><tr><th class="ps-3">Cuota</th><th>Vencimiento</th><th>Estado</th><th class="text-end">Importe</th><th class="text-end">Pagado</th><th class="text-end pe-3">Pendiente</th></tr></thead><tbody>
+        <?php foreach ($cuotas ?? [] as $cuota): $pendienteCuota = max(0, (float) $cuota['monto'] - (float) $cuota['montopagado']); $vencida = $cuota['estado'] !== 'PAGADA' && $cuota['fechavencimiento'] < date('Y-m-d'); ?>
+            <tr><td class="ps-3 fw-semibold">N.º <?= (int) $cuota['nrocuota'] ?></td><td><?= esc(date('d/m/Y', strtotime($cuota['fechavencimiento']))) ?></td><td><?php if ($vencida): ?><span class="badge text-bg-danger">Vencida</span><?php elseif ($cuota['estado'] === 'PAGADA'): ?><span class="badge text-bg-success">Pagada</span><?php elseif ($cuota['estado'] === 'PARCIAL'): ?><span class="badge text-bg-warning">Parcial</span><?php else: ?><span class="badge text-bg-secondary">Pendiente</span><?php endif; ?></td><td class="text-end"><?= esc($moneda($cuota['monto'])) ?></td><td class="text-end"><?= esc($moneda($cuota['montopagado'])) ?></td><td class="text-end pe-3 fw-semibold"><?= esc($moneda($pendienteCuota)) ?></td></tr>
+        <?php endforeach; ?>
+        </tbody></table></div></div>
+    </div>
+    <?php endif; ?>
+
     <div class="row g-3 mb-3">
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100">
@@ -145,7 +159,14 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
                                     </tr>
                                     <?php else: foreach ($pagos as $pago): ?>
                                         <tr>
-                                            <td class="ps-3"><?= esc($pago['tipopago'] ?? 'No especificado') ?>
+                                             <td class="ps-3"><?= esc($pago['tipopago'] ?? 'No especificado') ?>
+                                                <?php if (!empty($pago['idcuota']) && isset($cuotasPorId[$pago['idcuota']])): ?><small class="d-block text-muted">Cuota N.º <?= (int) $cuotasPorId[$pago['idcuota']]['nrocuota'] ?></small><?php endif; ?>
+                                                <?php if (!empty($pago['idapertura'])): ?><small class="d-block text-muted">Apertura #<?= (int) $pago['idapertura'] ?></small><?php endif; ?>
+                                                <?php if (!empty($pago['banco'])): ?><small class="d-block"><?= esc($pago['banco'] . ' · ' . $pago['numerocuenta']) ?></small><?php endif; ?>
+                                                <?php if (!empty($pago['referencia'])): ?><small class="d-block">Operación: <?= esc($pago['referencia']) ?></small><?php endif; ?>
+                                                <?php if (!empty($pago['voucher']) && (session('rol') === 'Administrador' || (int) $pago['idusuariocobro'] === (int) session('idusuario'))): ?>
+                                                    <a class="small" target="_blank" rel="noopener" href="<?= base_url('admin/caja/voucher/' . (int) $pago['idpagoventa']) ?>">Ver voucher</a>
+                                                <?php endif; ?>
                                                 <?php if ((float) ($pago['vuelto'] ?? 0) > 0): ?>
                                                     <small class="d-block text-muted">Recibido: <?= esc($moneda($pago['montorecibido'])) ?> · Vuelto: <?= esc($moneda($pago['vuelto'])) ?></small>
                                                 <?php endif; ?>
@@ -160,6 +181,25 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
                 </div>
                 <?php if ($pagos): ?><div class="card-footer bg-white d-flex justify-content-between"><span class="fw-semibold">Total registrado</span><span class="fw-semibold"><?= esc($moneda($totalPagado)) ?></span></div><?php endif; ?>
             </div>
+            <?php if (!$ventaAnulada && (float) $saldoCobro > 0): ?>
+                <form class="card card-body border-0 shadow-sm mt-3" method="post" enctype="multipart/form-data" action="<?= base_url('admin/ventas/cobrar/' . $idVenta) ?>">
+                    <?= csrf_field() ?><input type="hidden" name="token_operacion" value="<?= esc(bin2hex(random_bytes(32)), 'attr') ?>">
+                    <h3 class="h6">Registrar cobro posterior</h3><p class="small text-muted">Saldo pendiente: <?= esc($moneda($saldoCobro)) ?>. Los pagos electrónicos exigen cuenta, operación y voucher.</p>
+                    <div class="row g-2">
+                        <div class="col-md-6"><label class="form-label">Caja abierta</label><select name="idapertura" class="form-select" required><option value="">Selecciona</option><?php foreach ($aperturasCobro as $fila): ?><option value="<?= (int) $fila['idapertura'] ?>"><?= esc($fila['caja'] . ' #' . $fila['idapertura']) ?></option><?php endforeach; ?></select></div>
+                        <div class="col-md-6"><label class="form-label">Medio</label><select name="pago[idtipopago]" class="form-select" required><option value="">Selecciona</option><?php foreach ($mediosCobro as $fila): ?><option value="<?= (int) $fila['idtipopago'] ?>"><?= esc($fila['tipopago']) ?></option><?php endforeach; ?></select></div>
+                        <div class="col-md-4"><label class="form-label">Monto aplicado</label><input type="number" name="pago[monto]" min="0.01" max="<?= esc($saldoCobro, 'attr') ?>" step="0.01" class="form-control" required></div>
+                        <div class="col-md-4"><label class="form-label">Efectivo recibido</label><input type="number" name="pago[montorecibido]" min="0.01" step="0.01" class="form-control"><small class="text-muted">Solo para efectivo.</small></div>
+                        <div class="col-md-4"><label class="form-label">Cuenta destino</label><select name="pago[idcuenta]" class="form-select"><option value="">No aplica</option><?php foreach ($cuentasCobro as $fila): ?><option value="<?= (int) $fila['idcuenta'] ?>"><?= esc($fila['banco'] . ' · ' . $fila['numerocuenta']) ?></option><?php endforeach; ?></select></div>
+                        <div class="col-md-4"><label class="form-label">Número de operación</label><input name="pago[referencia]" maxlength="50" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label">Voucher</label><input type="file" name="voucher" accept="image/jpeg,image/png,image/webp" class="form-control"></div>
+                        <div class="col-md-4"><label class="form-label">Técnico que cobró</label><select name="idtecnicocobro" class="form-select"><option value="">No aplica</option><?php foreach ($tecnicosCobro as $fila): ?><option value="<?= (int) $fila['idtecnico'] ?>" <?= (int) ($entregaComercial['idtecnico'] ?? 0) === (int) $fila['idtecnico'] ? 'selected' : '' ?>><?= esc(trim($fila['nombres'] . ' ' . $fila['apellidos'])) ?></option><?php endforeach; ?></select></div>
+                        <?php if ($cuotasCobro): ?><div class="col-md-4"><label class="form-label">Cuota</label><select name="idcuota" class="form-select" <?= $esVentaCuotas ? 'required' : '' ?>><option value=""><?= $esVentaCuotas ? 'Selecciona la cuota' : 'Sin cuota específica' ?></option><?php foreach ($cuotasCobro as $fila): $pendiente = max(0, (float) $fila['monto'] - (float) $fila['montopagado']); ?><option value="<?= (int) $fila['idcuota'] ?>">Cuota <?= (int) $fila['nrocuota'] ?> · <?= esc($moneda($pendiente)) ?> · vence <?= esc(date('d/m/Y', strtotime($fila['fechavencimiento']))) ?></option><?php endforeach; ?></select></div><?php endif; ?>
+                    </div>
+                    <button class="btn btn-primary mt-3 align-self-start" <?= !$aperturasCobro ? 'disabled' : '' ?>>Guardar cobro</button>
+                    <?php if (!$aperturasCobro): ?><p class="text-warning small mt-2 mb-0">Debes abrir una caja del mismo local antes de cobrar.</p><?php endif; ?>
+                </form>
+            <?php endif; ?>
         </div>
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100">
@@ -186,7 +226,22 @@ $esAdministradorAnulacion = !empty($puedeAutorizar);
         <div class="card-header ventas-section-header"><span class="ventas-resumen-icono"><i class="bi bi-clock-history" aria-hidden="true"></i></span><div><h2>Seguimiento comercial</h2><p>Historial de solicitudes y anulaciones.</p></div></div>
         <div class="card-body">
             <?php if ($anulacionComercial): ?>
-                <div class="alert alert-warning small">Esta venta tiene un registro de anulación comercial.</div>
+                <div class="alert alert-warning small">Esta venta fue anulada. Pagado: <?= esc($moneda($anulacionComercial['monto_pagado'])) ?> · Pendiente de reembolso: <?= esc($moneda($anulacionComercial['monto_pendiente_reembolso'])) ?> · Estado: <?= esc($anulacionComercial['estado_reembolso']) ?>.</div>
+                <?php if ($reembolsos): ?><div class="table-responsive mb-3"><table class="table table-sm"><thead><tr><th>Fecha</th><th>Medio</th><th>Usuario</th><th>Referencia</th><th class="text-end">Monto</th></tr></thead><tbody><?php foreach ($reembolsos as $reembolso): ?><tr><td><?= esc($fecha($reembolso['fecha'])) ?></td><td><?= esc($reembolso['tipopago']) ?></td><td><?= esc($reembolso['nombreusuario']) ?></td><td><?= esc($reembolso['referencia'] ?? '—') ?></td><td class="text-end"><?= esc($moneda($reembolso['monto'])) ?></td></tr><?php endforeach; ?></tbody></table></div><?php endif; ?>
+                <?php if ($esAdministradorAnulacion && $anulacionComercial['estado_reembolso'] === 'PENDIENTE'): ?>
+                    <form action="<?= base_url('admin/ventas/reembolsar/' . (int) $anulacionComercial['idanulacion']) ?>" method="post" class="card card-body mb-3">
+                        <?= csrf_field() ?><input type="hidden" name="token_operacion" value="<?= esc(bin2hex(random_bytes(32)), 'attr') ?>">
+                        <h3 class="h6">Registrar devolución efectiva de dinero</h3>
+                        <div class="row g-2">
+                            <div class="col-md-3"><label class="form-label">Pago original</label><select name="idpagoventa" class="form-select" required><?php foreach ($pagos as $pago): ?><option value="<?= (int) $pago['idpagoventa'] ?>"><?= esc(($pago['tipopago'] ?? 'Pago') . ' · ' . $moneda($pago['monto'])) ?></option><?php endforeach; ?></select></div>
+                            <div class="col-md-3"><label class="form-label">Caja que devuelve</label><select name="idapertura" class="form-select" required><option value="">Selecciona</option><?php foreach ($aperturasReembolso as $apertura): ?><option value="<?= (int) $apertura['idapertura'] ?>"><?= esc($apertura['caja'] . ' #' . $apertura['idapertura']) ?></option><?php endforeach; ?></select></div>
+                            <div class="col-md-2"><label class="form-label">Monto</label><input type="number" name="monto" min="0.01" max="<?= esc($anulacionComercial['monto_pendiente_reembolso'], 'attr') ?>" step="0.01" class="form-control" required></div>
+                            <div class="col-md-4"><label class="form-label">Referencia (obligatoria si no es efectivo)</label><input name="referencia" maxlength="50" class="form-control"></div>
+                        </div>
+                        <button class="btn btn-danger mt-3 align-self-start" <?= !$aperturasReembolso ? 'disabled' : '' ?> onclick="return confirm('¿Confirmas que el dinero ya fue devuelto al cliente?');">Registrar reembolso</button>
+                        <?php if (!$aperturasReembolso): ?><p class="text-warning small mt-2 mb-0">Abre una caja en el local de la venta para registrar la devolución.</p><?php endif; ?>
+                    </form>
+                <?php endif; ?>
             <?php endif; ?>
             <?php if ($solicitudActiva): ?>
                 <div class="alert alert-info small">Existe una solicitud de anulación activa: <?= esc(str_replace('_', ' ', (string) ($solicitudActiva['estado'] ?? ''))) ?>.</div>

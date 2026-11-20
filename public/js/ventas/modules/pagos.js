@@ -1,7 +1,49 @@
-import { $, $$, money, normalizar, alertar } from './utils.js';
+import { $, $$, money, normalizar, alertar, leer } from './utils.js';
 import { cantidadValida } from './inventario.js';
 
 let filas, descuentoVenta;
+export function crearSoporteElectronico(celda, id) {
+  const cuenta = document.createElement("select");
+  cuenta.name = `pagos[${id}][idcuenta]`;
+  cuenta.className = "form-select form-select-sm mt-2 pago-cuenta";
+  cuenta.required = true;
+  cuenta.setAttribute("aria-label", "Cuenta destino");
+  const opciones = [{ idcuenta: "", banco: "Seleccione cuenta destino", numerocuenta: "" }, ...leer("cuentas", [])];
+  for (const datos of opciones) {
+    const opcion = document.createElement("option");
+    opcion.value = String(datos.idcuenta);
+    opcion.textContent = `${datos.banco} ${datos.numerocuenta}`.trim();
+    cuenta.appendChild(opcion);
+  }
+  celda.appendChild(cuenta);
+  const label = document.createElement("label");
+  label.className = "small text-muted mt-2 d-block";
+  label.textContent = "Foto del voucher (hasta 4 MB)";
+  const archivo = document.createElement("input");
+  archivo.type = "file";
+  archivo.name = `voucher_pagos[${id}]`;
+  archivo.accept = "image/jpeg,image/png,image/webp";
+  archivo.className = "form-control form-control-sm pago-voucher";
+  archivo.required = true;
+  archivo.addEventListener("change", () => {
+    const foto = archivo.files?.[0];
+    archivo.setCustomValidity(foto && foto.size > 4 * 1024 * 1024 ? "El voucher no puede superar 4 MB." : "");
+  });
+  label.appendChild(archivo);
+  celda.appendChild(label);
+}
+
+export function sincronizarCaja() {
+  const select = $("selectCaja");
+  if (!select) return;
+  const local = $("selectLocal").value;
+  for (const opcion of select.options) {
+    if (opcion.value) opcion.disabled = opcion.dataset.local !== local;
+  }
+  const disponibles = [...select.options].filter(opcion => opcion.value && !opcion.disabled);
+  if (!disponibles.some(opcion => opcion.value === select.value)) select.value = disponibles.length === 1 ? disponibles[0].value : "";
+  $("avisoCajaVenta").hidden = disponibles.length > 0;
+}
 const avisoPagos =
   '<tr id="filaSinPagos"><td colspan="3" class="text-center text-muted py-2 small">Sin pagos asignados.</td></tr>';
 
@@ -35,6 +77,7 @@ export function totalizarPagos() {
   );
   $("lblVuelto").textContent = money(vuelto);
   previsualizarVuelto();
+  actualizarPlanCuotas();
   $("estadoCobro").textContent =
     diferencia === 0 && total > 0
       ? "Pago completo. Vuelto en efectivo: " + money(vuelto)
@@ -43,6 +86,7 @@ export function totalizarPagos() {
 }
 export function actualizarConfirmacion() {
   const form = $("formVenta");
+  const formaPago = $("formaPago")?.value || "CONTADO";
   const total = Math.round(Number($("inputTotal").value || 0) * 100);
   const pagado = $$(".input-monto-pago").reduce(
     (sum, input) => sum + Math.round(Number(input.value || 0) * 100),
@@ -55,17 +99,24 @@ export function actualizarConfirmacion() {
   );
   const descuentoError = descuentoVenta().error;
   const errorInventario = filas().map(row => cantidadValida(row, Number(row.querySelector('.input-cantidad').value))).find(Boolean);
+  const contraentrega = $("cobroContraentrega")?.checked && $("tipoentrega")?.value === "DOMICILIO";
+  const pagoValido = formaPago === "CONTADO"
+    ? pagado === total
+    : formaPago === "CUOTAS"
+      ? pagado < total
+      : pagado < total && (pagado > 0 || contraentrega);
+  if ($("selectCaja")) $("selectCaja").required = pagado > 0;
   const formularioValido = form.checkValidity();
   $("btnConfirmarVenta").disabled =
     $("btnConfirmarVenta").dataset.sending === "1" ||
     !filas().length ||
     total <= 0 ||
-    pagado !== total ||
+    !pagoValido ||
     !recibidoValido ||
     !formularioValido ||
     !!descuentoError ||
     !!errorInventario;
-  const etiquetas = { idlinea: 'Línea', idcanal: 'Canal', idestado: 'Estado', idcliente: 'Cliente', buscarClienteVenta: 'Cliente', direccion_entrega: 'Dirección de entrega', telefono_entrega: 'Teléfono de entrega' };
+  const etiquetas = { idlinea: 'Línea', idcanal: 'Canal', idestado: 'Estado', idcliente: 'Cliente', idapertura: 'Caja abierta', buscarClienteVenta: 'Cliente', tipoentrega: 'Modalidad de entrega', direccion_entrega: 'Dirección de entrega', telefono_entrega: 'Teléfono de entrega' };
   const pendientes = [...new Set([...form.elements]
     .filter(campo => campo.willValidate && !campo.validity.valid)
     .map(campo => etiquetas[campo.name] || etiquetas[campo.id] ||
@@ -80,7 +131,7 @@ export function actualizarConfirmacion() {
   else {
     estado = pagado === total
       ? 'Pago completo. Vuelto en efectivo: ' + $('lblVuelto').textContent + '.'
-      : pagado < total ? 'Pendiente de pago: ' + money((total - pagado) / 100) + '. Agregue el pago para continuar.'
+      : pagado < total ? 'Saldo posterior: ' + money((total - pagado) / 100) + (formaPago === 'CONTADO' ? '. Agregue el pago para continuar.' : '.')
       : 'Los pagos superan el total. Revise los montos aplicados.';
     if (avisos.length) estado += ' ' + avisos.join(' ');
   }
@@ -97,6 +148,36 @@ export function saldoPendienteCentimos() {
     0,
     Math.round(Number($("inputTotal").value || 0) * 100) - pagado,
   );
+}
+
+function actualizarPlanCuotas() {
+  const panel = $("planCuotas");
+  if (!panel) return;
+  const activo = $("formaPago")?.value === "CUOTAS";
+  panel.hidden = !activo;
+  for (const campo of [$("numeroCuotas"), $("frecuenciaCuotas"), $("primeraFechaCuota")]) {
+    campo.disabled = !activo;
+    campo.required = activo;
+  }
+  const contraentrega = $("cobroContraentrega");
+  if (contraentrega) {
+    if (activo) contraentrega.checked = false;
+    contraentrega.disabled = activo;
+  }
+  if (!activo) return;
+  const cuotas = Number($("numeroCuotas").value || 0);
+  const saldo = saldoPendienteCentimos();
+  const fecha = $("primeraFechaCuota").value;
+  const preview = $("previewCuotas");
+  if (!Number.isInteger(cuotas) || cuotas < 1 || cuotas > 120 || saldo < cuotas || !fecha) {
+    preview.textContent = "Completa un número de cuotas, frecuencia y primera fecha válidos.";
+    return;
+  }
+  const base = Math.floor(saldo / cuotas);
+  const resto = saldo % cuotas;
+  const primera = (base + (resto > 0 ? 1 : 0)) / 100;
+  const ultima = base / 100;
+  preview.textContent = `${cuotas} cuotas · primera ${money(primera)} · última ${money(ultima)} · saldo financiado ${money(saldo / 100)}.`;
 }
 export function previsualizarVuelto() {
   const efectivo =
@@ -121,6 +202,11 @@ export function previsualizarVuelto() {
 
 export function inicializarPagos(dependencias) {
   ({ filas, descuentoVenta } = dependencias);
+  $("selectLocal")?.addEventListener("change", sincronizarCaja);
+  $("formaPago")?.addEventListener("change", () => { actualizarPlanCuotas(); actualizarConfirmacion(); });
+  for (const campo of [$("numeroCuotas"), $("frecuenciaCuotas"), $("primeraFechaCuota")]) campo?.addEventListener("input", () => { actualizarPlanCuotas(); actualizarConfirmacion(); });
+  $("cobroContraentrega")?.addEventListener("change", actualizarConfirmacion);
+  $("tipoentrega")?.addEventListener("change", actualizarConfirmacion);
   $("inputMontoPago").addEventListener("input", previsualizarVuelto);
   $("inputRecibidoPago").addEventListener("input", previsualizarVuelto);
   $("btnCompletarPago")?.addEventListener("click", () => {
@@ -135,6 +221,7 @@ export function inicializarPagos(dependencias) {
     $("inputRecibidoPago").value = $("inputMontoPago").value;
     previsualizarVuelto();
   });
+  actualizarPlanCuotas();
   $$('[data-efectivo]').forEach((boton) => {
     boton.addEventListener("click", () => {
       const efectivo = [...$("selectTipoPago").options].find(
@@ -215,7 +302,10 @@ export function inicializarPagos(dependencias) {
     ref.placeholder = "Referencia";
     ref.required = !efectivo;
     ref.setAttribute("aria-label", "Referencia de operación");
-    if (!efectivo) celda.appendChild(ref);
+    if (!efectivo) {
+      celda.appendChild(ref);
+      crearSoporteElectronico(celda, tipo.value);
+    }
     if (efectivo) {
       const label = document.createElement("label");
       label.className = "small text-muted mt-1";

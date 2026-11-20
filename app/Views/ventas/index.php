@@ -15,6 +15,8 @@
 
 <?php
 $cantidadVentas = count($ventas ?? []);
+$totalVentasFiltradas = isset($pager) ? $pager->getTotal('ventas') : $cantidadVentas;
+$paginaVentas = isset($pager) ? $pager->getCurrentPage('ventas') : 1;
 $cantidadAnuladas = count(array_filter($ventas ?? [], static fn($venta) => !empty($venta['fechaanulacion'])));
 ?>
 <div class="container-fluid df-ventas ventas-historial">
@@ -26,12 +28,14 @@ $cantidadAnuladas = count(array_filter($ventas ?? [], static fn($venta) => !empt
             <h1>Ventas</h1>
             <p>Consulta tus comprobantes y da seguimiento a cada operación.</p>
         </div>
-        <div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="<?= base_url('admin/ventas/cuotas') ?>" class="btn ventas-btn-secundario"><i class="bi bi-calendar2-week" aria-hidden="true"></i> Cartera de cuotas<?php if (!empty($cuotasVencidas)): ?><span class="badge text-bg-danger ms-1"><?= (int) $cuotasVencidas ?></span><?php endif; ?></a>
             <a href="<?= base_url('admin/ventas/crear') ?>" class="btn ventas-btn-principal">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i> Nueva venta
             </a>
         </div>
     </header>
+    <?php if (!empty($cuotasVencidas)): ?><div class="alert alert-warning d-flex align-items-center justify-content-between gap-3"><span><i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Hay <strong><?= (int) $cuotasVencidas ?></strong> <?= (int) $cuotasVencidas === 1 ? 'cuota vencida' : 'cuotas vencidas' ?> pendientes de cobro.</span><a class="btn btn-sm btn-outline-dark" href="<?= base_url('admin/ventas/cuotas') ?>">Revisar cartera</a></div><?php endif; ?>
 
     <div class="ventas-indicadores" aria-label="Resumen del listado filtrado">
         <?php foreach ([
@@ -41,7 +45,7 @@ $cantidadAnuladas = count(array_filter($ventas ?? [], static fn($venta) => !empt
         ] as [$etiqueta, $cantidad, $icono, $clase]): ?>
             <div class="ventas-indicador <?= $clase ?>">
                 <span class="ventas-indicador-icono"><i class="bi <?= $icono ?>" aria-hidden="true"></i></span>
-                <div><span><?= $etiqueta ?></span><strong><?= $cantidad ?></strong><small>En este listado</small></div>
+                <div><span><?= $etiqueta ?></span><strong><?= $cantidad ?></strong><small>En esta página</small></div>
             </div>
         <?php endforeach; ?>
     </div>
@@ -65,7 +69,7 @@ $cantidadAnuladas = count(array_filter($ventas ?? [], static fn($venta) => !empt
         <div class="card-header ventas-section-header">
             <span class="ventas-resumen-icono"><i class="bi bi-receipt" aria-hidden="true"></i></span>
             <div><h2>Historial de ventas</h2><p>Información comercial, entregas y comprobantes.</p></div>
-            <span class="ventas-etiqueta ms-auto"><?= $cantidadVentas ?> registros</span>
+            <span class="ventas-etiqueta ms-auto"><?= (int) $totalVentasFiltradas ?> registros</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -85,7 +89,7 @@ $cantidadAnuladas = count(array_filter($ventas ?? [], static fn($venta) => !empt
                         <?php if (!empty($ventas) && is_array($ventas)): ?>
                             <?php foreach ($ventas as $key => $venta): ?>
                                 <tr>
-                                    <td class="ps-4 text-muted fw-semibold"><?= $key + 1 ?></td>
+                                    <td class="ps-4 text-muted fw-semibold"><?= (($paginaVentas - 1) * 25) + $key + 1 ?></td>
                                     <td>
                                         <strong class="ventas-comprobante-numero"><?= esc(trim(($venta['serie'] ?? '') . '-' . $venta['numero'], '-')) ?></strong>
                                         <span class="ventas-texto-secundario"><?= esc(str_replace('_', ' ', $venta['tipodocumento'])) ?></span>
@@ -142,6 +146,11 @@ $cantidadAnuladas = count(array_filter($ventas ?? [], static fn($venta) => !empt
                 </table>
             </div>
         </div>
+        <?php if (isset($pager)): ?>
+        <div class="card-footer d-flex justify-content-center py-3">
+            <?= $pager->links('ventas', 'default_full') ?>
+        </div>
+        <?php endif; ?>
     </div>
 
 

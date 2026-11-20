@@ -18,13 +18,16 @@ class PagoVentaModel extends Model
         'idcuota',
         'idapertura',
         'idusuariocobro',
+        'idtecnicocobro',
+        'identrega',
         'idcuenta',
         'voucher',
         'monto',
         'referencia',
         'montorecibido',
         'vuelto',
-        'fecha'
+        'fecha',
+        'token_operacion'
     ];
 
     protected $useTimestamps = false;

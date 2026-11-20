@@ -11,9 +11,26 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static functio
 
     $routes->get('login', 'Auth::login');
     $routes->post('login', 'Auth::autenticar');
-    $routes->get('logout', 'Auth::logout', ['filter' => 'auth']);
+    $routes->post('logout', 'Auth::logout', ['filter' => 'auth']);
 
     $routes->get('dashboard', 'Dashboard::index', ['filter' => 'auth:Administrador,Operador,Vendedor']);
+
+    $routes->group('caja', ['filter' => 'auth:Administrador,Vendedor'], static function ($routes) {
+        $routes->get('', 'CajaController::index');
+        $routes->post('abrir', 'CajaController::abrir');
+        $routes->get('detalles/(:num)', 'CajaController::detalles/$1');
+        $routes->post('cerrar/(:num)', 'CajaController::cerrar/$1');
+        $routes->post('movimiento/(:num)', 'CajaController::movimiento/$1');
+        $routes->post('cierre-administrativo/(:num)', 'CajaController::cierreAdministrativo/$1', ['filter' => 'auth:Administrador']);
+        $routes->get('reportes', 'ReporteCajaController::index');
+        $routes->get('voucher/(:num)', 'CajaController::voucher/$1');
+        $routes->get('configuracion', 'CajaController::configuracion', ['filter' => 'auth:Administrador']);
+        $routes->post('crear-caja', 'CajaController::crearCaja', ['filter' => 'auth:Administrador']);
+        $routes->post('estado-caja/(:num)', 'CajaController::estadoCaja/$1', ['filter' => 'auth:Administrador']);
+        $routes->post('crear-cuenta', 'CajaController::crearCuenta', ['filter' => 'auth:Administrador']);
+        $routes->post('estado-cuenta/(:num)', 'CajaController::estadoCuenta/$1', ['filter' => 'auth:Administrador']);
+        $routes->post('completar-medios', 'CajaController::completarMedios', ['filter' => 'auth:Administrador']);
+    });
 
     $routes->group('locales', ['filter' => 'auth:Administrador'], static function ($routes) {
         $routes->get('/', 'LocalController::index');
@@ -80,12 +97,17 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static functio
     $routes->group('ventas', ['filter' => 'auth:Administrador,Vendedor'], static function ($routes) {
         $routes->get('', 'VentaController::index');
         $routes->get('crear', 'VentaController::crear');
+        $routes->get('buscar-articulos', 'ArticuloApi::buscar');
+        $routes->get('articulo/(:num)', 'ArticuloApi::detalle/$1');
+        $routes->get('cuotas', 'VentaController::cuotas');
         $routes->post('guardar', 'VentaController::guardar');
         $routes->get('detalles/(:num)', 'VentaController::detalles/$1');
+        $routes->post('cobrar/(:num)', 'VentaController::cobrar/$1');
         $routes->get('nota-pdf/(:num)', 'NotaVentaPdfController::generar/$1');
         $routes->post('solicitar-anulacion/(:num)', 'VentaAnulacionController::solicitar/$1');
         $routes->post('revisar-anulacion/(:num)', 'VentaAnulacionController::revisar/$1', ['filter' => 'auth:Administrador']);
         $routes->post('ejecutar-anulacion/(:num)', 'VentaAnulacionController::ejecutar/$1', ['filter' => 'auth:Administrador']);
+        $routes->post('reembolsar/(:num)', 'VentaAnulacionController::reembolsar/$1', ['filter' => 'auth:Administrador']);
     });
 
     $routes->group('pedidos', ['filter' => 'auth:Administrador,Vendedor'], static function ($routes) {

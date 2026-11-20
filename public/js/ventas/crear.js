@@ -10,7 +10,7 @@ import {
   descuentoVenta,
   totalizar,
 } from "./modules/carrito.js";
-import { inicializarPagos, actualizarConfirmacion } from "./modules/pagos.js";
+import { inicializarPagos, actualizarConfirmacion, sincronizarCaja } from "./modules/pagos.js";
 import {
   inicializarClienteBorrador,
   restaurarBorrador,
@@ -39,7 +39,8 @@ function iniciarVenta() {
   inicializarCarrito(estado);
   inicializarPagos({ filas, descuentoVenta });
   inicializarClienteBorrador(estado);
-  restaurarBorrador();
+  restaurarBorrador().catch(error => console.error("Error al restaurar venta", error));
+  sincronizarCaja();
   mostrarDisponibilidad();
   totalizar();
   function actualizarResumenVenta() {
@@ -49,10 +50,10 @@ function iniciarVenta() {
       : "Sin seleccionar";
     $("resumenLocalVenta").textContent =
       estado.local.selectedOptions[0]?.textContent.trim() || "Sin seleccionar";
-    $("resumenEntregaVenta").textContent =
-      $("tipoentrega").value === "DOMICILIO"
-        ? "Entrega a domicilio"
-        : "Recojo en tienda";
+    $("resumenEntregaVenta").textContent = {
+      DOMICILIO: "Entrega a domicilio",
+      RECOJO_TIENDA: "Recojo en tienda",
+    }[$("tipoentrega").value] || "Por confirmar";
   }
   $("formVenta").addEventListener("change", actualizarResumenVenta);
   actualizarResumenVenta();
@@ -122,11 +123,24 @@ function iniciarVenta() {
         );
       }
     }
-    if (Math.round(pagado * 100) !== Math.round(total * 100)) {
+    const formaPago = $("formaPago")?.value || "CONTADO";
+    const contraentrega = $("cobroContraentrega")?.checked && $("tipoentrega")?.value === "DOMICILIO";
+    const totalCentimos = Math.round(total * 100);
+    const pagadoCentimos = Math.round(pagado * 100);
+    const pagoValido = formaPago === "CONTADO"
+      ? pagadoCentimos === totalCentimos
+      : formaPago === "CUOTAS"
+        ? pagadoCentimos < totalCentimos
+        : pagadoCentimos < totalCentimos && (pagadoCentimos > 0 || contraentrega);
+    if (!pagoValido) {
       event.preventDefault();
       return alertar(
         "Pago incorrecto",
-        `Los pagos (${money(pagado)}) deben coincidir con el total (${money(total)}).`,
+        formaPago === "CONTADO"
+          ? `Los pagos (${money(pagado)}) deben coincidir con el total (${money(total)}).`
+          : formaPago === "CUOTAS"
+            ? "El pago inicial debe ser menor al total y el saldo debe quedar distribuido en cuotas."
+            : "Registra un adelanto menor al total o marca el cobro contraentrega a domicilio.",
         "error",
       );
     }

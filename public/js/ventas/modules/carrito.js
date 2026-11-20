@@ -8,6 +8,40 @@ let estado, local, carrito, selectores, buscador, grupos, botonesFiltro;
 let tipoVisible = 'todos';
 let restaurandoArticulo = false;
 
+/** Inserta un artículo en los selectores existentes sin precargar el catálogo. */
+export function registrarArticulo(articulo, componentesCombo = []) {
+    const tipo = String(articulo.tipo || '').toUpperCase();
+    const selector = ({ PRODUCTO: $('selectProducto'), SERVICIO: $('selectServicio'), COMBO: $('selectCombo') })[tipo];
+    if (!selector) throw new Error('Tipo de artículo desconocido');
+    const id = String(articulo.idproducto);
+    if (!/^\d+$/.test(id)) throw new Error('ID de artículo inválido');
+    let opcion = [...selector.options].find(o => o.value === id);
+    if (!opcion) { opcion = new Option(String(articulo.nombre || ''), id); selector.add(opcion); }
+    opcion.disabled = false;
+    opcion.hidden = false;
+    opcion.dataset.nombre = String(articulo.nombre || '');
+    opcion.dataset.precio = String(articulo.precioventa ?? 0);
+    opcion.dataset.unidad = String(articulo.unidad || 'UND');
+    opcion.dataset.codigo = String(articulo.codigobarras || '');
+    opcion.dataset.controlastock = String(Number(articulo.controlastock) === 1 ? 1 : 0);
+    opcion.dataset.controlaserie = String(Number(articulo.controlaserie) === 1 ? 1 : 0);
+    opcion.dataset.combo = tipo === 'COMBO' ? '1' : '0';
+    if (tipo === 'COMBO') estado.combos[id] = componentesCombo;
+    return selector;
+}
+
+export async function cargarArticuloPorId(id) {
+    const base = $('ventaConfig')?.dataset.urlDetalle;
+    if (!base || !/^\d+$/.test(String(id))) throw new Error('URL o ID inválido');
+    const response = await fetch(`${base}/${encodeURIComponent(id)}`, {
+        credentials: 'same-origin', headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) throw new Error(`No se pudo cargar el artículo ${id} (HTTP ${response.status})`);
+    const data = await response.json();
+    if (!data.articulo) throw new Error('Respuesta de artículo inválida');
+    return registrarArticulo(data.articulo, data.componentes || []);
+}
+
 export function restaurarArticulo(selector, cantidad) {
     restaurandoArticulo = true;
     try {
@@ -34,6 +68,18 @@ export function entrega() {
     [$("direccion_entrega"), $("telefono_entrega")].forEach((el) => {
         if (el) el.required = domicilio;
     });
+    for (const id of ["direccion_entrega", "telefono_entrega", "referencia_entrega", "idtecnico_entrega"]) {
+        const campo = $(id);
+        if (campo) campo.disabled = !domicilio;
+    }
+    for (const id of ["direccion_entrega", "referencia_entrega"]) {
+        const campo = $(id);
+        if (campo) {
+            campo.setCustomValidity(domicilio && Array.from(campo.value.trim()).length > 150
+                ? "La dirección y la referencia de entrega admiten hasta 150 caracteres. Revise el dato sin recortarlo automáticamente."
+                : "");
+        }
+    }
 }
 
 function filtrarArticulos() {
@@ -191,38 +237,140 @@ export function inicializarCarrito(compartido) {
     grupos = $$('.articulo-grupo');
     botonesFiltro = $$('#filtrosArticulos [data-tipo]');
 
-    const busquedaArticulos = crearBusqueda(
-        buscador,
-        $("resultadosArticulos"),
-        () =>
-            selectores
-                .filter(
-                    (s) => !s.closest(".articulo-grupo").classList.contains("d-none"),
-                )
-                .flatMap((selector) =>
-                    [...selector.options]
-                        .filter((x) => x.value)
-                        .map((opcion) => ({
-                            selector,
-                            opcion,
-                            value: opcion.value,
-                            codigo: opcion.dataset.codigo || opcion.value,
-                            label: `${opcion.dataset.nombre || opcion.textContent.trim()} · S/ ${Number(opcion.dataset.precio).toFixed(2)}`,
-                        })),
-                ),
-        (item) => {
-            item.selector.value = item.opcion.value;
-            item.selector.dispatchEvent(new Event("change"));
-            $("inputCantidad").value = "1";
-            $("btnAgregarItem").click();
 
-            if (!estado.activo) {
-                buscador.value = "";
-                filtrarArticulos();
-                buscador.focus();
+    const listaResultados = $("resultadosArticulos");
+    let solicitudBusqueda = null;
+    let temporizadorBusqueda = null;
+    let secuenciaBusqueda = 0;
+    let resultadosRemotos = [];
+    let indiceBusqueda = -1;
+    const urlBusqueda = buscador?.dataset.urlBusqueda;
+    const cerrarBusqueda = () => {
+        listaResultados.hidden = true;
+        buscador.setAttribute("aria-expanded", "false");
+        buscador.removeAttribute("aria-activedescendant");
+    };
+    const marcarBusqueda = () => {
+        [...listaResultados.querySelectorAll('[role="option"]')].forEach((n, i) => {
+            n.setAttribute("aria-selected", String(i === indiceBusqueda));
+        });
+        if (indiceBusqueda >= 0) {
+            buscador.setAttribute("aria-activedescendant", `${listaResultados.id}-${indiceBusqueda}`);
+        } else {
+            buscador.removeAttribute("aria-activedescendant");
+        }
+    };
+    async function seleccionarRemoto(articulo) {
+        try {
+            // La respuesta de detalle incluye los componentes del combo.
+            const selector = await cargarArticuloPorId(String(articulo.idproducto));
+            selector.value = String(articulo.idproducto);
+            selector.dispatchEvent(new Event('change'));
+            $('inputCantidad').value = '1';
+            $('btnAgregarItem').click();
+            cerrarBusqueda();
+            buscador.value = '';
+            buscador.focus();
+        } catch (error) {
+            alertar('Artículo no disponible', error.message);
+        }
+    }
+    function mostrarResultadosRemotos(mensaje = "") {
+        listaResultados.replaceChildren();
+        resultadosRemotos.forEach((articulo, i) => {
+            const boton = document.createElement("button");
+            boton.type = "button";
+            boton.id = `${listaResultados.id}-${i}`;
+            boton.setAttribute("role", "option");
+            boton.tabIndex = -1;
+            boton.textContent = `${articulo.nombre} · S/ ${Number(articulo.precioventa || 0).toFixed(2)} · ${articulo.tipo}`;
+            boton.addEventListener("mousedown", (e) => e.preventDefault());
+            boton.addEventListener("click", () => seleccionarRemoto(articulo));
+            listaResultados.appendChild(boton);
+        });
+        if (!resultadosRemotos.length) {
+            const aviso = document.createElement("div");
+            aviso.className = "venta-sin-resultados";
+            aviso.textContent = mensaje || "Sin coincidencias";
+            listaResultados.appendChild(aviso);
+        }
+        listaResultados.hidden = false;
+        buscador.setAttribute("aria-expanded", "true");
+        marcarBusqueda();
+    }
+    async function buscarRemoto() {
+        const texto = buscador.value.trim();
+        const actual = ++secuenciaBusqueda;
+        solicitudBusqueda?.abort();
+        if (texto.length < 2 || texto.length > 80) {
+            resultadosRemotos = [];
+            cerrarBusqueda();
+            return;
+        }
+        solicitudBusqueda = new AbortController();
+        const tipos = tipoVisible === "todos"
+            ? ["PRODUCTO", "SERVICIO", "COMBO"]
+            : [tipoVisible.toUpperCase()];
+        try {
+            const respuestas = await Promise.all(tipos.map(async (tipo) => {
+                const url = new URL(urlBusqueda, window.location.href);
+                url.searchParams.set("q", texto);
+                url.searchParams.set("tipo", tipo);
+                const respuesta = await fetch(url, {
+                    signal: solicitudBusqueda.signal,
+                    credentials: "same-origin",
+                    headers: { Accept: "application/json" },
+                });
+                if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+                const datos = await respuesta.json();
+                if (!Array.isArray(datos.articulos)) throw new Error("Respuesta inválida");
+                return datos.articulos;
+            }));
+            if (actual !== secuenciaBusqueda) return;
+            resultadosRemotos = respuestas.flat().slice(0, 20);
+            indiceBusqueda = resultadosRemotos.length ? 0 : -1;
+            mostrarResultadosRemotos();
+            $("resultadoBusqueda").textContent = `${resultadosRemotos.length} resultado(s) de búsqueda.`;
+        } catch (error) {
+            if (actual !== secuenciaBusqueda || error.name === "AbortError") return;
+            resultadosRemotos = [];
+            indiceBusqueda = -1;
+            mostrarResultadosRemotos("No se pudo consultar el catálogo. Use el selector manual o reintente.");
+        }
+    }
+    if (urlBusqueda) {
+        buscador.addEventListener("input", () => {
+            clearTimeout(temporizadorBusqueda);
+            solicitudBusqueda?.abort();
+            temporizadorBusqueda = setTimeout(buscarRemoto, 300);
+        });
+        buscador.addEventListener("focus", () => {
+            if (buscador.value.trim().length >= 2) buscarRemoto();
+        });
+        buscador.addEventListener("blur", () => setTimeout(cerrarBusqueda, 150));
+        buscador.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") return cerrarBusqueda();
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.preventDefault();
+                if (!resultadosRemotos.length) return;
+                indiceBusqueda = (indiceBusqueda + (e.key === "ArrowDown" ? 1 : -1) + resultadosRemotos.length) % resultadosRemotos.length;
+                marcarBusqueda();
             }
-        },
-    );
+            if (e.key === "Enter") {
+                e.preventDefault();
+                if (!listaResultados.hidden && resultadosRemotos[indiceBusqueda]) seleccionarRemoto(resultadosRemotos[indiceBusqueda]);
+            }
+        });
+    } else {
+        crearBusqueda(
+            buscador, listaResultados,
+            () => selectores.flatMap((selector) => [...selector.options].filter((o) => o.value).map((opcion) => ({
+                selector, opcion, value: opcion.value, codigo: opcion.dataset.codigo || opcion.value,
+                label: `${opcion.dataset.nombre || opcion.textContent.trim()} · S/ ${Number(opcion.dataset.precio).toFixed(2)}`,
+            }))),
+            (item) => { item.selector.value = item.opcion.value; item.selector.dispatchEvent(new Event("change")); $("btnAgregarItem").click(); },
+        );
+    }
 
     buscador?.addEventListener("input", filtrarArticulos);
 
@@ -236,12 +384,18 @@ export function inicializarCarrito(compartido) {
             });
 
             filtrarArticulos();
+            if (urlBusqueda && buscador.value.trim().length >= 2) {
+                clearTimeout(temporizadorBusqueda);
+                temporizadorBusqueda = setTimeout(buscarRemoto, 300);
+            }
         }),
     );
 
     filtrarArticulos();
 
     $("tipoentrega")?.addEventListener("change", entrega);
+    $("direccion_entrega")?.addEventListener("input", entrega);
+    $("referencia_entrega")?.addEventListener("input", entrega);
     entrega();
 
     selectores.forEach((selector) =>

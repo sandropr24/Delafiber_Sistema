@@ -14,6 +14,10 @@ class DetVentaModel extends Model
         'idproducto',
         'cantidad',
         'precioventa',
-        'costounitario'
+        'costounitario',
+        'garantiameses',
+        'nombre_snapshot',
+        'tipo_snapshot',
+        'controlaserie_snapshot'
     ];
 }

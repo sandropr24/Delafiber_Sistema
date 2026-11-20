@@ -1,6 +1,6 @@
 import { $, $$, leer, alertarCliente } from './utils.js';
 import { crearBusqueda } from './buscador.js';
-import { fila, entrega, totalizar, restaurarArticulo } from './carrito.js';
+import { fila, entrega, totalizar, restaurarArticulo, cargarArticuloPorId } from './carrito.js';
 import { actualizarConfirmacion } from './pagos.js';
 
 let draftKey, selectores, carrito, buscador;
@@ -25,13 +25,23 @@ export function configurarDocumentoExpress() {
   documento.maxLength = longitud;
   documento.pattern = `[0-9]{${longitud}}`;
   documento.title = `Ingrese exactamente ${longitud} dígitos para ${tipo}.`;
+  const nombre = form.elements.nombre;
+  nombre.maxLength = tipo === "RUC" ? 150 : 100;
+  nombre.minLength = 2;
+  if (tipo === "RUC") {
+    nombre.removeAttribute("pattern");
+    nombre.title = "Ingrese la razón social (hasta 150 caracteres).";
+  } else {
+    nombre.pattern = "[^0-9]+";
+    nombre.title = "El nombre no debe contener números.";
+  }
 }
 
 export function guardarBorrador() {
   if (restaurando) return;
   try {
     const datos = [...new FormData($("formVenta")).entries()].filter(
-      ([name]) => name !== "csrf_test_name" && !name.startsWith("csrf_"),
+      ([name, valor]) => name !== "csrf_test_name" && !name.startsWith("csrf_") && !name.startsWith("voucher_pagos[") && typeof valor === "string",
     );
     sessionStorage.setItem(
       draftKey,
@@ -41,7 +51,7 @@ export function guardarBorrador() {
     console.warn("No se pudo conservar el borrador.", error);
   }
 }
-export function restaurarBorrador() {
+export async function restaurarBorrador() {
   let entradas = [];
   const esPedido = Number($('ventaConfig').dataset.pedido) > 0 || Number($('ventaConfig').dataset.cotizacion) > 0;
   const old = leer("old", {});
@@ -86,6 +96,7 @@ export function restaurarBorrador() {
       name === 'idcotizacion' ||
       name.startsWith("detalles[") ||
       name.startsWith("pagos[")
+      || name.startsWith("voucher_pagos[")
     )
       continue;
     const campo = formulario.elements.namedItem(name);
@@ -99,12 +110,17 @@ export function restaurarBorrador() {
     /^detalles\[[^\]]+\]\[idproducto\]$/.test(name),
   )) {
     const base = name.slice(0, -"[idproducto]".length);
-    const selector = selectores.find((select) =>
+    let selector = selectores.find((select) =>
       [...select.options].some((opt) => opt.value === value),
     );
     if (!selector) {
-      omitidos++;
-      continue;
+      try {
+        selector = await cargarArticuloPorId(value);
+      } catch (error) {
+        console.warn('Artículo del borrador no disponible:', value, error);
+        omitidos++;
+        continue;
+      }
     }
     selector.value = value;
     restaurarArticulo(selector, datos.get(base + "[cantidad]") || "1");
@@ -130,6 +146,8 @@ export function restaurarBorrador() {
     $("inputReferenciaPago").value = datos.get(base + "[referencia]") || "";
     $("inputRecibidoPago").value = datos.get(base + "[montorecibido]") || "";
     $("btnAgregarPago").click();
+    const cuenta = $("pago-" + value)?.querySelector(".pago-cuenta");
+    if (cuenta) cuenta.value = datos.get(base + "[idcuenta]") || "";
   }
   for (const input of $$(".selector-serie", carrito)) {
     if (datos.has(input.name)) input.value = datos.get(input.name);
@@ -205,7 +223,9 @@ export function inicializarClienteBorrador(estado) {
   $("formClienteExpress")?.elements.nombre.addEventListener(
     "input",
     (event) => {
-      event.target.value = event.target.value.replace(/\p{N}/gu, "");
+      if ($("formClienteExpress").elements.tipodoc.value !== "RUC") {
+        event.target.value = event.target.value.replace(/\p{N}/gu, "");
+      }
     },
   );
   $("formClienteExpress")?.elements.telefono.addEventListener(
@@ -222,7 +242,8 @@ export function inicializarClienteBorrador(estado) {
     const documento = String(datos.get("documento") || "").trim();
     const nombre = String(datos.get("nombre") || "").trim();
     const telefono = String(datos.get("telefono") || "").trim();
-    if (/\p{N}/u.test(nombre))
+    const tipoDoc = String(datos.get("tipodoc") || "");
+    if (tipoDoc !== "RUC" && /\p{N}/u.test(nombre))
       return alertarCliente("Nombre inválido", "El nombre no debe contener números.");
     if (telefono && !/^[0-9]{1,9}$/.test(telefono)) {
       return alertarCliente(
@@ -231,7 +252,6 @@ export function inicializarClienteBorrador(estado) {
       );
     }
 
-    const tipoDoc = String(datos.get("tipodoc") || "");
     const patronDocumento =
       tipoDoc === "DNI" ? /^\d{8}$/ : tipoDoc === "RUC" ? /^\d{11}$/ : null;
     if (!patronDocumento || !patronDocumento.test(documento)) {

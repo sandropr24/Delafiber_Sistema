@@ -1056,3 +1056,9 @@ SECCIÓN: CLIENTE Y AUTOCOMPLETADO
     transition: none !important;
   }
 }
+.venta-plan-cuotas {
+  padding: 16px;
+  border: 1px solid #ded3e7;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #faf7fc, #fff);
+}
