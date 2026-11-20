@@ -77,11 +77,14 @@
                                     </td>
                                     <td class="small text-secondary"><?= esc($u['telefono'] ?? '-') ?></td>
                                     <td class="text-center">
-                                        <a href="<?= base_url('admin/usuarios/cambiarestado/' . $u['idusuario']) ?>"
-                                            class="badge <?= $u['estado'] == 1 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?> text-decoration-none px-2 py-1 fw-semibold"
+                                        <form action="<?= base_url('admin/usuarios/cambiarestado/' . $u['idusuario']) ?>" method="post" class="d-inline">
+                                            <?= csrf_field() ?>
+                                        <button type="submit"
+                                            class="badge <?= $u['estado'] == 1 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?> px-2 py-1 fw-semibold"
                                             title="Clic para alternar estado">
                                             <?= $u['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
-                                        </a>
+                                        </button>
+                                        </form>
                                     </td>
                                     <td class="pe-4 text-end">
                                         <div class="d-flex justify-content-end gap-1">
@@ -174,8 +177,15 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="claveacceso" class="form-label small fw-bold text-secondary text-uppercase" id="labelClave">Contraseña <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" id="claveacceso" name="claveacceso">
-                            <small class="text-muted d-block mt-1" id="helpClave" style="display: none; font-size: 0.75rem;">Dejar en blanco para conservar la actual.</small>
+                            <input type="password" class="form-control" id="claveacceso" name="claveacceso" minlength="12" maxlength="72" autocomplete="new-password">
+                            <small class="text-muted d-block mt-1" id="helpClave" style="display: none; font-size: 0.75rem;">Mínimo 12 caracteres. Al editar, dejar en blanco para conservar la actual.</small>
+                        </div>
+                        <div class="col-12">
+                            <label for="idlocales" class="form-label small fw-bold text-secondary text-uppercase">Locales autorizados</label>
+                            <select class="form-select" id="idlocales" name="idlocales[]" multiple size="<?= min(5, max(2, count($locales))) ?>">
+                                <?php foreach ($locales as $local): ?><option value="<?= (int) $local['idlocal'] ?>"><?= esc($local['nombrelocal']) ?></option><?php endforeach; ?>
+                            </select>
+                            <small class="text-muted">Obligatorio para administradores y operadores. Controla dónde pueden consumir inventario.</small>
                         </div>
                     </div>
                 </div>

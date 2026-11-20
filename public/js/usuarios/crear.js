@@ -12,6 +12,7 @@ function limpiarFormulario() {
   document.getElementById("nombreusuario").value = "";
   document.getElementById("idrol").value = "";
   document.getElementById("claveacceso").value = "";
+  document.querySelectorAll("#idlocales option").forEach(opcion => { opcion.selected = true; });
 
   document.getElementById("claveacceso").required = true;
   document.getElementById("helpClave").style.display = "none";
@@ -31,6 +32,8 @@ function editarUsuario(u) {
   document.getElementById("nombreusuario").value = u.nombreusuario;
   document.getElementById("idrol").value = u.idrol || "";
   document.getElementById("claveacceso").value = "";
+  const locales = new Set((u.idlocales || []).map(Number));
+  document.querySelectorAll("#idlocales option").forEach(opcion => { opcion.selected = locales.has(Number(opcion.value)); });
 
   document.getElementById("claveacceso").required = false;
   document.getElementById("helpClave").style.display = "block";

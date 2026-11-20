@@ -5,6 +5,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\LocalModel;
 use CodeIgniter\HTTP\RedirectResponse;
+use Throwable;
 
 class LocalController extends BaseController
 {
@@ -17,21 +18,20 @@ class LocalController extends BaseController
 
     public function index(): string
     {
-        $data = [
+        return view('locales/index', [
             'titulo'  => 'Sedes y Locales',
-            'locales' => $this->localModel->orderBy('nombrelocal', 'ASC')->findAll(),
-        ];
-
-        return view('locales/index', $data);
+            'locales' => $this->localModel
+                ->orderBy('nombrelocal', 'ASC')
+                ->findAll(),
+        ]);
     }
 
     public function guardar(): RedirectResponse
     {
-
         $reglas = [
-            'nombrelocal' => 'required|min_length[3]|max_length[255]',
-            'direccion'   => 'required|max_length[255]',
-            'tipolocal'   => 'required|max_length[100]',
+            'nombrelocal' => 'required|min_length[3]|max_length[80]',
+            'direccion'   => 'required|max_length[150]',
+            'tipolocal'   => 'required|in_list[TIENDA,ALMACEN,OFICINA]',
         ];
 
         if (!$this->validate($reglas)) {
@@ -41,43 +41,139 @@ class LocalController extends BaseController
         }
 
         $id = $this->request->getPost('idlocal');
-        $datos = $this->request->getPost(['nombrelocal', 'direccion', 'tipolocal']);
-        $datos = array_map('trim', $datos);
 
-        if (!empty($id)) {
-            $datos['idlocal'] = $id;
-        }
-
-        if (!$this->localModel->save($datos)) {
+        if ($id !== null && $id !== '' &&
+            (!ctype_digit((string) $id) || (int) $id <= 0)) {
             return redirect()->back()
                 ->withInput()
-                ->with('errors', $this->localModel->errors());
+                ->with('error', 'El identificador del local no es válido.');
         }
 
-        $mensaje = !empty($id) ? 'Local actualizado correctamente.' : 'Local registrado correctamente.';
-        return redirect()->to(base_url('admin/locales'))->with('mensaje', $mensaje);
+        $esEdicion = $id !== null && $id !== '';
+
+        if ($esEdicion && !$this->localModel->find((int) $id)) {
+            return redirect()->to(base_url('admin/locales'))
+                ->with('error', 'El local no existe.');
+        }
+
+        $datos = [
+            'nombrelocal' => trim((string) $this->request->getPost('nombrelocal')),
+            'direccion'   => trim((string) $this->request->getPost('direccion')),
+            'tipolocal'   => trim((string) $this->request->getPost('tipolocal')),
+        ];
+
+        if ($esEdicion) {
+            $datos['idlocal'] = (int) $id;
+        }
+
+        $db = db_connect();
+
+        $db->transBegin();
+
+        try {
+            if (!$this->localModel->save($datos)) {
+                $db->transRollback();
+
+                return redirect()->back()
+                    ->withInput()
+                    ->with('errors', $this->localModel->errors());
+            }
+
+            if (!$esEdicion && $db->tableExists('usuario_local')) {
+                $idLocal = (int) $this->localModel->getInsertID();
+
+                if ($idLocal <= 0) {
+                    throw new \RuntimeException(
+                        'No se pudo obtener el identificador del local.'
+                    );
+                }
+
+                $administradores = $db->table('usuarios u')
+                    ->select('u.idusuario')
+                    ->join('roles r', 'r.idrol = u.idrol')
+                    ->where('r.rol', 'Administrador')
+                    ->get()
+                    ->getResultArray();
+
+                foreach ($administradores as $usuario) {
+                    $insertado = $db->table('usuario_local')->insert([
+                        'idusuario' => (int) $usuario['idusuario'],
+                        'idlocal'   => $idLocal,
+                    ]);
+
+                    if (!$insertado) {
+                        throw new \RuntimeException(
+                            'No se pudo asignar el local a los administradores.'
+                        );
+                    }
+                }
+            }
+
+            if (!$db->transStatus() || !$db->transCommit()) {
+                throw new \RuntimeException(
+                    'No se pudo confirmar el registro del local.'
+                );
+            }
+        } catch (Throwable $e) {
+            $db->transRollback();
+
+            log_message(
+                'error',
+                'Error al guardar local: ' . $e->getMessage()
+            );
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'No se pudo guardar el local.');
+        }
+
+        $mensaje = $esEdicion
+            ? 'Local actualizado correctamente.'
+            : 'Local registrado correctamente.';
+
+        return redirect()->to(base_url('admin/locales'))
+            ->with('mensaje', $mensaje);
     }
 
     public function eliminar($id = null): RedirectResponse
     {
-        if (empty($id) || !$this->localModel->find($id)) {
-            return redirect()->to(base_url('admin/locales'))->with('error', 'El local no existe.');
+        if (
+            $id === null ||
+            !ctype_digit((string) $id) ||
+            (int) $id <= 0 ||
+            !$this->localModel->find((int) $id)
+        ) {
+            return redirect()->to(base_url('admin/locales'))
+                ->with('error', 'El local no existe.');
         }
 
-        $db = $this->localModel->builder()->db();
+        $db = db_connect();
 
-        $enKardex = $db->table('kardex')->where('idlocal', $id)->countAllResults();
+        $enKardex = $db->table('kardex')
+            ->where('idlocal', (int) $id)
+            ->countAllResults();
+
         if ($enKardex > 0) {
             return redirect()->to(base_url('admin/locales'))
                 ->with('error', 'No se puede eliminar: el local tiene movimientos de inventario registrados.');
         }
 
         try {
-            $this->localModel->delete($id);
-            return redirect()->to(base_url('admin/locales'))->with('mensaje', 'Local eliminado correctamente.');
-        } catch (\Exception $e) {
-            log_message('error', 'Error al eliminar local: ' . $e->getMessage());
-            return redirect()->to(base_url('admin/locales'))->with('error', 'Ocurrió un error al intentar eliminar el local.');
+            if (!$this->localModel->delete((int) $id)) {
+                return redirect()->to(base_url('admin/locales'))
+                    ->with('error', 'No se pudo eliminar el local.');
+            }
+
+            return redirect()->to(base_url('admin/locales'))
+                ->with('mensaje', 'Local eliminado correctamente.');
+        } catch (Throwable $e) {
+            log_message(
+                'error',
+                'Error al eliminar local: ' . $e->getMessage()
+            );
+
+            return redirect()->to(base_url('admin/locales'))
+                ->with('error', 'Ocurrió un error al intentar eliminar el local.');
         }
     }
 }
