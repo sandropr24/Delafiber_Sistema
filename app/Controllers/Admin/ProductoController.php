@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\CategoriaModel;
 use App\Models\MarcaModel;
 use App\Models\ProductoModel;
+use App\Services\ProductoConfiguracionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 class ProductoController extends BaseController
@@ -28,6 +29,7 @@ class ProductoController extends BaseController
         'controlastock',
         'controlaserie',
         'estado',
+        'componentes_combo',
     ];
 
     protected $productoModel;
@@ -261,8 +263,15 @@ class ProductoController extends BaseController
         }
 
         $db = db_connect();
+        $erroresGuardado = [];
         $db->transBegin();
         try {
+            if ($id) {
+                $actual = (new ProductoConfiguracionService($db))->validarCambio($id, $datos);
+                if ($actual['tipo'] === 'COMBO' && $tipo !== 'COMBO') {
+                    throw new \InvalidArgumentException('No cambie el tipo de un combo existente; edite sus componentes o desactívelo.');
+                }
+            }
             $guardado = $this->productoModel->save($datos);
             if (!$guardado) {
                 throw new \RuntimeException('No se pudo guardar el producto.');
@@ -301,7 +310,10 @@ class ProductoController extends BaseController
             $db->transCommit();
         } catch (\Throwable $e) {
             $db->transRollback();
-            log_message('error', 'Error al guardar producto: ' . $e->getMessage());
+            if ($e instanceof \InvalidArgumentException) {
+                $erroresGuardado[] = $e->getMessage();
+            }
+            log_message($e instanceof \InvalidArgumentException ? 'warning' : 'error', 'Error al guardar producto: ' . $e->getMessage());
             $guardado = false;
         }
 
@@ -311,7 +323,7 @@ class ProductoController extends BaseController
             }
 
             $mensajes = array_values($this->productoModel->errors());
-            return $this->volverConErrores($mensajes ?: ['No se pudo guardar el producto. Revise los datos e intente nuevamente.']);
+            return $this->volverConErrores($erroresGuardado ?: ($mensajes ?: ['No se pudo guardar el producto. Revise los datos e intente nuevamente.']));
         }
 
         if ($nuevaImagen && !empty($actual['imagen'])) {

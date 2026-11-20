@@ -105,7 +105,12 @@
 
                 <div class="modal-body px-4 py-4">
                     <div class="row g-3 producto-form-grid">
-                        <div class="col-12 producto-section-heading"><span class="producto-step">01</span><div><div class="producto-section-title">Información general</div><div class="producto-section-subtitle">Datos para identificar el artículo en el catálogo</div></div></div>
+                        <div class="col-12 producto-section-heading"><span class="producto-step">01</span>
+                            <div>
+                                <div class="producto-section-title">Información general</div>
+                                <div class="producto-section-subtitle">Datos para identificar el artículo en el catálogo</div>
+                            </div>
+                        </div>
                         <div class="col-12 col-md-4">
                             <label for="tipo" class="form-label small fw-semibold">Tipo <span class="text-danger">*</span></label>
                             <select class="form-select" id="tipo" name="tipo" required>
@@ -161,7 +166,12 @@
                             <input type="text" class="form-control" id="codigobarras" name="codigobarras" maxlength="13">
                         </div>
 
-                        <div class="col-12 producto-section-heading"><span class="producto-step">02</span><div><div class="producto-section-title">Inventario y condiciones</div><div class="producto-section-subtitle">Configura su control y los datos comerciales de referencia</div></div></div>
+                        <div class="col-12 producto-section-heading"><span class="producto-step">02</span>
+                            <div>
+                                <div class="producto-section-title">Inventario y condiciones</div>
+                                <div class="producto-section-subtitle">Configura su control y los datos comerciales de referencia</div>
+                            </div>
+                        </div>
                         <div class="col-12 col-md-4" id="contenedorUnidad">
                             <label for="idunidad" class="form-label small fw-semibold">Unidad de medida <span class="text-danger">*</span></label>
                             <select class="form-select" id="idunidad" name="idunidad" required>
@@ -202,7 +212,12 @@
                             <div class="form-text">La serie se registra sin stock. Estará disponible cuando se registre su ingreso en Compras.</div>
                         </div>
 
-                        <div class="col-12 producto-section-heading"><span class="producto-step">03</span><div><div class="producto-section-title">Imagen del artículo</div><div class="producto-section-subtitle">Opcional: ayuda a reconocerlo durante una venta</div></div></div>
+                        <div class="col-12 producto-section-heading"><span class="producto-step">03</span>
+                            <div>
+                                <div class="producto-section-title">Imagen del artículo</div>
+                                <div class="producto-section-subtitle">Opcional: ayuda a reconocerlo durante una venta</div>
+                            </div>
+                        </div>
                         <div class="col-12 col-md-8">
                             <label for="imagen" class="form-label small fw-semibold">Imagen (opcional)</label>
                             <input type="file" class="form-control" id="imagen" name="imagen" accept="image/png, image/jpeg, image/webp" onchange="previsualizarImagen(event)">
