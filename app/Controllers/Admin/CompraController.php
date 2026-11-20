@@ -28,7 +28,9 @@ class CompraController extends BaseController
             'compras' => $compraModel->select('compras.*, proveedores.razonsocial as proveedor')
                 ->join('proveedores', 'proveedores.idproveedor = compras.idproveedor', 'left')
                 ->orderBy('compras.fechacompra', 'DESC')
-                ->findAll()
+                ->orderBy('compras.idcompra', 'DESC')
+                ->paginate(25, 'compras'),
+            'pager' => $compraModel->pager
         ];
 
         return view('compras/index', $data);

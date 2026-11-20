@@ -24,7 +24,7 @@
                 Historial de Compras
             </h6>
             <span class="badge bg-white text-dark border fw-normal px-2 py-1">
-                Total: <?= !empty($compras) ? count($compras) : 0 ?> registros
+                Total: <?= isset($pager) ? (int) $pager->getTotal('compras') : count($compras ?? []) ?> registros
             </span>
         </div>
         <div class="card-body p-0">
@@ -99,6 +99,11 @@
                 </table>
             </div>
         </div>
+        <?php if (isset($pager)): ?>
+        <div class="card-footer d-flex justify-content-center py-3">
+            <?= $pager->links('compras', 'default_full') ?>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 
