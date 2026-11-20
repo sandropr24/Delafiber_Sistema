@@ -3,6 +3,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\PedidoModel;
+use App\Services\PedidoWebCorreoService;
 
 class PedidoController extends BaseController
 {
@@ -22,10 +23,10 @@ class PedidoController extends BaseController
         if (!$this->autorizado()) return $this->denegar();
         $db = db_connect();
         $filtros = ['q' => mb_substr(trim((string) $this->request->getGet('q')), 0, 150), 'estado' => (string) $this->request->getGet('estado'), 'vendedor' => max(0, (int) $this->request->getGet('vendedor'))];
-        $consulta = $db->table('pedido p')->select("p.*, e.codigo AS estado_codigo, e.estado, COALESCE(NULLIF(pe.razonsocial, ''), CONCAT_WS(' ', pe.nombres, pe.apellidos)) AS cliente, l.nombrelocal, u.nombreusuario", false)
-            ->join('estadopedido e', 'e.idestado = p.idestado')->join('personas pe', 'pe.idpersona = p.idpersona')->join('locales l', 'l.idlocal = p.idlocal')->join('usuarios u', 'u.idusuario = p.idusuario');
+        $consulta = $db->table('pedido p')->select("p.*, e.codigo AS estado_codigo, e.estado, COALESCE(NULLIF(pe.razonsocial, ''), NULLIF(CONCAT_WS(' ', pe.nombres, pe.apellidos), ''), pw.nombre_contacto) AS cliente, l.nombrelocal, COALESCE(u.nombreusuario, 'Tienda web') AS nombreusuario", false)
+            ->join('estadopedido e', 'e.idestado = p.idestado')->join('personas pe', 'pe.idpersona = p.idpersona', 'left')->join('pedido_web pw', 'pw.idpedido = p.idpedido', 'left')->join('locales l', 'l.idlocal = p.idlocal')->join('usuarios u', 'u.idusuario = p.idusuario', 'left');
         if ($filtros['q'] !== '') {
-            $consulta->groupStart()->like('p.codigo', $filtros['q'])->orLike('pe.numerodoc', $filtros['q'])->orLike('pe.razonsocial', $filtros['q'])->orLike("CONCAT_WS(' ', pe.nombres, pe.apellidos)", $filtros['q'])->groupEnd();
+            $consulta->groupStart()->like('p.codigo', $filtros['q'])->orLike('pe.numerodoc', $filtros['q'])->orLike('pe.razonsocial', $filtros['q'])->orLike('pw.nombre_contacto', $filtros['q'])->orLike("CONCAT_WS(' ', pe.nombres, pe.apellidos)", $filtros['q'])->groupEnd();
         }
         if (in_array($filtros['estado'], ['PENDIENTE', 'CONFIRMADO', 'CONVERTIDO', 'CANCELADO'], true)) $consulta->where('e.codigo', $filtros['estado']);
         else $filtros['estado'] = '';
@@ -80,7 +81,7 @@ class PedidoController extends BaseController
         $pedido = $this->pedidos->obtener($id);
         if (!$pedido) return redirect()->to(base_url('admin/pedidos'))->with('error', 'El pedido no existe.');
         $detalles = $this->pedidos->detalles($id);
-        $historial = db_connect()->table('historial_pedido h')->select('h.*, u.nombreusuario')->join('usuarios u', 'u.idusuario = h.idusuario')->where('h.idpedido', $id)->orderBy('h.idhistorial', 'DESC')->get()->getResultArray();
+        $historial = db_connect()->table('historial_pedido h')->select("h.*, COALESCE(u.nombreusuario, 'Tienda web') AS nombreusuario", false)->join('usuarios u', 'u.idusuario = h.idusuario', 'left')->where('h.idpedido', $id)->orderBy('h.idhistorial', 'DESC')->get()->getResultArray();
         return view('pedidos/detalles', compact('pedido', 'detalles', 'historial') + ['titulo' => 'Detalle del pedido']);
     }
 
@@ -88,8 +89,12 @@ class PedidoController extends BaseController
     {
         if (!$this->autorizado()) return $this->denegar();
         try {
-            $this->pedidos->cambiarEstado($id, (string) $this->request->getPost('estado'), trim((string) $this->request->getPost('motivo')), (int) session('idusuario'));
-            return redirect()->to(base_url('admin/pedidos/detalles/' . $id))->with('mensaje', 'Estado del pedido actualizado.');
+            $estado = (string) $this->request->getPost('estado');
+            $motivo = trim((string) $this->request->getPost('motivo'));
+            $this->pedidos->cambiarEstado($id, $estado, $motivo, (int) session('idusuario'));
+            $correo = (new PedidoWebCorreoService())->cambioEstado($id, $estado, $motivo ?: null);
+            $redireccion = redirect()->to(base_url('admin/pedidos/detalles/' . $id))->with('mensaje', 'Estado del pedido actualizado.');
+            return $correo === false ? $redireccion->with('error', 'El estado se guardó, pero no se pudo enviar el correo al cliente. Contáctalo manualmente.') : $redireccion;
         } catch (\Throwable $e) {
             log_message('error', 'Estado pedido: ' . $e->getMessage());
             return redirect()->to(base_url('admin/pedidos/detalles/' . $id))->with('error', $e instanceof \InvalidArgumentException ? $e->getMessage() : 'No se pudo actualizar el pedido.');

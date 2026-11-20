@@ -3,6 +3,7 @@ namespace App\Models;
 
 use App\Libraries\CobroVenta;
 use App\Libraries\DescuentoVenta;
+use App\Libraries\EntregaPedidoWeb;
 use CodeIgniter\Model;
 use InvalidArgumentException;
 use RuntimeException;
@@ -30,8 +31,22 @@ class PedidoModel extends Model
 
     public function obtener(int $id): ?array
     {
-        return $this->db->table('pedido p')->select("p.*, e.codigo AS estado_codigo, e.estado, COALESCE(NULLIF(pe.razonsocial, ''), CONCAT_WS(' ', pe.nombres, pe.apellidos)) AS cliente, pe.numerodoc, l.nombrelocal, u.nombreusuario, v.idventa, v.fechaanulacion AS venta_anulada, co.numero AS cotizacion_numero", false)
-            ->join('estadopedido e', 'e.idestado = p.idestado')->join('personas pe', 'pe.idpersona = p.idpersona')->join('locales l', 'l.idlocal = p.idlocal')->join('usuarios u', 'u.idusuario = p.idusuario')->join('ventas v', 'v.idpedido = p.idpedido', 'left')->join('cotizacion co', 'co.idcotizacion = p.idcotizacion', 'left')->where('p.idpedido', $id)->get()->getRowArray();
+        $pedido = $this->db->table('pedido p')->select("p.*, e.codigo AS estado_codigo, e.estado, COALESCE(NULLIF(pe.razonsocial, ''), CONCAT_WS(' ', pe.nombres, pe.apellidos)) AS cliente, pe.numerodoc, l.nombrelocal, COALESCE(u.nombreusuario, 'Tienda web') AS nombreusuario, v.idventa, v.fechaanulacion AS venta_anulada, co.numero AS cotizacion_numero", false)
+            ->join('estadopedido e', 'e.idestado = p.idestado')->join('personas pe', 'pe.idpersona = p.idpersona', 'left')->join('locales l', 'l.idlocal = p.idlocal')->join('usuarios u', 'u.idusuario = p.idusuario', 'left')->join('ventas v', 'v.idpedido = p.idpedido', 'left')->join('cotizacion co', 'co.idcotizacion = p.idcotizacion', 'left')->where('p.idpedido', $id)->get()->getRowArray();
+        if ($pedido) {
+            $pedido['datos_web'] = $pedido['tipopedido'] === 'TIENDA_WEB' ? $this->datosWeb($id) : null;
+            if (($pedido['idpersona'] ?? null) === null) $pedido['cliente'] = $pedido['datos_web']['nombre_contacto'] ?? 'Cliente sin verificar';
+        }
+        return $pedido;
+    }
+
+    public function datosWeb(int $id): ?array
+    {
+        // Nunca exponer el hash de seguimiento ni los datos de la cuenta.
+        return $this->db->query(
+            'SELECT modalidad, direccion_entrega, nombre_contacto, email_contacto, telefono_contacto FROM pedido_web WHERE idpedido = ?',
+            [$id]
+        )->getRowArray();
     }
 
     public function detalles(int $id): array
@@ -174,6 +189,7 @@ class PedidoModel extends Model
             if (($nuevo === 'CONFIRMADO' && $anterior !== 'PENDIENTE') || ($nuevo === 'CANCELADO' && !in_array($anterior, ['PENDIENTE', 'CONFIRMADO'], true)) || !in_array($nuevo, ['CONFIRMADO', 'CANCELADO'], true)) throw new InvalidArgumentException('Este cambio de estado no está permitido.');
             if ($nuevo === 'CANCELADO' && (mb_strlen(trim($motivo)) < 5 || mb_strlen($motivo) > 300)) throw new InvalidArgumentException('Indica un motivo de cancelación de entre 5 y 300 caracteres.');
             if ($nuevo === 'CONFIRMADO') {
+                if ($pedido['idpersona'] === null) throw new InvalidArgumentException('Verifica el contacto y asigna un cliente desde Editar pedido antes de confirmar.');
                 if (!$this->db->table('personas')->where('idpersona', $pedido['idpersona'])->where('estado', 1)->countAllResults()) throw new InvalidArgumentException('El cliente ya no está activo.');
                 $lineas = array_map(static fn($d) => ['idproducto' => $d['idproducto'], 'cantidad' => $d['cantidad'], 'precioventa' => $d['preciounitario']], $this->detalles($id));
                 $validadas = $this->preparar($lineas, $rol);
@@ -182,8 +198,7 @@ class PedidoModel extends Model
             }
             $this->db->table('pedido')->where('idpedido', $id)->update(['idestado' => $this->estadoId($nuevo), $nuevo === 'CONFIRMADO' ? 'fecha_confirmacion' : 'fecha_cancelacion' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')]);
             $this->historial($id, $usuario, $nuevo === 'CONFIRMADO' ? 'CONFIRMACION' : 'CANCELACION', $anterior, $nuevo, trim($motivo) ?: null);
-            if (!$this->db->transStatus()) throw new RuntimeException('No se pudo actualizar el pedido.');
-            $this->db->transCommit();
+            if (!$this->db->transStatus() || !$this->db->transCommit()) throw new RuntimeException('No se pudo actualizar el pedido.');
         } catch (\Throwable $e) { $this->db->transRollback(); throw $e; }
     }
 
@@ -272,6 +287,11 @@ class PedidoModel extends Model
         $agregar('Valor del descuento', $pedido['valordescuento'], $venta['valordescuento']);
         $agregar('Motivo del descuento', $pedido['motivodescuento'], $venta['motivodescuento']);
         foreach (['subtotal' => 'Subtotal', 'descuento' => 'Descuento aplicado', 'total' => 'Total'] as $campo => $etiqueta) $agregar($etiqueta, $importe($pedido[$campo]), $importe($venta[$campo]));
+        if ($pedido['tipopedido'] === 'TIENDA_WEB') {
+            $entrega = $this->db->table('entregas')->select('tipoentrega, direccion, telefono')->where('idventa', $idVenta)->get()->getRowArray();
+            if (!$entrega) throw new RuntimeException('No se pudo comparar la entrega de la venta con la solicitud web.');
+            $cambios = array_merge($cambios, EntregaPedidoWeb::cambios($this->datosWeb($id), $entrega));
+        }
         return $cambios;
     }
 }

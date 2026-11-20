@@ -3,78 +3,87 @@
 <?= $this->section('contenido') ?>
 
 <div class="container-fluid df-page">
-<?= view('partials/ruta', ['uiSection' => 'Directorio', 'uiCurrent' => 'Clientes', 'uiSectionUrl' => null]) ?>
-<div class="df-page-heading">
-    <div>
-        <h1>Clientes</h1>
-        <p class="text-muted small mb-0">Directorio de personas y empresas para ventas y facturación.</p>
+    <?= view('partials/ruta', ['uiSection' => 'Directorio', 'uiCurrent' => 'Clientes', 'uiSectionUrl' => null]) ?>
+    <div class="df-page-heading">
+        <div>
+            <h1>Clientes</h1>
+            <p class="text-muted small mb-0">Directorio de personas y empresas para ventas y facturación.</p>
+        </div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCliente" onclick="limpiarFormulario()">
+            <i class="bi bi-person-plus me-1"></i> Nuevo Cliente
+        </button>
     </div>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCliente" onclick="limpiarFormulario()">
-        <i class="bi bi-person-plus me-1"></i> Nuevo Cliente
-    </button>
-</div>
 
-<div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr class="small text-uppercase text-secondary">
-                    <th class="ps-4" style="width: 60px;">#</th>
-                    <th>Cliente / Razón Social</th>
-                    <th>Documento</th>
-                    <th>Teléfono</th>
-                    <th>Email</th>
-                    <th>Dirección</th>
-                    <th class="text-center" style="width: 110px;">Estado</th>
-                    <th class="text-end pe-4" style="width: 100px;">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($clientes)): ?>
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-4">No hay clientes registrados en el sistema.</td>
+    <?php if ($erroresCliente = session()->getFlashdata('errors')): ?>
+        <div class="alert alert-danger" role="alert">
+            <ul class="mb-0"><?php foreach ((array) $erroresCliente as $error): ?><li><?= esc($error) ?></li><?php endforeach; ?></ul>
+        </div>
+    <?php endif; ?>
+
+    <div class="card border rounded-3 overflow-hidden shadow-sm" style="border-color: #e0e0e0 !important;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr class="small text-uppercase text-secondary">
+                        <th class="ps-4" style="width: 60px;">#</th>
+                        <th>Cliente / Razón Social</th>
+                        <th>Documento</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                        <th>Dirección</th>
+                        <th class="text-center" style="width: 110px;">Estado</th>
+                        <th class="text-end pe-4" style="width: 100px;">Acciones</th>
                     </tr>
-                <?php else: ?>
-                    <?php foreach ($clientes as $i => $c): ?>
+                </thead>
+                <tbody>
+                    <?php if (empty($clientes)): ?>
                         <tr>
-                            <td class="ps-4 text-muted small"><?= $i + 1 ?></td>
-                            <td>
-                                <div class="fw-semibold text-dark">
-                                    <?= esc(trim($c['nombres'] . ' ' . ($c['apellidos'] ?? ''))) ?>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge bg-light text-dark border"><?= esc($c['tipodoc']) ?></span>
-                                <span class="small font-monospace ms-1"><?= esc($c['numerodoc']) ?></span>
-                            </td>
-                            <td class="small text-muted"><?= esc($c['telefono'] ?? '-') ?></td>
-                            <td class="small text-muted"><?= esc($c['email'] ?? '-') ?></td>
-                            <td class="small text-muted text-truncate" style="max-width: 220px;" title="<?= esc($c['direccion'] ?? '') ?>">
-                                <?= esc($c['direccion'] ?? '-') ?>
-                            </td>
-                            <td class="text-center">
-                                <a href="<?= base_url('admin/clientes/cambiarestado/' . $c['idpersona']) ?>"
-                                    class="badge <?= (($c['estado'] ?? 1) == 1) ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?> text-decoration-none px-2 py-1 fw-semibold"
-                                    title="Clic para alternar estado">
-                                    <?= (($c['estado'] ?? 1) == 1) ? 'Activo' : 'Inactivo' ?>
-                                </a>
-                            </td>
-                            <td class="text-end pe-4">
-                                <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-light text-primary border-0"
-                                        onclick="editarCliente(<?= esc(json_encode($c, JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>)"
-                                        title="Editar">
-                                        <i class="bi bi-pencil-square fs-5"></i>
-                                    </button>
-                                </div>
-                            </td>
+                            <td colspan="8" class="text-center text-muted py-4">No hay clientes registrados en el sistema.</td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    <?php else: ?>
+                        <?php foreach ($clientes as $i => $c): ?>
+                            <tr>
+                                <td class="ps-4 text-muted small"><?= $i + 1 ?></td>
+                                <td>
+                                    <div class="fw-semibold text-dark">
+                                        <?= esc(\App\Models\PersonaModel::nombreCliente($c)) ?>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border"><?= esc($c['tipodoc']) ?></span>
+                                    <span class="small font-monospace ms-1"><?= esc($c['numerodoc']) ?></span>
+                                </td>
+                                <td class="small text-muted"><?= esc($c['telefono'] ?? '-') ?></td>
+                                <td class="small text-muted"><?= esc($c['email'] ?? '-') ?></td>
+                                <td class="small text-muted text-truncate" style="max-width: 220px;" title="<?= esc($c['direccion'] ?? '') ?>">
+                                    <?= esc($c['direccion'] ?? '-') ?>
+                                </td>
+                                <td class="text-center">
+                                    <form action="<?= base_url('admin/clientes/cambiarestado/' . $c['idpersona']) ?>" method="post" class="d-inline">
+                                        <?= csrf_field() ?>
+                                        <button type="submit"
+                                            class="badge <?= (($c['estado'] ?? 1) == 1) ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?> px-2 py-1 fw-semibold"
+                                            title="Clic para alternar estado">
+                                            <?= (($c['estado'] ?? 1) == 1) ? 'Activo' : 'Inactivo' ?>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-light text-primary border-0"
+                                            onclick="editarCliente(<?= esc(json_encode($c, JSON_HEX_APOS | JSON_HEX_QUOT), 'attr') ?>)"
+                                            title="Editar">
+                                            <i class="bi bi-pencil-square fs-5"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
 </div>
 <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
@@ -83,6 +92,7 @@
             <form action="<?= base_url('admin/clientes/guardar') ?>" method="POST" autocomplete="off">
                 <?= csrf_field() ?>
                 <input type="hidden" name="idpersona" id="idpersona">
+                <input type="hidden" name="origen_formulario" value="cliente">
 
                 <div class="modal-header py-3">
                     <h5 class="modal-title fw-bold" id="modalTitulo">Nuevo Cliente</h5>
@@ -96,23 +106,28 @@
                                 <option value="DNI">DNI</option>
                                 <option value="RUC">RUC</option>
                                 <option value="CE">C. Extranjería</option>
+                                <option value="PASAPORTE">Pasaporte</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-8">
                             <label for="numerodoc" class="form-label small fw-semibold">N° Documento <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" required pattern="\d+" title="Solo números" maxlength="8">
+                            <input type="text" class="form-control" id="numerodoc" name="numerodoc" required inputmode="numeric" pattern="[0-9]{8}" title="Ingrese exactamente 8 dígitos para DNI." minlength="8" maxlength="8">
                         </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-6" id="contenedorNombres">
                             <label for="nombres" class="form-label small fw-semibold" id="labelNombres">Nombres <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="nombres" name="nombres" required maxlength="150">
+                            <input type="text" class="form-control" id="nombres" name="nombres" required minlength="2" maxlength="100">
                         </div>
                         <div class="col-12 col-md-6" id="contenedorApellidos">
-                            <label for="apellidos" class="form-label small fw-semibold">Apellidos</label>
-                            <input type="text" class="form-control" id="apellidos" name="apellidos" maxlength="150">
+                            <label for="apellidos" class="form-label small fw-semibold">Apellidos <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="apellidos" name="apellidos" required minlength="2" maxlength="100">
+                        </div>
+                        <div class="col-12" id="contenedorRazonSocial" hidden>
+                            <label for="razonsocial" class="form-label small fw-semibold">Razón social <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="razonsocial" name="razonsocial" minlength="2" maxlength="150" disabled>
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="telefono" class="form-label small fw-semibold">Teléfono</label>
-                            <input type="text" class="form-control" id="telefono" name="telefono" pattern="\d*" title="Solo números" maxlength="9">
+                            <input type="text" class="form-control" id="telefono" name="telefono" maxlength="9">
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="email" class="form-label small fw-semibold">Correo Electrónico</label>
@@ -120,7 +135,7 @@
                         </div>
                         <div class="col-12">
                             <label for="direccion" class="form-label small fw-semibold">Dirección</label>
-                            <input type="text" class="form-control" id="direccion" name="direccion" maxlength="255">
+                            <input type="text" class="form-control" id="direccion" name="direccion" maxlength="150">
                         </div>
                     </div>
                 </div>
@@ -136,60 +151,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script>
-    function adaptarCamposDoc() {
-        const tipo = document.getElementById('tipodoc').value;
-        const labelNombres = document.getElementById('labelNombres');
-        const contenedorApellidos = document.getElementById('contenedorApellidos');
-        const inputNumDoc = document.getElementById('numerodoc');
-
-        if (tipo === 'RUC') {
-            labelNombres.innerHTML = 'Razón Social <span class="text-danger">*</span>';
-            contenedorApellidos.style.display = 'none';
-            document.getElementById('apellidos').value = '';
-            inputNumDoc.setAttribute('maxlength', '11');
-        } else if (tipo === 'DNI') {
-            labelNombres.innerHTML = 'Nombres <span class="text-danger">*</span>';
-            contenedorApellidos.style.display = 'block';
-            inputNumDoc.setAttribute('maxlength', '8');
-        } else {
-            labelNombres.innerHTML = 'Nombres <span class="text-danger">*</span>';
-            contenedorApellidos.style.display = 'block';
-            inputNumDoc.setAttribute('maxlength', '12');
-        }
-
-        const max = parseInt(inputNumDoc.getAttribute('maxlength'));
-        if (inputNumDoc.value.length > max) {
-            inputNumDoc.value = inputNumDoc.value.slice(0, max);
-        }
-    }
-
-    function limpiarFormulario() {
-        document.getElementById('modalTitulo').textContent = 'Nuevo Cliente';
-        document.getElementById('idpersona').value = '';
-        document.getElementById('tipodoc').value = 'DNI';
-        document.getElementById('numerodoc').value = '';
-        document.getElementById('nombres').value = '';
-        document.getElementById('apellidos').value = '';
-        document.getElementById('telefono').value = '';
-        document.getElementById('email').value = '';
-        document.getElementById('direccion').value = '';
-        adaptarCamposDoc();
-    }
-
-    function editarCliente(c) {
-        document.getElementById('modalTitulo').textContent = 'Editar Cliente';
-        document.getElementById('idpersona').value = c.idpersona;
-        document.getElementById('tipodoc').value = c.tipodoc || 'DNI';
-        document.getElementById('numerodoc').value = c.numerodoc || '';
-        document.getElementById('nombres').value = c.nombres || '';
-        document.getElementById('apellidos').value = c.apellidos || '';
-        document.getElementById('telefono').value = c.telefono || '';
-        document.getElementById('email').value = c.email || '';
-        document.getElementById('direccion').value = c.direccion || '';
-        adaptarCamposDoc();
-
-        new bootstrap.Modal(document.getElementById('modalCliente')).show();
-    }
-</script>
+<div id="clienteConfig" data-form="<?= esc(json_encode($formCliente ?? []), 'attr') ?>"></div>
+<script src="<?= base_url('js/clientes/index.js') ?>?v=<?= filemtime(FCPATH . 'js/clientes/index.js') ?>"></script>
 <?= $this->endSection() ?>

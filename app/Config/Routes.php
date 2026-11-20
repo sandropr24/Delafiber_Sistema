@@ -4,7 +4,22 @@ use CodeIgniter\Router\RouteCollection;
 
 /** @var RouteCollection $routes */
 
-$routes->get('/', fn() => redirect()->to('/admin/login'));
+$routes->get('/', 'TiendaController::catalogo');
+$routes->get('producto/(:num)', 'TiendaController::detalle/$1');
+$routes->get('carrito', 'TiendaController::carrito');
+$routes->post('carrito/agregar', 'TiendaController::agregarCarrito', ['filter' => 'throttle:cart-add,30,60']);
+$routes->post('carrito/actualizar', 'TiendaController::actualizarCarrito', ['filter' => 'throttle:cart-update,30,60']);
+$routes->post('carrito/eliminar/(:num)', 'TiendaController::eliminarCarrito/$1');
+$routes->get('checkout', 'TiendaController::checkout');
+$routes->post('checkout', 'TiendaController::confirmarCheckout', ['filter' => ['throttle:checkout-ip,5,600', 'throttle:checkout-email,3,3600,email']]);
+$routes->get('seguimiento/(:segment)', 'TiendaController::seguimiento/$1');
+$routes->get('cliente/login', 'TiendaController::login');
+$routes->post('cliente/login', 'TiendaController::autenticar');
+$routes->get('cliente/registro', 'TiendaController::registro');
+$routes->post('cliente/registro', 'TiendaController::registrar', ['filter' => 'throttle:register-ip,5,3600']);
+$routes->get('cliente/verificar/(:segment)', 'TiendaController::verificar/$1');
+$routes->get('cuenta', 'TiendaController::cuenta');
+$routes->post('cliente/logout', 'TiendaController::logout');
 
 
 $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], static function ($routes) {

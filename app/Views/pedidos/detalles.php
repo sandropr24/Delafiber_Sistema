@@ -36,6 +36,7 @@
                     </dl>
                 </div>
             </section>
+            <?= view('pedidos/_solicitud_web', ['datosWeb' => $pedido['datos_web'] ?? null, 'observacionesPedido' => $pedido['observaciones'] ?? null]) ?>
             <section class="card pedido-card">
                 <div class="card-header">Artículos acordados</div>
                 <div class="table-responsive">
@@ -67,10 +68,26 @@
                             <span class="small"><?= esc($h['motivo'] ?: str_replace('_', ' ', $h['estado_nuevo'])) ?></span>
                             <?php $cambios = json_decode($h['cambios'] ?? 'null', true); ?>
                             <?php if (is_array($cambios) && $cambios): ?>
-                                <details class="mt-2"><summary class="small">Ver cambios (<?= count($cambios) ?>)</summary>
-                                    <div class="table-responsive mt-2"><table class="table table-sm"><thead><tr><th>Dato</th><th>Pedido original</th><th>Venta registrada</th></tr></thead><tbody>
-                                        <?php foreach ($cambios as $cambio): ?><tr><td><?= esc($cambio['campo']) ?></td><td><?= esc($cambio['antes']) ?></td><td><?= esc($cambio['despues']) ?></td></tr><?php endforeach; ?>
-                                    </tbody></table></div>
+                                <details class="mt-2">
+                                    <summary class="small">Ver cambios (<?= count($cambios) ?>)</summary>
+                                    <div class="table-responsive mt-2">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Dato</th>
+                                                    <th>Pedido original</th>
+                                                    <th>Venta registrada</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($cambios as $cambio): ?><tr>
+                                                        <td><?= esc($cambio['campo']) ?></td>
+                                                        <td><?= esc($cambio['antes']) ?></td>
+                                                        <td><?= esc($cambio['despues']) ?></td>
+                                                    </tr><?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </details>
                             <?php endif; ?>
                         </div>
@@ -84,12 +101,56 @@
                 <div class="card-body">
                     <div class="pedido-importe"><span>Subtotal</span><strong>S/ <?= number_format((float) $pedido['subtotal'], 2) ?></strong></div>
                     <div class="pedido-importe"><span>Descuento</span><strong>S/ <?= number_format((float) $pedido['descuento'], 2) ?></strong></div><?php if ($pedido['motivodescuento']): ?><p class="small"><?= esc($pedido['motivodescuento']) ?></p><?php endif; ?>
-                    <?php if (isset($pedido['baseimponible'])): ?><div class="pedido-importe"><span>Base imponible</span><strong>S/ <?= number_format((float) $pedido['baseimponible'], 2) ?></strong></div><div class="pedido-importe"><span>IGV <?= number_format((float) $pedido['porcentajeigv'], 2) ?> % incluido</span><strong>S/ <?= number_format((float) $pedido['montoigv'], 2) ?></strong></div><?php endif; ?>
+                    <?php if (isset($pedido['baseimponible'])): ?><div class="pedido-importe"><span>Base imponible</span><strong>S/ <?= number_format((float) $pedido['baseimponible'], 2) ?></strong></div>
+                        <div class="pedido-importe"><span>IGV <?= number_format((float) $pedido['porcentajeigv'], 2) ?> % incluido</span><strong>S/ <?= number_format((float) $pedido['montoigv'], 2) ?></strong></div><?php endif; ?>
                     <div class="pedido-importe pedido-total"><span>Total</span><strong>S/ <?= number_format((float) $pedido['total'], 2) ?></strong></div>
                     <?php if ($pedido['estado_codigo'] === 'PENDIENTE'): ?><a class="btn btn-outline-light w-100 mb-2" href="<?= base_url('admin/pedidos/editar/' . $pedido['idpedido']) ?>">Editar pedido</a>
                         <form method="post" action="<?= base_url('admin/pedidos/cambiar-estado/' . $pedido['idpedido']) ?>" class="pedido-confirmar" data-confirmacion="Se conservará el pedido confirmado. Podrás ajustar los datos al convertirlo a venta y los cambios quedarán registrados. Todavía no se reservará stock."><?= csrf_field() ?><input type="hidden" name="estado" value="CONFIRMADO"><button type="submit" class="btn pedido-primary w-100">Confirmar pedido</button></form><?php endif; ?>
-                    <?php if ($pedido['estado_codigo'] === 'CONFIRMADO'): ?><a id="convertirPedido" class="btn pedido-primary w-100" href="<?= base_url('admin/ventas/crear') . '?pedido=' . (int) $pedido['idpedido'] . '&amp;desde_pedido=1' ?>">Convertir a venta</a>
-                        <p class="small mt-2 mb-0">Selecciona las series, completa los datos de venta y registra el pago. Se comprobará el stock disponible.</p><?php endif; ?>
+                    <?php if ($pedido['estado_codigo'] === 'CONFIRMADO'): ?>
+                        <a id="convertirPedido" class="btn pedido-primary w-100" href="<?= base_url('admin/ventas/crear') . '?pedido=' . (int) $pedido['idpedido'] . '&amp;desde_pedido=1' ?>">Convertir a venta</a>
+                        <p class="small mt-2 mb-0">Selecciona las series, completa los datos de venta y registra el pago. Se comprobará el stock disponible.</p>
+
+                        <?php
+                        $whatsappUrl = '';
+                        $datosWeb = $pedido['datos_web'] ?? [];
+                        $telefonoRaw = $datosWeb['telefono_contacto'] ?? $pedido['telefono'] ?? '';
+                        $telefonoLimpio = preg_replace('/[^0-9]/', '', (string) $telefonoRaw);
+                        if (strlen($telefonoLimpio) === 9) {
+                            $telefonoLimpio = '51' . $telefonoLimpio;
+                        }
+
+                        if (!empty($telefonoLimpio)):
+                            $nombreCliente = !empty($datosWeb['nombre_contacto']) ? $datosWeb['nombre_contacto'] : $pedido['cliente'];
+                            $modalidadTexto = ['RECOJO' => 'Recojo en tienda', 'DOMICILIO' => 'Entrega a domicilio'][$datosWeb['modalidad'] ?? ''] ?? '';
+
+                            $lineas = [];
+                            $lineas[] = "*DELAFIBER*";
+                            $lineas[] = "Hola *{$nombreCliente}*, tu pedido *{$pedido['codigo']}* ha sido confirmado.";
+                            if ($modalidadTexto !== '') {
+                                $lineas[] = "Modalidad: {$modalidadTexto}";
+                            }
+                            $lineas[] = "";
+                            $lineas[] = "Producto - Cantidad - Precio";
+
+                            foreach ($detalles as $d) {
+                                $cant = (int) $d['cantidad'];
+                                $importe = number_format(round((float) $d['cantidad'] * (float) $d['preciounitario'], 2), 2);
+                                $lineas[] = "• {$d['nombre']} (x{$cant}) S/ {$importe}";
+                            }
+
+                            $totalFmt = number_format((float) $pedido['total'], 2);
+                            $lineas[] = "";
+                            $lineas[] = "*Total S/ {$totalFmt}*";
+                            $lineas[] = "";
+                            $lineas[] = "Para coordinar el pago y la entrega de tu pedido, comunícate con DELAFIBER.";
+
+                            $whatsappUrl = "https://api.whatsapp.com/send?phone={$telefonoLimpio}&text=" . rawurlencode(implode("\n", $lineas));
+                        ?>
+                            <a href="<?= esc($whatsappUrl, 'attr') ?>" target="_blank" rel="noopener noreferrer" class="btn btn-success w-100 mt-2">
+                                Notificar pedido por WhatsApp
+                            </a>
+                        <?php endif; ?>
+                    <?php endif; ?>
                     <?php if ($pedido['idventa']): ?><a class="btn btn-outline-light w-100" href="<?= base_url('admin/ventas/detalles/' . $pedido['idventa']) ?>">Ver venta vinculada</a><?php if ($pedido['venta_anulada']): ?><p class="small mt-2 mb-0">La venta fue anulada. Este pedido permanece cerrado; para una nueva operación registra otro pedido.</p><?php endif; ?><?php endif; ?>
                             <?php if (in_array($pedido['estado_codigo'], ['PENDIENTE', 'CONFIRMADO'], true)): ?><p class="small mt-3 mb-0">Este pedido no representa un cobro ni una reserva de mercadería.</p><?php endif; ?>
                 </div>
@@ -103,4 +164,6 @@
     </div>
 </div>
 <?= $this->endSection() ?>
-<?= $this->section('scripts') ?><script src="<?= base_url('js/pedidos/detalles.js') ?>?v=<?= filemtime(FCPATH . 'js/pedidos/detalles.js') ?>"></script><?= $this->endSection() ?>
+<?= $this->section('scripts') ?>
+<script src="<?= base_url('js/pedidos/detalles.js') ?>?v=<?= filemtime(FCPATH . 'js/pedidos/detalles.js') ?>"></script>
+<?= $this->endSection() ?>

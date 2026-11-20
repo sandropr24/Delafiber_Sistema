@@ -28,6 +28,7 @@ class ClienteController extends BaseController
         $data = [
             'titulo'   => 'Gestión de Clientes',
             'clientes' => $clientes,
+            'formCliente' => $this->formularioAnterior(),
         ];
 
         return view('clientes/index', $data);
@@ -35,35 +36,41 @@ class ClienteController extends BaseController
 
     public function guardar(): RedirectResponse
     {
-        $idPersona = $this->request->getPost('idpersona');
+        $idPersonaRaw = trim((string) $this->request->getPost('idpersona'));
+        if ($idPersonaRaw !== '' && !ctype_digit($idPersonaRaw)) {
+            return redirect()->to(base_url('admin/clientes'))->with('error', 'El cliente indicado no es válido.');
+        }
 
-        $reglas = [
-            'nombres'   => 'required|max_length[100]',
-            'apellidos' => 'required|max_length[100]',
-            'tipodoc'   => 'required',
-            'numerodoc' => 'required|max_length[20]|is_unique[personas.numerodoc,idpersona,' . ($idPersona ?: 'NULL') . ']',
-            'email'     => 'permit_empty|valid_email|max_length[150]',
-        ];
+        $idPersona = $idPersonaRaw === '' ? null : (int) $idPersonaRaw;
+        if ($idPersona !== null && !$this->esClienteEditable($idPersona)) {
+            return redirect()->to(base_url('admin/clientes'))->with('error', 'El cliente no existe o no puede modificarse.');
+        }
+
+        try {
+            $datosPersona = $this->personaModel->datosCliente($this->request->getPost());
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->to(base_url('admin/clientes'))->withInput()->with('errors', ['datos' => $e->getMessage()]);
+        }
+
+        $reglas = $this->personaModel->reglasCliente((string) $datosPersona['tipodoc']);
+        // Se conserva la política existente de no repetir documentos en el directorio.
+        $reglas['numerodoc'] .= '|is_unique[personas.numerodoc,idpersona,' . ($idPersona ?: 'NULL') . ']';
 
         $mensajes = [
             'numerodoc' => [
-                'is_unique' => 'El número de documento ya se encuentra registrado.'
-            ]
+                'is_unique' => 'El número de documento ya se encuentra registrado.',
+                'regex_match' => 'Ingrese un DNI de 8 dígitos, RUC de 11 dígitos o documento extranjero de 5 a 20 caracteres alfanuméricos.',
+            ],
+            'nombres' => ['required' => 'Ingrese los nombres del cliente.'],
+            'apellidos' => ['required' => 'Ingrese los apellidos del cliente.'],
+            'razonsocial' => ['required' => 'Ingrese la razón social de la empresa.'],
         ];
 
-        if (!$this->validate($reglas, $mensajes)) {
-            return redirect()->back()
+        if (!$this->validateData($datosPersona, $reglas, $mensajes)) {
+            return redirect()->to(base_url('admin/clientes'))
                 ->withInput()
                 ->with('errors', $this->validator->getErrors());
         }
-
-        $campos = ['nombres', 'apellidos', 'tipodoc', 'numerodoc', 'telefono', 'email', 'direccion'];
-        $datosPersona = $this->request->getPost($campos);
-
-        $datosPersona = array_map(static function ($valor) {
-            $limpio = trim((string) $valor);
-            return $limpio === '' ? null : $limpio;
-        }, $datosPersona);
 
         if (!empty($idPersona)) {
             $datosPersona['idpersona'] = $idPersona;
@@ -72,7 +79,7 @@ class ClienteController extends BaseController
         }
 
         if (!$this->personaModel->save($datosPersona)) {
-            return redirect()->back()
+            return redirect()->to(base_url('admin/clientes'))
                 ->withInput()
                 ->with('errors', $this->personaModel->errors());
         }
@@ -83,7 +90,8 @@ class ClienteController extends BaseController
 
     public function cambiarEstado($id = null): RedirectResponse
     {
-        if (empty($id) || !$cliente = $this->personaModel->find($id)) {
+        $id = filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($id === false || !$this->esClienteEditable($id) || !$cliente = $this->personaModel->find($id)) {
             return redirect()->to(base_url('admin/clientes'))->with('error', 'El cliente no existe.');
         }
 
@@ -91,5 +99,30 @@ class ClienteController extends BaseController
         $this->personaModel->update($id, ['estado' => $nuevoEstado]);
 
         return redirect()->to(base_url('admin/clientes'))->with('mensaje', 'Estado del cliente actualizado correctamente.');
+    }
+
+    private function esClienteEditable(int $idPersona): bool
+    {
+        if (!$this->personaModel->find($idPersona)) {
+            return false;
+        }
+
+        return $this->personaModel->builder()->db()
+            ->table('usuarios')
+            ->where('idpersona', $idPersona)
+            ->countAllResults() === 0;
+    }
+
+    private function formularioAnterior(): array
+    {
+        $datos = session()->get('_ci_old_input')['post'] ?? [];
+        if (($datos['origen_formulario'] ?? '') !== 'cliente') {
+            return [];
+        }
+
+        return array_filter(
+            array_intersect_key($datos, array_flip(['idpersona', 'tipodoc', 'numerodoc', 'nombres', 'apellidos', 'razonsocial', 'telefono', 'email', 'direccion'])),
+            static fn($valor) => is_scalar($valor)
+        );
     }
 }
