@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($titulo ?? 'Inicio') ?> - Delafiber Gestión</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
     <link href="<?= base_url('css/estilos.css') ?>" rel="stylesheet">
     <link rel="icon" href="<?= base_url('img/faviconDela.jpg') ?>">
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js" integrity="sha384-YB/DdIkloKoRpclWB8bNcYXWakt57USgtQPDzvnIDHYU0lasD5eWlXVo1S4ODukY" crossorigin="anonymous"></script>
 
     <?= $this->renderSection('styles') ?>
     <link href="<?= base_url('css/interfaz.css') ?>?v=<?= filemtime(FCPATH . 'css/interfaz.css') ?>" rel="stylesheet">
@@ -21,6 +21,7 @@
     $userRol = session()->get('rol') ?? '';
     $userName = session()->get('nombreusuario') ?? 'Usuario';
     $userEmail = session()->get('email') ?? 'Sin email';
+    $puedeVerServicios = (new \App\Services\PermissionService())->can((int) session()->get('idusuario'), 'servicios.ver');
     ?>
 
     <div class="d-flex">
@@ -63,8 +64,12 @@
                         <i class="bi bi-send"></i>
                         <span>Entregas</span>
                     </a>
+                    <a href="<?= base_url('admin/garantias') ?>" class="sidebar-link <?= url_is('admin/garantias*') ? 'active' : '' ?>">
+                        <i class="bi bi-shield-check"></i>
+                        <span>Garantías</span>
+                    </a>
 
-                    <?php if (in_array($userRol, ['Administrador', 'Operador'], true)): ?>
+                    <?php if ($puedeVerServicios): ?>
                         <a href="<?= base_url('admin/servicios') ?>" class="sidebar-link <?= url_is('admin/servicios*') ? 'active' : '' ?>">
                             <i class="bi bi-tools"></i>
                             <span>Servicios Técnicos</span>
@@ -74,6 +79,10 @@
 
                 <?php if (in_array($userRol, ['Administrador', 'Vendedor'], true)): ?>
                     <div class="nav-section-title">Comercial</div>
+                    <a href="<?= base_url('admin/caja') ?>" class="sidebar-link <?= url_is('admin/caja*') ? 'active' : '' ?>">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Caja y cobros</span>
+                    </a>
                     <a href="<?= base_url('admin/clientes') ?>" class="sidebar-link <?= url_is('admin/personas*') ? 'active' : '' ?>">
                         <i class="bi bi-people"></i>
                         <span>Clientes</span>
@@ -102,10 +111,10 @@
                         <i class="bi bi-cart-check"></i>
                         <span>Compras</span>
                     </a>
-<?php if ($userRol === 'Operador'): ?>                    <a href="<?= base_url('admin/cotizaciones') ?>" class="sidebar-link <?= url_is('admin/cotizaciones*') ? 'active' : '' ?>">
-                        <i class="bi bi-file-earmark-text"></i>
-                        <span>Cotizaciones</span>
-                    </a><?php endif; ?>
+                    <?php if ($userRol === 'Operador'): ?> <a href="<?= base_url('admin/cotizaciones') ?>" class="sidebar-link <?= url_is('admin/cotizaciones*') ? 'active' : '' ?>">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span>Cotizaciones</span>
+                        </a><?php endif; ?>
                 <?php endif; ?>
 
                 <?php if ($userRol === 'Administrador'): ?>
@@ -149,10 +158,13 @@
                                     <span class="text-muted small text-truncate d-block" style="font-size: 0.8rem;"><?= esc($userEmail) ?></span>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item py-2 px-3 text-danger d-flex align-items-center gap-2" href="<?= base_url('admin/logout') ?>">
-                                        <i class="bi bi-box-arrow-right fs-5"></i>
-                                        <span class="fw-semibold small">Cerrar Sesión</span>
-                                    </a>
+                                    <form action="<?= base_url('admin/logout') ?>" method="post">
+                                        <?= csrf_field() ?>
+                                        <button class="dropdown-item py-2 px-3 text-danger d-flex align-items-center gap-2" type="submit">
+                                            <i class="bi bi-box-arrow-right fs-5"></i>
+                                            <span class="fw-semibold small">Cerrar Sesión</span>
+                                        </button>
+                                    </form>
                                 </li>
                             </ul>
                         </div>
@@ -166,7 +178,7 @@
                         <div class="alert alert-success alert-dismissible fade show shadow-lg border-0 text-white bg-success mb-2" role="alert" data-auto-dismiss="true" style="min-width: 280px;">
                             <div class="d-flex align-items-center">
                                 <i class="bi bi-check-circle-fill fs-5 me-2"></i>
-                                <div><?= session()->getFlashdata('mensaje') ?? session()->getFlashdata('success') ?></div>
+                                <div><?= esc((string) (session()->getFlashdata('mensaje') ?? session()->getFlashdata('success'))) ?></div>
                             </div>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
@@ -176,7 +188,7 @@
                         <div class="alert alert-danger alert-dismissible fade show shadow-lg border-0 text-white bg-danger mb-2" role="alert" data-auto-dismiss="true" style="min-width: 280px;">
                             <div class="d-flex align-items-center">
                                 <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
-                                <div><?= session()->getFlashdata('error') ?></div>
+                                <div><?= esc((string) session()->getFlashdata('error')) ?></div>
                             </div>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
@@ -192,7 +204,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
         const toggleBtn = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
