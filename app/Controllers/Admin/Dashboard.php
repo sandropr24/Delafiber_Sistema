@@ -14,6 +14,7 @@ class Dashboard extends BaseController
 
         $ventasHoy = $db->table('ventas')
             ->selectSum('total', 'monto_hoy')
+            ->where('fechaanulacion', null)
             ->where('fecha >=', $hoy . ' 00:00:00')
             ->where('fecha <', date('Y-m-d', strtotime('+1 day')) . ' 00:00:00')
             ->get()->getRowArray();
@@ -37,6 +38,7 @@ class Dashboard extends BaseController
         $ultimasVentas = $db->table('ventas')
             ->select('ventas.*, personas.nombres, personas.apellidos, personas.razonsocial')
             ->join('personas', 'personas.idpersona = ventas.idcliente', 'left')
+            ->where('ventas.fechaanulacion', null)
             ->orderBy('ventas.fecha', 'DESC')->limit(5)
             ->get()->getResultArray();
 
@@ -52,6 +54,7 @@ class Dashboard extends BaseController
 
         $ventasPorDia = $db->table('ventas')
             ->select('DATE(fecha) AS dia, SUM(total) AS monto', false)
+            ->where('fechaanulacion', null)
             ->where('fecha >=', $inicio . ' 00:00:00')
             ->where('fecha <', date('Y-m-d', strtotime('+1 day')) . ' 00:00:00')
             ->groupBy('DATE(fecha)')->get()->getResultArray();
